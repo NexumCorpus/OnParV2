@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // VERCEL DEPLOYMENT CONFIGURATION
-  // Removed 'output: export' for server functionality
-  
+  // Essential Vercel deployment configuration
   eslint: {
     ignoreDuringBuilds: true
   },
@@ -13,16 +11,40 @@ const nextConfig = {
     unoptimized: true
   },
   
-  // Vercel-optimized settings
-  experimental: {
-    serverComponentsExternalPackages: ['@supabase/supabase-js', 'stripe']
-  },
-  
   // Performance optimizations
   poweredByHeader: false,
   compress: true,
   
-  // Security headers (simplified for Vercel)
+  // Webpack configuration for proper module resolution
+  webpack: (config, { isServer }) => {
+    // Ensure proper module resolution for external packages
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      crypto: false
+    }
+    
+    // Handle dynamic imports properly
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+        },
+      },
+    }
+    
+    return config
+  },
+  
+  // Security headers
   async headers() {
     return [
       {
@@ -38,7 +60,7 @@ const nextConfig = {
           },
           {
             key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin'
+            value: 'origin-when-cross-origin'
           }
         ]
       }

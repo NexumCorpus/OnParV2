@@ -1,63 +1,28 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { SECURITY_HEADERS, validateOrigin, getClientIP } from './lib/security'
-import { apiRateLimiter, authRateLimiter, webhookRateLimiter } from './lib/rate-limiter'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const clientIP = getClientIP(request)
   
-  // Apply security headers to all responses
+  // Create response with security headers
   const response = NextResponse.next()
   
-  // Add security headers
-  Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
-    response.headers.set(key, value)
-  })
+  // Add essential security headers
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
   
-  // Validate origin for sensitive endpoints
-  if (pathname.startsWith('/api/') && !validateOrigin(request)) {
-    return new NextResponse('Forbidden', { status: 403 })
+  // Handle CORS for API routes
+  if (pathname.startsWith('/api/')) {
+    response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   }
   
-  // Apply rate limiting based on endpoint
-  let rateLimitResult
-  
-  if (pathname.startsWith('/api/webhook/')) {
-    // Webhook endpoints - more permissive but still limited
-    rateLimitResult = await webhookRateLimiter.checkLimit(clientIP)
-  } else if (pathname.includes('auth') || pathname.includes('login') || pathname.includes('signup')) {
-    // Authentication endpoints - strict rate limiting
-    rateLimitResult = await authRateLimiter.checkLimit(clientIP)
-  } else if (pathname.startsWith('/api/')) {
-    // General API endpoints
-    rateLimitResult = await apiRateLimiter.checkLimit(clientIP)
-  }
-  
-  if (rateLimitResult && !rateLimitResult.allowed) {
-    const rateLimitResponse = new NextResponse('Too Many Requests', { status: 429 })
-    
-    // Add rate limit headers
-    rateLimitResponse.headers.set('X-RateLimit-Limit', String(rateLimitResult.remaining + 1))
-    rateLimitResponse.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining))
-    rateLimitResponse.headers.set('X-RateLimit-Reset', String(rateLimitResult.resetTime))
-    
-    if (rateLimitResult.retryAfter) {
-      rateLimitResponse.headers.set('Retry-After', String(rateLimitResult.retryAfter))
-    }
-    
-    // Apply security headers to rate limit response
-    Object.entries(SECURITY_HEADERS).forEach(([key, value]) => {
-      rateLimitResponse.headers.set(key, value)
-    })
-    
-    return rateLimitResponse
-  }
-  
-  // Add rate limit headers to successful responses
-  if (rateLimitResult) {
-    response.headers.set('X-RateLimit-Remaining', String(rateLimitResult.remaining))
-    response.headers.set('X-RateLimit-Reset', String(rateLimitResult.resetTime))
+  // Handle preflight requests
+  if (request.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 200, headers: response.headers })
   }
   
   return response
