@@ -74,18 +74,6 @@
     "typescript": "^5.2.2"
   },
   "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
-  "keywords": [
-    "restaurant",
-    "inventory",
-    "management",
-    "saas",
-    "nextjs",
-    "supabase",
-    "stripe"
-  ],
-  "author": "OnPar Inc.",
-  "license": "MIT"
+    "node": ">=18.0.0"
+  }
 }

@@ -1,51 +1,28 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export',
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  },
+  // VERCEL DEPLOYMENT CONFIGURATION
+  // Removed 'output: export' for server functionality
+  
   eslint: {
     ignoreDuringBuilds: true
   },
   typescript: {
     ignoreBuildErrors: true
   },
+  images: {
+    unoptimized: true
+  },
+  
+  // Vercel-optimized settings
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons']
+    serverComponentsExternalPackages: ['@supabase/supabase-js', 'stripe']
   },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production'
-  },
-  webpack: (config, { isServer }) => {
-    // Optimize bundle size
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false
-      }
-    }
-
-    // Add bundle analyzer in development
-    if (process.env.ANALYZE === 'true') {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'server',
-          openAnalyzer: true
-        })
-      )
-    }
-
-    return config
-  },
+  
   // Performance optimizations
   poweredByHeader: false,
   compress: true,
-  generateEtags: true,
-  // Security headers
+  
+  // Security headers (simplified for Vercel)
   async headers() {
     return [
       {
@@ -62,16 +39,13 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin'
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
           }
         ]
       }
     ]
   },
-  // Redirects for SEO
+  
+  // Essential redirects
   async redirects() {
     return [
       {
