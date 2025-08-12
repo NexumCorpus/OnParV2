@@ -1,237 +1,123 @@
-# OnPar Restaurant SaaS 🍽️
+# OnPar - Restaurant Inventory Management
 
-> Smart inventory management for small restaurants, cafes, and eateries
+Smart inventory management for small restaurants, cafes, and eateries. Reduce waste by 10-20% and save $500+ monthly.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/onpar-restaurant-saas)
+## 🚀 Quick Deploy
 
-## 🎯 Overview
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/onpar-restaurant-saas)
 
-OnPar helps small restaurants (1-50 employees) reduce food waste by 10-20% and save $500+ monthly through intelligent alerts, AI insights, and automated reorder suggestions. Built specifically for the Charleston, SC restaurant market.
+## ⚡ Quick Start
 
-### Key Benefits
-- **Reduce waste by 10-20%** with smart inventory tracking
-- **Save $500+ monthly** through optimized purchasing
-- **5-minute setup** with intuitive mobile-first design
-- **AI-powered insights** for menu optimization
-- **Real-time alerts** for low stock and expiring items
+1. **Clone & Install**
+   ```bash
+   git clone <repository-url>
+   cd onpar-restaurant-saas
+   npm install
+   ```
 
-## 🚀 Quick Deploy to Vercel
+2. **Environment Setup**
+   ```bash
+   cp .env.example .env.local
+   # Add your Supabase and Stripe keys
+   ```
 
-### 1. Clone & Deploy
-```bash
-git clone https://github.com/yourusername/onpar-restaurant-saas
-cd onpar-restaurant-saas
+3. **Run Development**
+   ```bash
+   npm run dev
+   ```
+
+## 🔧 Environment Variables
+
+### Required for Core Features
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 ```
 
-### 2. Deploy to Vercel
-1. Push to your GitHub repository
-2. Go to [vercel.com](https://vercel.com) and import your repo
-3. Add environment variables (see below)
-4. Deploy!
-
-### 3. Environment Variables
-Add these in your Vercel dashboard:
-
+### Optional for Full Features
 ```env
-# Supabase (Database & Auth)
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_key
-
-# Stripe (Payments)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Resend (Email)
 RESEND_API_KEY=re_...
-
-# App Config
 NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
 ```
 
-## 🛠️ Tech Stack
+## 📦 Tech Stack
 
 - **Framework:** Next.js 14 with App Router
-- **Database:** Supabase (PostgreSQL + Auth)
+- **Database:** Supabase (PostgreSQL)
 - **Payments:** Stripe
-- **Email:** Resend
 - **Styling:** Tailwind CSS + shadcn/ui
-- **Language:** TypeScript
+- **Email:** Resend
 - **Deployment:** Vercel
-
-## 📱 Features
-
-### Core Inventory Management
-- Smart inventory tracking with expiry dates
-- Automated reorder point alerts
-- Bulk operations and CSV import/export
-- Mobile-responsive interface
-
-### AI-Powered Insights
-- Waste reduction recommendations
-- Menu optimization suggestions
-- Cost analysis and profit tracking
-- Predictive ordering
-
-### Business Intelligence
-- Real-time analytics dashboard
-- Custom report generation
-- Budget monitoring and alerts
-- Supplier performance tracking
-
-### Integration Ready
-- POS system integrations
-- Supplier API connections
-- Email/SMS notifications
-- Webhook support
 
 ## 🏗️ Project Structure
 
 ```
 onpar-restaurant-saas/
-├── app/                    # Next.js App Router
-│   ├── dashboard/         # Main application
-│   ├── api/              # API routes
-│   └── auth/             # Authentication
-├── components/           # React components
-│   ├── ui/              # Reusable UI components
-│   ├── dashboard/       # Dashboard-specific
-│   └── analytics/       # Analytics components
-├── lib/                 # Business logic
-│   ├── supabase.ts     # Database client
-│   ├── stripe.ts       # Payment processing
-│   └── utils.ts        # Utilities
-├── hooks/              # Custom React hooks
-├── types/              # TypeScript definitions
-└── supabase/          # Database migrations
+├── app/                    # Next.js App Router pages
+├── components/             # Reusable React components
+├── lib/                    # Business logic and utilities
+├── hooks/                  # Custom React hooks
+├── types/                  # TypeScript definitions
+└── supabase/              # Database migrations
 ```
 
-## 🔧 Development
+## 🎯 Features
 
-### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Supabase account
-- Stripe account (for payments)
-
-### Local Development
-```bash
-# Install dependencies
-npm install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your credentials
-
-# Run development server
-npm run dev
-```
-
-### Database Setup
-```bash
-# Install Supabase CLI
-npm install -g @supabase/cli
-
-# Initialize Supabase
-supabase init
-
-# Start local Supabase
-supabase start
-
-# Push database schema
-supabase db push
-```
-
-## 📊 Performance
-
-- **Lighthouse Score:** 95/100
-- **Bundle Size:** ~200KB gzipped
-- **Load Time:** <2 seconds
-- **Core Web Vitals:** All green
-
-## 🧪 Testing
-
-The application includes comprehensive testing utilities:
-
-```bash
-# Run type checking
-npm run type-check
-
-# Run linting
-npm run lint
-
-# Test build
-npm run build
-```
+- **Smart Inventory Tracking** - Real-time stock monitoring
+- **Waste Reduction Analytics** - AI-powered insights
+- **Mobile-First Design** - Works on any device
+- **Recipe Cost Analysis** - Profit margin tracking
+- **Automated Alerts** - Low stock & expiry notifications
+- **CSV Import/Export** - Bulk data management
 
 ## 🚀 Deployment
 
 ### Vercel (Recommended)
-1. Push to GitHub
-2. Import to Vercel
-3. Add environment variables
-4. Deploy automatically
+```bash
+npm i -g vercel
+vercel --prod
+```
 
-### Other Platforms
-- **Netlify:** Compatible with static export
-- **Railway:** Full-stack deployment
-- **DigitalOcean:** App Platform ready
+### Manual Build
+```bash
+npm run build
+npm start
+```
 
-## 📈 Business Model
+## 📊 API Endpoints
 
-- **Basic Plan:** $49/month - Core inventory management
-- **Premium Add-on:** $29/month - AI insights and analytics
-- **Setup Fee:** $299 one-time (includes onboarding)
-- **Target Market:** Small restaurants (1-50 employees)
+- `GET /api/health` - Health check
+- `GET /api/inventory` - Get inventory items
+- `POST /api/inventory` - Create inventory item
+- `GET /api/menu` - Get menu items
+- `POST /api/webhook/stripe` - Stripe webhooks
 
-## 🎯 Roadmap
+## 🧪 Testing
 
-### Phase 1: Beta Launch ✅
-- Core inventory management
-- Basic analytics
-- Charleston market focus
+```bash
+npm run type-check    # TypeScript validation
+npm run lint         # ESLint checks
+npm run build        # Production build test
+```
 
-### Phase 2: AI Enhancement 🚧
-- Advanced waste predictions
-- Menu optimization AI
-- Automated reordering
+## 📝 License
 
-### Phase 3: Scale 📋
-- Multi-location support
-- Advanced integrations
-- Enterprise features
+MIT License - see LICENSE file for details.
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
-### Development Guidelines
-- TypeScript for type safety
-- ESLint + Prettier for code quality
-- Conventional commits
-- Component-driven development
+## 📞 Support
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Documentation:** [Setup Guide](SETUP_INSTRUCTIONS.md)
-- **Issues:** [GitHub Issues](https://github.com/yourusername/onpar-restaurant-saas/issues)
-- **Email:** support@onpar.app
-- **Discord:** [Join our community](https://discord.gg/onpar)
-
-## 🏆 Acknowledgments
-
-Built with ❤️ for the Charleston, SC restaurant community.
-
-Special thanks to:
-- Local restaurant partners for beta testing
-- Charleston tech community for support
-- Open source contributors
-
----
-
-**Ready to reduce food waste and save money?** [Deploy OnPar today!](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/onpar-restaurant-saas)
+- Email: support@onpar.app
+- Documentation: [docs.onpar.app](https://docs.onpar.app)
+- Issues: [GitHub Issues](https://github.com/your-username/onpar-restaurant-saas/issues)

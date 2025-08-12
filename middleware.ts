@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
   
   // Handle CORS for API routes
   if (pathname.startsWith('/api/')) {
-    response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || '*')
+    response.headers.set('Access-Control-Allow-Origin', (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_APP_URL : undefined) || '*')
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   }

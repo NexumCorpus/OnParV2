@@ -15,30 +15,14 @@ const nextConfig = {
   poweredByHeader: false,
   compress: true,
   
-  // Webpack configuration for proper module resolution
-  webpack: (config, { isServer }) => {
-    // Ensure proper module resolution for external packages
+  // Minimal webpack configuration to avoid SSR issues
+  webpack: (config) => {
+    // Only add essential fallbacks
     config.resolve.fallback = {
       ...config.resolve.fallback,
       fs: false,
       net: false,
-      tls: false,
-      crypto: false
-    }
-    
-    // Handle dynamic imports properly
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-        },
-      },
+      tls: false
     }
     
     return config

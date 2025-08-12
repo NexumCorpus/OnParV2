@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { supabase } from '@/lib/supabase'
 
 // Authentication middleware for API routes
 export async function withAuth(
@@ -12,33 +11,27 @@ export async function withAuth(
 ) {
   return async (request: NextRequest) => {
     try {
-
       // Check authentication if required
       if (options.requireAuth !== false) {
-        const supabase = createRouteHandlerClient({ cookies })
-        const { data: { user }, error } = await supabase.auth.getUser()
+        // Get auth token from request headers
+        const authHeader = request.headers.get('authorization')
+        const token = authHeader?.replace('Bearer ', '')
 
-        if (error || !user) {
+        if (!token) {
           return NextResponse.json(
             { error: 'Authentication required' },
             { status: 401 }
           )
         }
 
-        // Check role if required
-        if (options.requiredRole) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single()
+        // Verify token with Supabase
+        const { data: { user }, error } = await supabase.auth.getUser(token)
 
-          if (!profile || profile.role !== options.requiredRole) {
-            return NextResponse.json(
-              { error: 'Insufficient permissions' },
-              { status: 403 }
-            )
-          }
+        if (error || !user) {
+          return NextResponse.json(
+            { error: 'Invalid authentication token' },
+            { status: 401 }
+          )
         }
 
         return handler(request, { user })

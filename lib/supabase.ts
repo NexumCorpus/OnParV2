@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Graceful fallback for missing environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
+const supabaseUrl = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined) || 'https://placeholder.supabase.co'
+const supabaseAnonKey = (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined) || 'placeholder-key'
 
 // Create client with fallback values
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -15,13 +15,13 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Helper function to check if Supabase is properly configured
 export const isSupabaseConfigured = () => {
-  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  return !!(typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
 }
 
 // Helper function to get configuration status
 export const getSupabaseStatus = () => {
-  const hasUrl = !!process.env.NEXT_PUBLIC_SUPABASE_URL
-  const hasKey = !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const hasUrl = !!(typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_URL)
+  const hasKey = !!(typeof process !== 'undefined' && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
   
   return {
     configured: hasUrl && hasKey,

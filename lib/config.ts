@@ -1,10 +1,37 @@
 // Application configuration and constants
 
+// Environment variables with fallbacks
+export const env = {
+  NEXT_PUBLIC_SUPABASE_URL: (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined) || 'https://placeholder.supabase.co',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined) || 'placeholder_anon_key',
+  SUPABASE_SERVICE_ROLE_KEY: (typeof process !== 'undefined' ? process.env.SUPABASE_SERVICE_ROLE_KEY : undefined) || 'placeholder_service_key',
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY : undefined) || 'pk_test_placeholder',
+  STRIPE_SECRET_KEY: (typeof process !== 'undefined' ? process.env.STRIPE_SECRET_KEY : undefined) || 'sk_test_placeholder',
+  STRIPE_WEBHOOK_SECRET: (typeof process !== 'undefined' ? process.env.STRIPE_WEBHOOK_SECRET : undefined) || 'whsec_placeholder',
+  RESEND_API_KEY: (typeof process !== 'undefined' ? process.env.RESEND_API_KEY : undefined) || 're_placeholder',
+  NEXT_PUBLIC_APP_URL: (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_APP_URL : undefined) || 'http://localhost:3000',
+  NODE_ENV: (typeof process !== 'undefined' ? process.env.NODE_ENV : undefined) || 'development',
+  
+  // Feature flags for graceful degradation
+  get ENABLE_STRIPE() {
+    const key = typeof process !== 'undefined' ? process.env.STRIPE_SECRET_KEY : undefined
+    return key && key !== 'sk_test_placeholder'
+  },
+  get ENABLE_EMAIL() {
+    const key = typeof process !== 'undefined' ? process.env.RESEND_API_KEY : undefined
+    return key && key !== 're_placeholder'
+  },
+  get ENABLE_SUPABASE() {
+    const url = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined
+    return url && url !== 'https://placeholder.supabase.co'
+  },
+}
+
 export const APP_CONFIG = {
   name: 'OnPar',
   description: 'Smart inventory management for small restaurants',
   version: '1.0.0',
-  url: process.env.NEXT_PUBLIC_APP_URL || 'https://onpar.app',
+  url: (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_APP_URL : undefined) || 'https://onpar.app',
   supportEmail: 'support@onpar.app',
   company: 'OnPar Inc.',
   
@@ -158,16 +185,16 @@ export const APP_CONFIG = {
   // External services
   services: {
     stripe: {
-      publishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET
+      publishableKey: typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY : undefined,
+      webhookSecret: typeof process !== 'undefined' ? process.env.STRIPE_WEBHOOK_SECRET : undefined
     },
     supabase: {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY
+      url: typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined,
+      anonKey: typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined,
+      serviceRoleKey: typeof process !== 'undefined' ? process.env.SUPABASE_SERVICE_ROLE_KEY : undefined
     },
     resend: {
-      apiKey: process.env.RESEND_API_KEY,
+      apiKey: typeof process !== 'undefined' ? process.env.RESEND_API_KEY : undefined,
       fromEmail: 'noreply@onpar.app',
       fromName: 'OnPar'
     }
@@ -304,12 +331,12 @@ export const APP_CONFIG = {
 }
 
 // Environment-specific overrides
-if (process.env.NODE_ENV === 'development') {
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
   APP_CONFIG.api.timeout = 30000 // Longer timeout for development
   APP_CONFIG.performance.pageLoadWarning = 5000 // More lenient in dev
 }
 
-if (process.env.NODE_ENV === 'production') {
+if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
   APP_CONFIG.features.performanceMonitoring = true
 }
 

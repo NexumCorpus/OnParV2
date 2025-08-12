@@ -1,4 +1,4 @@
-// Performance optimization utilities for OnPar
+// Performance optimization and monitoring utilities for OnPar
 
 export interface PerformanceMetrics {
   loadTime: number
@@ -6,6 +6,42 @@ export interface PerformanceMetrics {
   apiResponseTime: number
   memoryUsage?: number
 }
+
+interface PerformanceMetric {
+  name: string
+  value: number
+  timestamp: number
+  metadata?: Record<string, any>
+}
+
+// Global performance monitor
+class PerformanceMonitor {
+  private metrics: PerformanceMetric[] = []
+  
+  recordMetric(name: string, value: number, metadata?: Record<string, any>) {
+    this.metrics.push({
+      name,
+      value,
+      timestamp: Date.now(),
+      metadata
+    })
+    
+    // Keep only last 100 metrics to prevent memory leaks
+    if (this.metrics.length > 100) {
+      this.metrics = this.metrics.slice(-100)
+    }
+  }
+  
+  getMetrics(name?: string): PerformanceMetric[] {
+    return name ? this.metrics.filter(m => m.name === name) : [...this.metrics]
+  }
+  
+  clearMetrics() {
+    this.metrics = []
+  }
+}
+
+export const performanceMonitor = new PerformanceMonitor()
 
 // Debounce function for search and input fields
 export function debounce<T extends (...args: any[]) => any>(
@@ -42,7 +78,7 @@ export function measureRenderTime(componentName: string) {
     const endTime = performance.now()
     const renderTime = endTime - startTime
     
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.log(`${componentName} render time: ${renderTime.toFixed(2)}ms`)
     }
     
@@ -193,7 +229,7 @@ export function trackPageLoad(pageName: string): void {
     window.addEventListener('load', () => {
       const loadTime = performance.now()
       
-      if (process.env.NODE_ENV === 'development') {
+      if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
         console.log(`${pageName} load time: ${loadTime.toFixed(2)}ms`)
       }
       

@@ -56,7 +56,11 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
             </CardHeader>
             <CardContent className="text-center">
               <Button
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.location.reload()
+                  }
+                }}
                 className="w-full"
               >
                 <RefreshCw className="mr-2 h-4 w-4" />
