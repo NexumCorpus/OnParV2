@@ -31,8 +31,7 @@ import {
   DollarSign,
   Settings,
   Star,
-  Zap,
-  Plug
+  Zap
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { getCurrentUser, updateUserProfile } from '@/lib/auth'

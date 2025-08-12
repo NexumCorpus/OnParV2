@@ -17,7 +17,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { FeedbackButton } from '@/components/ui/feedback-button'
 import { getCurrentUser, signOut } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
-import { ChefHat, User, Settings, CreditCard, BarChart3, LogOut, Bell, Star, Zap } from 'lucide-react'
+import { ChefHat, User, Settings, CreditCard, BarChart3, LogOut, Bell, Star, Zap, Plug } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function DashboardNavbar() {
