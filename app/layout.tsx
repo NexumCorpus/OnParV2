@@ -9,7 +9,11 @@ export const metadata: Metadata = {
   description: 'Smart inventory management for small restaurants, cafes, and eateries. Reduce waste, save money, and optimize your operations.',
   keywords: ['restaurant', 'inventory', 'management', 'food waste', 'saas'],
   authors: [{ name: 'OnPar Inc.' }],
-  viewport: 'width=device-width, initial-scale=1',
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({

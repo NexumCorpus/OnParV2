@@ -3,6 +3,8 @@ import { createInventoryItem, getInventoryItems, updateInventoryItem, deleteInve
 import { getCurrentUser } from '@/lib/auth'
 import { logError, logUserAction } from '@/lib/error-logging'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const { user } = await getCurrentUser()

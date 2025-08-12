@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { headers } from 'next/headers'
 import Stripe from 'stripe'
 import { supabase } from '@/lib/supabase'
 import { logError, logUserAction } from '@/lib/error-logging'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe((typeof process !== 'undefined' ? process.env.STRIPE_SECRET_KEY : undefined) || 'sk_test_placeholder', {
   apiVersion: '2023-10-16',
 })
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+const webhookSecret = (typeof process !== 'undefined' ? process.env.STRIPE_WEBHOOK_SECRET : undefined) || 'whsec_placeholder'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text()
-    const headersList = headers()
-    const signature = headersList.get('stripe-signature')!
+    const signature = request.headers.get('stripe-signature')
+    
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing stripe signature' }, { status: 400 })
+    }
 
     let event: Stripe.Event
 

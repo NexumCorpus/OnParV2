@@ -3,6 +3,8 @@ import { getCurrentUser } from '@/lib/auth'
 import { logError, logUserAction } from '@/lib/error-logging'
 import { supabase } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 export async function POST(request: NextRequest) {
   try {
     const { user } = await getCurrentUser()
