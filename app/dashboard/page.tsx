@@ -89,10 +89,9 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-          {/* Modern Hero Section */}
-          <div className="relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10 rounded-3xl"></div>
-            <ModernCard gradient="blue" className="relative border-0 shadow-2xl">
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10 rounded-3xl"></div>
+          <ModernCard gradient="blue" className="relative border-0 shadow-2xl">
               <CardContent className="p-8">
                 <div className="flex flex-col lg:flex-row items-center justify-between space-y-6 lg:space-y-0">
                   <div className="flex items-center space-x-6">
