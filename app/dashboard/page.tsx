@@ -7,6 +7,10 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Typography, Display, Heading, Text } from '@/components/ui/typography'
 import { Stack, Inline, Container, Section, Grid } from '@/components/ui/spacing'
+import { MetricsGrid, CardsGrid } from '@/components/ui/responsive-grid'
+import { DashboardLayout } from '@/components/layout/main-layout'
+import { ExecutiveSummary } from '@/components/dashboard/executive-summary'
+import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -27,6 +31,7 @@ import { AIInsightsDashboard } from '@/components/ai-insights-dashboard'
 
 export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
+  const { isDesktop, isMobile } = useBreakpoint()
   const [metrics, setMetrics] = useState({
     totalValue: 12450,
     monthlySpend: 8200,
@@ -61,135 +66,55 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-surface to-background">
-      <Container size="2xl">
-        <Section spacing="normal">
-          {/* Header Section */}
-          <Inline justify="between" align="center" className="flex-col lg:flex-row space-y-4 lg:space-y-0">
-            <Stack space={3}>
-              <Display size="lg" gradient>
-                OnPar Dashboard
-              </Display>
-              <Text variant="lead" color="muted">
-                Welcome back! Here's how your restaurant is performing today.
-              </Text>
-            </Stack>
-            <Inline space={3} align="center">
-              <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                <CheckCircle className="w-3 h-3 mr-1" />
-                All Systems Operational
-              </Badge>
-              <Button variant="gradient" size="lg" className="shadow-lg">
-                <Plus className="w-4 h-4 mr-2" />
-                Quick Add
-              </Button>
-            </Inline>
-          </Inline>
+    <DashboardLayout
+      title="Dashboard"
+      description="Welcome back! Here's how your restaurant is performing today."
+      actions={
+        <Inline space={3} align="center">
+          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            All Systems Operational
+          </Badge>
+          <Button variant="gradient" size={isDesktop ? "lg" : "default"} className="shadow-lg">
+            <Plus className="w-4 h-4 mr-2" />
+            Quick Add
+          </Button>
+        </Inline>
+      }
+    >
 
-          {/* Key Metrics Grid */}
-          <Grid cols={4} gap={6} responsive>
-            <Card variant="elevated" className="group hover:scale-[1.02] transition-all duration-300">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Typography variant="label" color="muted">
-                  Total Inventory Value
-                </Typography>
-                <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                  <Package className="h-4 w-4 text-primary" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Stack space={2}>
-                  <Typography variant="display-lg" weight="bold">
-                    ${metrics.totalValue.toLocaleString()}
-                  </Typography>
-                  <Inline space={1} align="center">
-                    <TrendingUp className="w-4 h-4 text-success" />
-                    <Typography variant="small" color="success">
-                      +5.2% from last month
-                    </Typography>
-                  </Inline>
-                </Stack>
-              </CardContent>
-            </Card>
+      {/* Executive Summary */}
+      <ExecutiveSummary
+        data={{
+          totalRevenue: 45250,
+          revenueGrowth: 12.5,
+          totalInventoryValue: metrics.totalValue,
+          inventoryTurnover: 8.2,
+          monthlySavings: metrics.monthlySavings,
+          savingsGrowth: metrics.wasteReduction,
+          wasteReduction: 15.8,
+          wasteTarget: 20,
+          lowStockItems: metrics.lowStockItems,
+          expiringItems: metrics.expiringItems,
+          efficiency: metrics.efficiency,
+          customerSatisfaction: 4.8,
+          ordersFulfilled: 1247,
+          totalOrders: 1285,
+          avgOrderValue: 35.20,
+          orderValueGrowth: 8.3,
+        }}
+        loading={loading}
+        period="this month"
+      />
 
-            <Card variant="elevated" className="group hover:scale-[1.02] transition-all duration-300">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Typography variant="label" color="muted">
-                  Monthly Savings
-                </Typography>
-                <div className="p-2 bg-success/10 rounded-lg group-hover:bg-success/20 transition-colors">
-                  <DollarSign className="h-4 w-4 text-success" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Stack space={2}>
-                  <Typography variant="display-lg" weight="bold">
-                    ${metrics.monthlySavings.toLocaleString()}
-                  </Typography>
-                  <Inline space={1} align="center">
-                    <ArrowUpRight className="w-4 h-4 text-success" />
-                    <Typography variant="small" color="success">
-                      {metrics.wasteReduction}% waste reduction
-                    </Typography>
-                  </Inline>
-                </Stack>
-              </CardContent>
-            </Card>
+      {/* AI Insights Section */}
+      <div className="mt-12">
+        <AIInsightsDashboard isPremium={true} />
+      </div>
 
-            <Card variant="elevated" className="group hover:scale-[1.02] transition-all duration-300">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Typography variant="label" color="muted">
-                  Items Need Attention
-                </Typography>
-                <div className="p-2 bg-warning/10 rounded-lg group-hover:bg-warning/20 transition-colors">
-                  <AlertTriangle className="h-4 w-4 text-warning" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Stack space={2}>
-                  <Typography variant="display-lg" weight="bold">
-                    {metrics.lowStockItems + metrics.expiringItems}
-                  </Typography>
-                  <Inline space={1} align="center">
-                    <Clock className="w-4 h-4 text-warning" />
-                    <Typography variant="small" color="warning">
-                      {metrics.lowStockItems} low stock, {metrics.expiringItems} expiring
-                    </Typography>
-                  </Inline>
-                </Stack>
-              </CardContent>
-            </Card>
-
-            <Card variant="elevated" className="group hover:scale-[1.02] transition-all duration-300">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Typography variant="label" color="muted">
-                  Efficiency Score
-                </Typography>
-                <div className="p-2 bg-info/10 rounded-lg group-hover:bg-info/20 transition-colors">
-                  <Zap className="h-4 w-4 text-info" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <Stack space={3}>
-                  <Typography variant="display-lg" weight="bold">
-                    {metrics.efficiency}%
-                  </Typography>
-                  <Stack space={2}>
-                    <Progress value={metrics.efficiency} className="h-2" />
-                    <Typography variant="small" color="muted">
-                      Excellent performance
-                    </Typography>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* AI Insights Section */}
-          <AIInsightsDashboard isPremium={true} />
-
-          {/* Quick Actions and Recent Activity */}
-          <Grid cols={2} gap={6} responsive>
+      {/* Quick Actions and Recent Activity */}
+      <div className="mt-12">
+        <CardsGrid gap={6} minItemWidth="400px">
           <Card variant="gradient" className="overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center">
@@ -296,9 +221,8 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-          </Grid>
-        </Section>
-      </Container>
-    </div>
+        </CardsGrid>
+      </div>
+    </DashboardLayout>
   )
 }

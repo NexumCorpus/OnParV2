@@ -1,278 +1,411 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import * as React from 'react'
+import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
-import { TrendingUp, TrendingDown, Minus, LucideIcon } from 'lucide-react'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { Typography } from '@/components/ui/typography'
+import { Stack, Inline } from '@/components/ui/spacing'
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Minus, 
+  ArrowUpRight, 
+  ArrowDownRight,
+  ArrowRight,
+  Target,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Zap,
+  DollarSign,
+  Percent,
+  Hash,
+  Calendar,
+  type LucideIcon
+} from 'lucide-react'
 
-interface MetricCardProps {
-  title: string
-  value: string | number
-  change?: number
-  changeLabel?: string
-  trend?: 'up' | 'down' | 'neutral'
-  icon?: LucideIcon
-  description?: string
-  className?: string
-  isGood?: boolean
-  loading?: boolean
-  prefix?: string
-  suffix?: string
-  size?: 'sm' | 'md' | 'lg'
-  variant?: 'default' | 'success' | 'warning' | 'destructive'
+const metricCardVariants = cva(
+  'group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer',
+  {
+    variants: {
+      variant: {
+        default: 'bg-card border-border/50 hover:border-primary/30 hover:shadow-md',
+        elevated: 'bg-card border-border/40 shadow-md hover:shadow-lg hover:border-primary/30',
+        gradient: 'bg-gradient-to-br from-card to-muted/20 border-border/40 hover:shadow-lg',
+        glass: 'bg-card/80 backdrop-blur-sm border-border/30 hover:bg-card/90',
+        success: 'bg-success/5 border-success/20 hover:border-success/40 hover:bg-success/10',
+        warning: 'bg-warning/5 border-warning/20 hover:border-warning/40 hover:bg-warning/10',
+        destructive: 'bg-destructive/5 border-destructive/20 hover:border-destructive/40 hover:bg-destructive/10',
+        info: 'bg-info/5 border-info/20 hover:border-info/40 hover:bg-info/10',
+      },
+      size: {
+        sm: 'p-4',
+        default: 'p-6',
+        lg: 'p-8',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+      size: 'default',
+    },
+  }
+)
+
+export interface TrendData {
+  value: number
+  label: string
+  period?: string
+  isPositive?: boolean
+  isNeutral?: boolean
 }
 
-export function MetricCard({
-  title,
-  value,
-  change,
-  changeLabel,
-  trend,
-  icon: Icon,
-  description,
-  className,
-  isGood,
-  loading = false,
-  prefix = '',
-  suffix = '',
-  size = 'md',
-  variant = 'default'
-}: MetricCardProps) {
-  const formatValue = (val: string | number) => {
-    if (typeof val === 'number') {
-      if (val >= 1000000) {
-        return `${(val / 1000000).toFixed(1)}M`
+export interface MetricCardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof metricCardVariants> {
+  title: string
+  value: string | number
+  icon?: LucideIcon
+  iconColor?: string
+  trend?: TrendData
+  subtitle?: string
+  description?: string
+  progress?: {
+    value: number
+    max?: number
+    label?: string
+    variant?: 'default' | 'success' | 'warning' | 'destructive' | 'info'
+  }
+  badge?: {
+    text: string
+    variant?: 'default' | 'success' | 'warning' | 'destructive' | 'info' | 'outline'
+  }
+  loading?: boolean
+  animated?: boolean
+  onClick?: () => void
+}
+
+export const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
+  ({
+    className,
+    variant,
+    size,
+    title,
+    value,
+    icon: Icon,
+    iconColor,
+    trend,
+    subtitle,
+    description,
+    progress,
+    badge,
+    loading = false,
+    animated = true,
+    onClick,
+    ...props
+  }, ref) => {
+    const [displayValue, setDisplayValue] = React.useState(0)
+    const [isVisible, setIsVisible] = React.useState(false)
+
+    // Animate value changes
+    React.useEffect(() => {
+      if (animated && typeof value === 'number') {
+        const timer = setTimeout(() => {
+          setDisplayValue(value)
+        }, 200)
+        return () => clearTimeout(timer)
       }
-      if (val >= 1000) {
-        return `${(val / 1000).toFixed(1)}K`
+    }, [value, animated])
+
+    // Intersection observer for entrance animation
+    React.useEffect(() => {
+      if (!animated) return
+
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true)
+          }
+        },
+        { threshold: 0.1 }
+      )
+
+      const element = ref as React.RefObject<HTMLDivElement>
+      if (element.current) {
+        observer.observe(element.current)
       }
-      return val.toLocaleString()
+
+      return () => observer.disconnect()
+    }, [animated, ref])
+
+    const getTrendIcon = () => {
+      if (!trend) return null
+      
+      if (trend.isNeutral) return <ArrowRight className="w-4 h-4" />
+      if (trend.isPositive) return <TrendingUp className="w-4 h-4" />
+      return <TrendingDown className="w-4 h-4" />
     }
-    return val
-  }
 
-  const getTrendIcon = () => {
-    if (trend === 'up') return TrendingUp
-    if (trend === 'down') return TrendingDown
-    return Minus
-  }
-
-  const getTrendColor = () => {
-    if (trend === 'neutral') return 'text-muted-foreground'
-    
-    if (isGood !== undefined) {
-      if (trend === 'up' && isGood) return 'text-green-600'
-      if (trend === 'up' && !isGood) return 'text-red-600'
-      if (trend === 'down' && isGood) return 'text-red-600'
-      if (trend === 'down' && !isGood) return 'text-green-600'
+    const getTrendColor = () => {
+      if (!trend) return 'text-muted-foreground'
+      
+      if (trend.isNeutral) return 'text-muted-foreground'
+      if (trend.isPositive) return 'text-success'
+      return 'text-destructive'
     }
-    
-    return trend === 'up' ? 'text-green-600' : 'text-red-600'
-  }
 
-  const getVariantStyles = () => {
-    switch (variant) {
-      case 'success':
-        return 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950'
-      case 'warning':
-        return 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950'
-      case 'destructive':
-        return 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950'
-      default:
-        return ''
+    const formatValue = (val: string | number) => {
+      if (typeof val === 'number' && animated) {
+        return displayValue.toLocaleString()
+      }
+      return val.toString()
     }
-  }
 
-  const getSizeStyles = () => {
-    switch (size) {
-      case 'sm':
-        return {
-          card: 'p-3',
-          title: 'text-xs',
-          value: 'text-lg',
-          icon: 'h-3 w-3',
-          change: 'text-xs'
-        }
-      case 'lg':
-        return {
-          card: 'p-8',
-          title: 'text-base',
-          value: 'text-4xl',
-          icon: 'h-6 w-6',
-          change: 'text-base'
-        }
-      default:
-        return {
-          card: 'p-6',
-          title: 'text-sm',
-          value: 'text-2xl',
-          icon: 'h-4 w-4',
-          change: 'text-sm'
-        }
-    }
-  }
-
-  const sizeStyles = getSizeStyles()
-  const TrendIcon = getTrendIcon()
-
-  if (loading) {
     return (
-      <Card className={cn(getVariantStyles(), className)}>
-        <CardContent className={sizeStyles.card}>
-          <div className="animate-pulse">
-            <div className="flex items-center justify-between mb-2">
-              <div className="h-4 bg-muted rounded w-20"></div>
-              {Icon && <div className="h-4 w-4 bg-muted rounded"></div>}
-            </div>
-            <div className="h-8 bg-muted rounded w-24 mb-2"></div>
-            {change !== undefined && (
-              <div className="h-3 bg-muted rounded w-16"></div>
+      <Card
+        ref={ref}
+        className={cn(
+          metricCardVariants({ variant, size }),
+          animated && 'animate-in fade-in-0 slide-in-from-bottom-4 duration-500',
+          animated && !isVisible && 'opacity-0 translate-y-4',
+          animated && isVisible && 'opacity-100 translate-y-0',
+          className
+        )}
+        onClick={onClick}
+        {...props}
+      >
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <Typography variant="label" color="muted" className="font-medium">
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography variant="caption" color="muted">
+                {subtitle}
+              </Typography>
             )}
           </div>
+          
+          <div className="flex items-center space-x-2">
+            {badge && (
+              <Badge variant={badge.variant} size="sm">
+                {badge.text}
+              </Badge>
+            )}
+            {Icon && (
+              <div className={cn(
+                'p-2 rounded-lg transition-colors group-hover:scale-110 duration-300',
+                iconColor || 'bg-primary/10 text-primary group-hover:bg-primary/20'
+              )}>
+                <Icon className="h-4 w-4" />
+              </div>
+            )}
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <Stack space={4}>
+            {/* Main Value */}
+            <div className="space-y-1">
+              {loading ? (
+                <div className="h-8 w-24 bg-muted rounded animate-pulse" />
+              ) : (
+                <Typography 
+                  variant="display-lg" 
+                  weight="bold"
+                  className={cn(
+                    'transition-all duration-700',
+                    animated && 'animate-in zoom-in-50 duration-700 delay-300'
+                  )}
+                >
+                  {formatValue(value)}
+                </Typography>
+              )}
+              
+              {description && (
+                <Typography variant="small" color="muted">
+                  {description}
+                </Typography>
+              )}
+            </div>
+
+            {/* Trend Indicator */}
+            {trend && !loading && (
+              <Inline space={2} align="center" className="text-sm">
+                <div className={cn('flex items-center space-x-1', getTrendColor())}>
+                  {getTrendIcon()}
+                  <span className="font-medium">
+                    {Math.abs(trend.value)}%
+                  </span>
+                </div>
+                <Typography variant="small" color="muted">
+                  {trend.label}
+                  {trend.period && ` ${trend.period}`}
+                </Typography>
+              </Inline>
+            )}
+
+            {/* Progress Bar */}
+            {progress && !loading && (
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  {progress.label && (
+                    <Typography variant="small" color="muted">
+                      {progress.label}
+                    </Typography>
+                  )}
+                  <Typography variant="small" color="muted" className="font-mono">
+                    {progress.value}
+                    {progress.max && `/${progress.max}`}
+                  </Typography>
+                </div>
+                <Progress
+                  value={(progress.value / (progress.max || 100)) * 100}
+                  variant={progress.variant}
+                  animated
+                  className="h-2"
+                />
+              </div>
+            )}
+          </Stack>
         </CardContent>
+
+        {/* Hover Effect Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
       </Card>
     )
   }
+)
+MetricCard.displayName = 'MetricCard'
+
+// Specialized metric card variants
+export const RevenueCard = React.forwardRef<HTMLDivElement, Omit<MetricCardProps, 'icon' | 'iconColor'>>(
+  (props, ref) => (
+    <MetricCard
+      ref={ref}
+      icon={DollarSign}
+      iconColor="bg-success/10 text-success group-hover:bg-success/20"
+      {...props}
+    />
+  )
+)
+RevenueCard.displayName = 'RevenueCard'
+
+export const PercentageCard = React.forwardRef<HTMLDivElement, Omit<MetricCardProps, 'icon' | 'iconColor'>>(
+  (props, ref) => (
+    <MetricCard
+      ref={ref}
+      icon={Percent}
+      iconColor="bg-info/10 text-info group-hover:bg-info/20"
+      {...props}
+    />
+  )
+)
+PercentageCard.displayName = 'PercentageCard'
+
+export const CountCard = React.forwardRef<HTMLDivElement, Omit<MetricCardProps, 'icon' | 'iconColor'>>(
+  (props, ref) => (
+    <MetricCard
+      ref={ref}
+      icon={Hash}
+      iconColor="bg-secondary/10 text-secondary group-hover:bg-secondary/20"
+      {...props}
+    />
+  )
+)
+CountCard.displayName = 'CountCard'
+
+export const TargetCard = React.forwardRef<HTMLDivElement, Omit<MetricCardProps, 'icon' | 'iconColor'>>(
+  (props, ref) => (
+    <MetricCard
+      ref={ref}
+      icon={Target}
+      iconColor="bg-warning/10 text-warning group-hover:bg-warning/20"
+      {...props}
+    />
+  )
+)
+TargetCard.displayName = 'TargetCard'
+
+export const StatusCard = React.forwardRef<HTMLDivElement, Omit<MetricCardProps, 'icon' | 'iconColor'> & {
+  status: 'success' | 'warning' | 'error' | 'pending'
+}>(({ status, ...props }, ref) => {
+  const statusConfig = {
+    success: {
+      icon: CheckCircle,
+      iconColor: 'bg-success/10 text-success group-hover:bg-success/20',
+      variant: 'success' as const,
+    },
+    warning: {
+      icon: AlertTriangle,
+      iconColor: 'bg-warning/10 text-warning group-hover:bg-warning/20',
+      variant: 'warning' as const,
+    },
+    error: {
+      icon: AlertTriangle,
+      iconColor: 'bg-destructive/10 text-destructive group-hover:bg-destructive/20',
+      variant: 'destructive' as const,
+    },
+    pending: {
+      icon: Clock,
+      iconColor: 'bg-muted/10 text-muted-foreground group-hover:bg-muted/20',
+      variant: 'default' as const,
+    },
+  }
+
+  const config = statusConfig[status]
 
   return (
-    <Card className={cn(getVariantStyles(), className)}>
-      <CardContent className={sizeStyles.card}>
-        <div className="flex items-center justify-between mb-2">
-          <p className={cn('font-medium text-muted-foreground', sizeStyles.title)}>
-            {title}
-          </p>
-          {Icon && <Icon className={cn('text-muted-foreground', sizeStyles.icon)} />}
-        </div>
-        
-        <div className="space-y-1">
-          <p className={cn('font-bold tracking-tight', sizeStyles.value)}>
-            {prefix}{formatValue(value)}{suffix}
-          </p>
-          
-          {change !== undefined && (
-            <div className="flex items-center space-x-1">
-              <TrendIcon className={cn('h-3 w-3', getTrendColor())} />
-              <span className={cn('font-medium', sizeStyles.change, getTrendColor())}>
-                {change > 0 ? '+' : ''}{change}%
-              </span>
-              {changeLabel && (
-                <span className={cn('text-muted-foreground', sizeStyles.change)}>
-                  {changeLabel}
-                </span>
-              )}
-            </div>
-          )}
-          
-          {description && (
-            <p className={cn('text-muted-foreground', sizeStyles.change)}>
-              {description}
-            </p>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <MetricCard
+      ref={ref}
+      icon={config.icon}
+      iconColor={config.iconColor}
+      variant={config.variant}
+      {...props}
+    />
   )
-}
+})
+StatusCard.displayName = 'StatusCard'
 
-// Specialized metric cards
-export function CurrencyMetricCard(props: Omit<MetricCardProps, 'prefix'>) {
-  return <MetricCard {...props} prefix="$" />
-}
-
-export function PercentageMetricCard(props: Omit<MetricCardProps, 'suffix'>) {
-  return <MetricCard {...props} suffix="%" />
-}
-
-export function CountMetricCard(props: MetricCardProps) {
-  return <MetricCard {...props} />
-}
-
-// Metric cards grid container
-export function MetricCardsGrid({ 
-  children, 
-  className 
-}: { 
+// Metric card grid container
+export interface MetricCardGridProps {
   children: React.ReactNode
-  className?: string 
-}) {
-  return (
-    <div className={cn(
-      'grid gap-4 md:grid-cols-2 lg:grid-cols-4',
-      className
-    )}>
-      {children}
-    </div>
-  )
-}
-
-// Comparison metric card
-export function ComparisonMetricCard({
-  title,
-  currentValue,
-  previousValue,
-  currentLabel = 'Current',
-  previousLabel = 'Previous',
-  icon,
-  className,
-  prefix = '',
-  suffix = ''
-}: {
-  title: string
-  currentValue: number
-  previousValue: number
-  currentLabel?: string
-  previousLabel?: string
-  icon?: LucideIcon
+  columns?: 1 | 2 | 3 | 4 | 5 | 6
+  gap?: number
   className?: string
-  prefix?: string
-  suffix?: string
-}) {
-  const change = previousValue !== 0 
-    ? ((currentValue - previousValue) / previousValue) * 100 
-    : 0
-  
-  const trend = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral'
-
-  return (
-    <Card className={className}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          {icon && <icon className="h-4 w-4 text-muted-foreground" />}
-        </div>
-        
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{currentLabel}</span>
-            <span className="text-2xl font-bold">
-              {prefix}{currentValue.toLocaleString()}{suffix}
-            </span>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{previousLabel}</span>
-            <span className="text-lg font-medium text-muted-foreground">
-              {prefix}{previousValue.toLocaleString()}{suffix}
-            </span>
-          </div>
-          
-          {change !== 0 && (
-            <div className="flex items-center justify-between pt-2 border-t">
-              <span className="text-sm text-muted-foreground">Change</span>
-              <div className="flex items-center space-x-1">
-                {trend === 'up' && <TrendingUp className="h-3 w-3 text-green-600" />}
-                {trend === 'down' && <TrendingDown className="h-3 w-3 text-red-600" />}
-                <span className={cn(
-                  'text-sm font-medium',
-                  trend === 'up' ? 'text-green-600' : 'text-red-600'
-                )}>
-                  {change > 0 ? '+' : ''}{change.toFixed(1)}%
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  )
 }
+
+export const MetricCardGrid = React.forwardRef<HTMLDivElement, MetricCardGridProps>(
+  ({ children, columns = 4, gap = 6, className }, ref) => {
+    const getGridClass = () => {
+      const colsMap = {
+        1: 'grid-cols-1',
+        2: 'grid-cols-1 md:grid-cols-2',
+        3: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3',
+        4: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4',
+        5: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5',
+        6: 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6',
+      }
+      return colsMap[columns]
+    }
+
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          'grid',
+          getGridClass(),
+          `gap-${gap}`,
+          className
+        )}
+      >
+        {children}
+      </div>
+    )
+  }
+)
+MetricCardGrid.displayName = 'MetricCardGrid'
+
+export { metricCardVariants }
