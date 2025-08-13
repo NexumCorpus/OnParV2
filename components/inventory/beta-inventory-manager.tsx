@@ -149,9 +149,10 @@ export function BetaInventoryManager() {
   const totalValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * item.pricePerUnit), 0)
   const lowStockCount = inventoryItems.filter(item => item.status === 'low' || item.status === 'critical').length
   const expiringCount = inventoryItems.filter(item => item.status === 'expiring').length
-  const totalWasteReduction = inventoryItems
-    .filter(item => item.wasteReduction)
-    .reduce((sum, item) => sum + (item.wasteReduction || 0), 0) / inventoryItems.filter(item => item.wasteReduction).length
+  const wasteReductionItems = inventoryItems.filter(item => item.wasteReduction)
+  const totalWasteReduction = wasteReductionItems.length > 0 
+    ? wasteReductionItems.reduce((sum, item) => sum + (item.wasteReduction || 0), 0) / wasteReductionItems.length
+    : 0
 
   return (
     <div className="space-y-8">
