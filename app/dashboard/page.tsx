@@ -257,11 +257,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </CardsGrid>
-      </div>
-    </DashboardLayout>
-  )
-} 
- return (
+  return (
     <DashboardLayout>
       <div className="space-y-6">
         {/* Beta Success Banner */}
