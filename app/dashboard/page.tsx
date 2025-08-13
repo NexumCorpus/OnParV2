@@ -1,15 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
+import { GradientButton } from '@/components/ui/gradient-button'
+import { MetricCard } from '@/components/ui/metric-card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DashboardLayout } from '@/components/layout/main-layout'
-import { BetaInventoryManager } from '@/components/inventory/beta-inventory-manager'
-import { BetaWasteAnalytics } from '@/components/analytics/beta-waste-analytics'
-import { BetaMobileInterface } from '@/components/mobile/beta-mobile-interface'
 import { useBreakpoint } from '@/hooks/use-breakpoint'
 import { 
   TrendingUp, 
@@ -79,331 +78,388 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Beta Success Banner */}
-        <Card className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
-          <CardContent className="p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+        <div className="space-y-8 p-6">
+          {/* Modern Hero Section */}
+          <div className="relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10 rounded-3xl"></div>
+            <ModernCard gradient="blue" className="relative border-0 shadow-2xl">
+              <CardContent className="p-8">
+                <div className="flex flex-col lg:flex-row items-center justify-between space-y-6 lg:space-y-0">
+                  <div className="flex items-center space-x-6">
+                    <div className="relative">
+                      <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-green-500/25">
+                        <Star className="h-10 w-10 text-white" />
+                      </div>
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse shadow-lg"></div>
+                    </div>
+                    <div>
+                      <h1 className="text-4xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                        🎉 Beta Success Story!
+                      </h1>
+                      <h2 className="text-2xl font-bold text-foreground mb-2">
+                        {metrics.wasteReduction}% Waste Reduction Achieved
+                      </h2>
+                      <p className="text-lg text-muted-foreground">
+                        You've saved <span className="font-bold text-green-600">${metrics.monthlySavings.toLocaleString()}</span> in just {metrics.daysInBeta} days!
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        On track for <span className="font-semibold">${metrics.projectedAnnualSavings.toLocaleString()}</span> annual savings
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center space-y-4">
+                    <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 text-lg font-bold shadow-lg">
+                      ⭐ BETA PIONEER
+                    </Badge>
+                    <GradientButton variant="success" size="lg" glow>
+                      <Sparkles className="h-5 w-5 mr-2" />
+                      View Full Report
+                    </GradientButton>
+                  </div>
+                </div>
+              </CardContent>
+            </ModernCard>
+          </div>
+
+          {/* Modern Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <MetricCard
+              title="Total Inventory Value"
+              value={`$${metrics.totalInventoryValue.toLocaleString()}`}
+              subtitle="Current stock value"
+              icon={Package}
+              trend={{
+                value: "+5.2% from last month",
+                positive: true,
+                icon: TrendingUp
+              }}
+              gradient="blue"
+            />
+
+            <MetricCard
+              title="Monthly Savings"
+              value={`$${metrics.monthlySavings.toLocaleString()}`}
+              subtitle={`${metrics.wasteReduction}% waste reduction`}
+              icon={DollarSign}
+              trend={{
+                value: `${metrics.wasteReduction}% improvement`,
+                positive: true,
+                icon: ArrowUpRight
+              }}
+              gradient="green"
+            />
+
+            <MetricCard
+              title="Items Need Attention"
+              value={metrics.lowStockItems + metrics.expiringItems}
+              subtitle={`${metrics.lowStockItems} low stock, ${metrics.expiringItems} expiring`}
+              icon={AlertTriangle}
+              gradient="orange"
+            />
+
+            <MetricCard
+              title="Efficiency Score"
+              value={`${metrics.efficiency}%`}
+              subtitle="Operational efficiency"
+              icon={Target}
+              trend={{
+                value: "+12% this month",
+                positive: true,
+                icon: TrendingUp
+              }}
+              gradient="purple"
+            />
+          </div>
+
+          {/* Modern Navigation Grid */}
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                  <Star className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">
-                    🎉 Beta Success: {metrics.wasteReduction}% Waste Reduction!
-                  </h3>
-                  <p className="text-green-700 dark:text-green-300">
-                    You've saved ${metrics.monthlySavings.toLocaleString()} in {metrics.daysInBeta} days. 
-                    On track for ${metrics.projectedAnnualSavings.toLocaleString()} annual savings!
-                  </p>
-                </div>
-              </div>
-              <Badge className="bg-green-600 text-white px-4 py-2">
-                BETA TESTER
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                Restaurant Management Hub
+              </h2>
+              <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2">
+                8 Modules Available
               </Badge>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Key Metrics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Total Inventory Value</p>
-                  <p className="text-2xl font-bold">${metrics.totalInventoryValue.toLocaleString()}</p>
-                  <p className="text-xs text-green-600 flex items-center mt-1">
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    +5.2% from last month
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <Package className="h-6 w-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Monthly Savings</p>
-                  <p className="text-2xl font-bold text-green-600">${metrics.monthlySavings.toLocaleString()}</p>
-                  <p className="text-xs text-green-600 flex items-center mt-1">
-                    <ArrowUpRight className="h-3 w-3 mr-1" />
-                    {metrics.wasteReduction}% waste reduction
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Items Need Attention</p>
-                  <p className="text-2xl font-bold text-orange-600">{metrics.lowStockItems + metrics.expiringItems}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {metrics.lowStockItems} low stock, {metrics.expiringItems} expiring
-                  </p>
-                </div>
-                <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                  <AlertTriangle className="h-6 w-6 text-orange-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Efficiency Score</p>
-                  <p className="text-2xl font-bold">{metrics.efficiency}%</p>
-                  <Progress value={metrics.efficiency} className="mt-2 h-2" />
-                </div>
-                <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                  <Target className="h-6 w-6 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Dashboard Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
-            <TabsTrigger value="overview" className="flex items-center space-x-2">
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Overview</span>
-            </TabsTrigger>
-            <TabsTrigger value="inventory" className="flex items-center space-x-2">
-              <Package className="h-4 w-4" />
-              <span className="hidden sm:inline">Inventory</span>
-            </TabsTrigger>
-            <TabsTrigger value="waste" className="flex items-center space-x-2">
-              <TrendingDown className="h-4 w-4" />
-              <span className="hidden sm:inline">Waste</span>
-            </TabsTrigger>
-            <TabsTrigger value="menu" className="flex items-center space-x-2">
-              <ChefHat className="h-4 w-4" />
-              <span className="hidden sm:inline">Menu</span>
-            </TabsTrigger>
-            <TabsTrigger value="suppliers" className="flex items-center space-x-2">
-              <Truck className="h-4 w-4" />
-              <span className="hidden sm:inline">Suppliers</span>
-            </TabsTrigger>
-            <TabsTrigger value="alerts" className="flex items-center space-x-2">
-              <Bell className="h-4 w-4" />
-              <span className="hidden sm:inline">Alerts</span>
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center space-x-2">
-              <FileText className="h-4 w-4" />
-              <span className="hidden sm:inline">Reports</span>
-            </TabsTrigger>
-            <TabsTrigger value="mobile" className="flex items-center space-x-2">
-              <Smartphone className="h-4 w-4" />
-              <span className="hidden sm:inline">Mobile</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Waste Reduction Chart */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <TrendingDown className="h-5 w-5 text-green-600" />
-                    <span>Waste Reduction Progress</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Your waste percentage has dropped from {metrics.wasteBeforeBeta}% to {metrics.wasteAfterBeta}% since joining beta
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Before OnPar</span>
-                      <span className="text-sm font-medium">{metrics.wasteBeforeBeta}%</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Link href="/dashboard/inventory">
+                <ModernCard gradient="blue" className="cursor-pointer group">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:scale-110 transition-transform">
+                      <Package className="h-8 w-8 text-white" />
                     </div>
-                    <Progress value={metrics.wasteBeforeBeta * 10} className="h-3" />
-                    
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">After OnPar</span>
-                      <span className="text-sm font-medium text-green-600">{metrics.wasteAfterBeta}%</span>
+                    <h3 className="font-bold text-lg mb-2">Smart Inventory</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      AI-powered inventory tracking with waste reduction insights
+                    </p>
+                    <GradientButton variant="primary" size="sm" className="w-full">
+                      Manage Inventory
+                    </GradientButton>
+                  </CardContent>
+                </ModernCard>
+              </Link>
+
+              <Link href="/dashboard/analytics">
+                <ModernCard gradient="green" className="cursor-pointer group">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-green-500/25 group-hover:scale-110 transition-transform">
+                      <TrendingDown className="h-8 w-8 text-white" />
                     </div>
-                    <Progress value={metrics.wasteAfterBeta * 10} className="h-3" />
-                    
-                    <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                        🎯 Improvement: {(metrics.wasteBeforeBeta - metrics.wasteAfterBeta).toFixed(1)}% reduction
-                      </p>
-                      <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                        This equals ${metrics.monthlySavings.toLocaleString()} in monthly savings
-                      </p>
-                    </div>
+                    <h3 className="font-bold text-lg mb-2">Waste Analytics</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Deep insights into waste patterns and cost optimization
+                    </p>
+                    <GradientButton variant="success" size="sm" className="w-full">
+                      View Analytics
+                    </GradientButton>
+                  </CardContent>
+                </ModernCard>
+              </Link>
+
+              <ModernCard gradient="purple" className="cursor-pointer group">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform">
+                    <ChefHat className="h-8 w-8 text-white" />
                   </div>
+                  <h3 className="font-bold text-lg mb-2">Menu Optimization</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Recipe costing and menu performance tracking
+                  </p>
+                  <GradientButton variant="purple" size="sm" className="w-full">
+                    Coming Soon
+                  </GradientButton>
                 </CardContent>
-              </Card>
+              </ModernCard>
 
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Zap className="h-5 w-5 text-blue-600" />
-                    <span>Quick Actions</span>
-                  </CardTitle>
-                  <CardDescription>
-                    Common tasks for busy restaurant operations
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-                      <Plus className="h-6 w-6" />
-                      <span className="text-xs">Add Item</span>
-                    </Button>
-                    <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-                      <Package className="h-6 w-6" />
-                      <span className="text-xs">Update Stock</span>
-                    </Button>
-                    <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-                      <AlertTriangle className="h-6 w-6" />
-                      <span className="text-xs">View Alerts</span>
-                    </Button>
-                    <Button variant="outline" className="h-20 flex flex-col items-center justify-center space-y-2">
-                      <FileText className="h-6 w-6" />
-                      <span className="text-xs">Generate Report</span>
-                    </Button>
+              <Link href="/dashboard/mobile">
+                <ModernCard gradient="cyan" className="cursor-pointer group">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-600 flex items-center justify-center shadow-lg shadow-cyan-500/25 group-hover:scale-110 transition-transform">
+                      <Smartphone className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-lg mb-2">Mobile Interface</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Kitchen-optimized mobile experience
+                    </p>
+                    <GradientButton variant="info" size="sm" className="w-full">
+                      Try Mobile
+                    </GradientButton>
+                  </CardContent>
+                </ModernCard>
+              </Link>
+
+              <ModernCard gradient="orange" className="cursor-pointer group">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/25 group-hover:scale-110 transition-transform">
+                    <Bell className="h-8 w-8 text-white" />
                   </div>
+                  <h3 className="font-bold text-lg mb-2">Smart Alerts</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Intelligent notifications for critical items
+                  </p>
+                  <GradientButton variant="warning" size="sm" className="w-full">
+                    Configure
+                  </GradientButton>
                 </CardContent>
-              </Card>
+              </ModernCard>
+
+              <ModernCard gradient="pink" className="cursor-pointer group">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/25 group-hover:scale-110 transition-transform">
+                    <Truck className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Supplier Hub</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Manage suppliers and automate ordering
+                  </p>
+                  <GradientButton variant="danger" size="sm" className="w-full">
+                    Coming Soon
+                  </GradientButton>
+                </CardContent>
+              </ModernCard>
+
+              <ModernCard gradient="blue" className="cursor-pointer group">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:scale-110 transition-transform">
+                    <FileText className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">Reports</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Custom reports and business intelligence
+                  </p>
+                  <GradientButton variant="primary" size="sm" className="w-full">
+                    Generate
+                  </GradientButton>
+                </CardContent>
+              </ModernCard>
+
+              <ModernCard gradient="green" className="cursor-pointer group">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-teal-500 to-green-600 flex items-center justify-center shadow-lg shadow-teal-500/25 group-hover:scale-110 transition-transform">
+                    <BarChart3 className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="font-bold text-lg mb-2">AI Insights</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Machine learning recommendations
+                  </p>
+                  <GradientButton variant="success" size="sm" className="w-full">
+                    View Insights
+                  </GradientButton>
+                </CardContent>
+              </ModernCard>
             </div>
+          </div>
 
-            {/* Recent Activity */}
-            <Card>
+          {/* Modern Overview Sections */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Waste Reduction Progress */}
+            <ModernCard gradient="green" glow>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5 text-gray-600" />
-                  <span>Recent Activity</span>
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                    <TrendingDown className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-xl font-bold">Waste Reduction Journey</span>
                 </CardTitle>
+                <CardDescription className="text-base">
+                  Your transformation from {metrics.wasteBeforeBeta}% to {metrics.wasteAfterBeta}% waste
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Before OnPar</span>
+                    <span className="text-lg font-bold text-red-500">{metrics.wasteBeforeBeta}%</span>
+                  </div>
+                  <div className="h-4 bg-gradient-to-r from-red-200 to-red-300 dark:from-red-900 dark:to-red-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-red-500 to-red-600 rounded-full transition-all duration-1000"
+                      style={{ width: `${metrics.wasteBeforeBeta * 10}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">After OnPar</span>
+                    <span className="text-lg font-bold text-green-600">{metrics.wasteAfterBeta}%</span>
+                  </div>
+                  <div className="h-4 bg-gradient-to-r from-green-200 to-emerald-300 dark:from-green-900 dark:to-emerald-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-1000"
+                      style={{ width: `${metrics.wasteAfterBeta * 10}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/50 dark:to-emerald-900/50 p-6 rounded-2xl border border-green-200 dark:border-green-800">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 flex items-center justify-center">
+                      <Target className="h-4 w-4 text-white" />
+                    </div>
+                    <h4 className="font-bold text-green-800 dark:text-green-200">
+                      🎯 {(metrics.wasteBeforeBeta - metrics.wasteAfterBeta).toFixed(1)}% Improvement
+                    </h4>
+                  </div>
+                  <p className="text-green-700 dark:text-green-300 font-medium">
+                    Monthly savings: ${metrics.monthlySavings.toLocaleString()}
+                  </p>
+                  <p className="text-green-600 dark:text-green-400 text-sm mt-1">
+                    Annual projection: ${metrics.projectedAnnualSavings.toLocaleString()}
+                  </p>
+                </div>
+              </CardContent>
+            </ModernCard>
+
+            {/* Quick Actions Hub */}
+            <ModernCard gradient="blue" glow>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-xl font-bold">Quick Actions</span>
+                </CardTitle>
+                <CardDescription className="text-base">
+                  Essential tools for daily restaurant operations
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Reduced pizza waste by 2.1%</p>
-                      <p className="text-xs text-muted-foreground">2 hours ago • Saved $45 this week</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                    <Package className="h-5 w-5 text-blue-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Restocked tomatoes - 50 lbs</p>
-                      <p className="text-xs text-muted-foreground">4 hours ago • Auto-reorder triggered</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3 p-3 bg-orange-50 dark:bg-orange-950 rounded-lg">
-                    <AlertTriangle className="h-5 w-5 text-orange-600" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Lettuce expires in 2 days</p>
-                      <p className="text-xs text-muted-foreground">6 hours ago • Consider daily special</p>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <GradientButton variant="primary" className="h-24 flex flex-col items-center justify-center space-y-2">
+                    <Plus className="h-8 w-8" />
+                    <span className="font-semibold">Add Item</span>
+                  </GradientButton>
+                  <GradientButton variant="success" className="h-24 flex flex-col items-center justify-center space-y-2">
+                    <Package className="h-8 w-8" />
+                    <span className="font-semibold">Update Stock</span>
+                  </GradientButton>
+                  <GradientButton variant="warning" className="h-24 flex flex-col items-center justify-center space-y-2">
+                    <AlertTriangle className="h-8 w-8" />
+                    <span className="font-semibold">View Alerts</span>
+                  </GradientButton>
+                  <GradientButton variant="info" className="h-24 flex flex-col items-center justify-center space-y-2">
+                    <FileText className="h-8 w-8" />
+                    <span className="font-semibold">Reports</span>
+                  </GradientButton>
                 </div>
               </CardContent>
-            </Card>
-          </TabsContent>
+            </ModernCard>
+          </div>
 
-          {/* Inventory Tab - Full Featured */}
-          <TabsContent value="inventory">
-            <BetaInventoryManager />
-          </TabsContent>
+          {/* Recent Activity Stream */}
+          <ModernCard gradient="purple" className="w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-xl font-bold">Live Activity Stream</span>
+              </CardTitle>
+              <CardDescription className="text-base">
+                Real-time updates from your restaurant operations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl border border-green-200 dark:border-green-800">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                    <CheckCircle className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-green-800 dark:text-green-200">Pizza waste reduced by 2.1%</p>
+                    <p className="text-sm text-green-600 dark:text-green-400">2 hours ago • Saved $45 this week</p>
+                  </div>
+                  <Badge className="bg-green-600 text-white">+$45</Badge>
+                </div>
+                
+                <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-2xl border border-blue-200 dark:border-blue-800">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                    <Package className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-blue-800 dark:text-blue-200">Restocked tomatoes - 50 lbs</p>
+                    <p className="text-sm text-blue-600 dark:text-blue-400">4 hours ago • Auto-reorder triggered</p>
+                  </div>
+                  <Badge className="bg-blue-600 text-white">Auto</Badge>
+                </div>
+                
+                <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 rounded-2xl border border-orange-200 dark:border-orange-800">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg">
+                    <AlertTriangle className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-semibold text-orange-800 dark:text-orange-200">Lettuce expires in 2 days</p>
+                    <p className="text-sm text-orange-600 dark:text-orange-400">6 hours ago • Consider daily special</p>
+                  </div>
+                  <Badge className="bg-orange-600 text-white">Alert</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </ModernCard>
 
-          {/* Waste Analytics Tab - Full Featured */}
-          <TabsContent value="waste">
-            <BetaWasteAnalytics />
-          </TabsContent>
-
-          <TabsContent value="menu">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <ChefHat className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Menu Performance & Recipe Costing</h3>
-                <p className="text-muted-foreground mb-4">
-                  Track menu item performance, calculate recipe costs, and optimize profit margins...
-                </p>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Menu Item
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="suppliers">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Truck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Supplier Management</h3>
-                <p className="text-muted-foreground mb-4">
-                  Track supplier performance, compare prices, and automate ordering...
-                </p>
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Supplier
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="alerts">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Smart Alerts & Notifications</h3>
-                <p className="text-muted-foreground mb-4">
-                  Intelligent alerts for low stock, expiring items, and cost overruns...
-                </p>
-                <Button>
-                  <Bell className="h-4 w-4 mr-2" />
-                  Configure Alerts
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="reports">
-            <Card>
-              <CardContent className="p-8 text-center">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Custom Reports & Analytics</h3>
-                <p className="text-muted-foreground mb-4">
-                  Generate detailed reports on waste, costs, and operational efficiency...
-                </p>
-                <Button>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Mobile Interface Tab - Full Featured */}
-          <TabsContent value="mobile">
-            <BetaMobileInterface />
-          </TabsContent>
-        </Tabs>
+        </div>
+      </div>
       </div>
     </DashboardLayout>
   )

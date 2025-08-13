@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
+import { GradientButton } from '@/components/ui/gradient-button'
+import { MetricCard } from '@/components/ui/metric-card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -153,95 +155,84 @@ export function BetaWasteAnalytics() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Beta Success Banner */}
-      <Card className="border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <TrendingDown className="h-6 w-6 text-green-600" />
+    <div className="space-y-8">
+      {/* Modern Success Banner */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-green-600/10 via-emerald-600/10 to-teal-600/10 rounded-3xl"></div>
+        <ModernCard gradient="green" className="relative border-0 shadow-2xl">
+          <CardContent className="p-8">
+            <div className="flex flex-col lg:flex-row items-center justify-between space-y-6 lg:space-y-0">
+              <div className="flex items-center space-x-6">
+                <div className="relative">
+                  <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-green-500/25">
+                    <TrendingDown className="h-10 w-10 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse shadow-lg"></div>
+                </div>
+                <div>
+                  <h1 className="text-4xl font-black bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent mb-2">
+                    🎉 Waste Reduction Champion!
+                  </h1>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                    {totalWasteReduction.toFixed(1)}% Average Reduction Achieved
+                  </h2>
+                  <p className="text-lg text-muted-foreground">
+                    Monthly savings: <span className="font-bold text-green-600">${totalMonthlySavings.toFixed(0)}</span> through intelligent management
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-green-900 dark:text-green-100">
-                  🎉 Amazing Progress: {totalWasteReduction.toFixed(1)}% Average Waste Reduction!
-                </h3>
-                <p className="text-green-700 dark:text-green-300">
-                  You've saved ${totalMonthlySavings.toFixed(0)} this month through smarter inventory management
-                </p>
+              <div className="flex flex-col items-center space-y-4">
+                <Badge className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 text-lg font-bold shadow-lg">
+                  🏆 WASTE WARRIOR
+                </Badge>
+                <GradientButton variant="success" size="lg" glow>
+                  <Sparkles className="h-5 w-5 mr-2" />
+                  View Detailed Analysis
+                </GradientButton>
               </div>
-            </div>
-            <Badge className="bg-green-600 text-white px-4 py-2">
-              BETA SUCCESS
-            </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-green-200 bg-green-50 dark:bg-green-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">Monthly Savings</p>
-                <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                  ${totalMonthlySavings.toFixed(0)}
-                </p>
-                <p className="text-xs text-green-600 flex items-center mt-1">
-                  <ArrowUpRight className="h-3 w-3 mr-1" />
-                  +{totalWasteReduction.toFixed(1)}% improvement
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
-        </Card>
+        </ModernCard>
+      </div>
 
-        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Waste Reduction</p>
-                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                  {totalWasteReduction.toFixed(1)}%
-                </p>
-                <p className="text-xs text-blue-600">Average across all items</p>
-              </div>
-              <TrendingDown className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Modern Analytics Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <MetricCard
+          title="Monthly Savings"
+          value={`$${totalMonthlySavings.toFixed(0)}`}
+          subtitle={`+${totalWasteReduction.toFixed(1)}% improvement`}
+          icon={DollarSign}
+          trend={{
+            value: `+${totalWasteReduction.toFixed(1)}% improvement`,
+            positive: true,
+            icon: ArrowUpRight
+          }}
+          gradient="green"
+        />
 
-        <Card className="border-purple-200 bg-purple-50 dark:bg-purple-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Total Waste Cost</p>
-                <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                  ${totalWasteCost.toFixed(0)}
-                </p>
-                <p className="text-xs text-purple-600">Before optimization</p>
-              </div>
-              <Target className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Waste Reduction"
+          value={`${totalWasteReduction.toFixed(1)}%`}
+          subtitle="Average across all items"
+          icon={TrendingDown}
+          gradient="blue"
+        />
 
-        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">AI Insights</p>
-                <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                  {insights.length}
-                </p>
-                <p className="text-xs text-orange-600">Actionable recommendations</p>
-              </div>
-              <Sparkles className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Total Waste Cost"
+          value={`$${totalWasteCost.toFixed(0)}`}
+          subtitle="Before optimization"
+          icon={Target}
+          gradient="purple"
+        />
+
+        <MetricCard
+          title="AI Insights"
+          value={insights.length}
+          subtitle="Actionable recommendations"
+          icon={Sparkles}
+          gradient="orange"
+        />
       </div>
 
       {/* Main Analytics Interface */}

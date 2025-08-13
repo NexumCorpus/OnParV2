@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
+import { GradientButton } from '@/components/ui/gradient-button'
+import { MetricCard } from '@/components/ui/metric-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { 
   Package, 
   Plus, 
@@ -153,94 +154,71 @@ export function BetaInventoryManager() {
     .reduce((sum, item) => sum + (item.wasteReduction || 0), 0) / inventoryItems.filter(item => item.wasteReduction).length
 
   return (
-    <div className="space-y-6">
-      {/* Beta Success Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-green-200 bg-green-50 dark:bg-green-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">Total Value</p>
-                <p className="text-2xl font-bold text-green-900 dark:text-green-100">
-                  ${totalValue.toLocaleString()}
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
+    <div className="space-y-8">
+      {/* Modern Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <MetricCard
+          title="Total Inventory Value"
+          value={`$${totalValue.toLocaleString()}`}
+          subtitle="Current stock value"
+          icon={DollarSign}
+          gradient="green"
+        />
 
-        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">Need Attention</p>
-                <p className="text-2xl font-bold text-orange-900 dark:text-orange-100">
-                  {lowStockCount + expiringCount}
-                </p>
-                <p className="text-xs text-orange-600">
-                  {lowStockCount} low, {expiringCount} expiring
-                </p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Items Need Attention"
+          value={lowStockCount + expiringCount}
+          subtitle={`${lowStockCount} low stock, ${expiringCount} expiring`}
+          icon={AlertTriangle}
+          gradient="orange"
+        />
 
-        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">Avg Waste Reduction</p>
-                <p className="text-2xl font-bold text-blue-900 dark:text-blue-100">
-                  {totalWasteReduction.toFixed(1)}%
-                </p>
-                <p className="text-xs text-blue-600">Since using OnPar</p>
-              </div>
-              <TrendingDown className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Avg Waste Reduction"
+          value={`${totalWasteReduction.toFixed(1)}%`}
+          subtitle="Since using OnPar"
+          icon={TrendingDown}
+          gradient="blue"
+        />
 
-        <Card className="border-purple-200 bg-purple-50 dark:bg-purple-950">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-800 dark:text-purple-200">Items Tracked</p>
-                <p className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                  {inventoryItems.length}
-                </p>
-                <p className="text-xs text-purple-600">Across {categories.length - 1} categories</p>
-              </div>
-              <Package className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
+        <MetricCard
+          title="Items Tracked"
+          value={inventoryItems.length}
+          subtitle={`Across ${categories.length - 1} categories`}
+          icon={Package}
+          gradient="purple"
+        />
       </div>
 
-      {/* Main Inventory Interface */}
-      <Card>
+      {/* Modern Inventory Interface */}
+      <ModernCard gradient="blue" glow>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div>
-              <CardTitle className="flex items-center space-x-2">
-                <Package className="h-5 w-5" />
-                <span>Smart Inventory Management</span>
-                <Badge className="bg-blue-100 text-blue-800">BETA</Badge>
+              <CardTitle className="flex items-center space-x-3 text-2xl">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <Package className="h-6 w-6 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                  Smart Inventory Hub
+                </span>
+                <Badge className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1">
+                  AI-POWERED
+                </Badge>
               </CardTitle>
-              <CardDescription>
-                AI-powered inventory tracking with waste reduction insights
+              <CardDescription className="text-base mt-2">
+                Intelligent inventory tracking with real-time waste reduction insights
               </CardDescription>
             </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
+            <div className="flex space-x-3">
+              <GradientButton variant="info" size="md">
                 <Scan className="h-4 w-4 mr-2" />
                 Scan Barcode
-              </Button>
-              <Button size="sm" onClick={() => setShowAddItem(true)}>
+              </GradientButton>
+              <GradientButton variant="primary" size="md" onClick={() => setShowAddItem(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Item
-              </Button>
+              </GradientButton>
             </div>
           </div>
         </CardHeader>
@@ -271,20 +249,30 @@ export function BetaInventoryManager() {
             </div>
           </div>
 
-          {/* Inventory Items Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Modern Inventory Items Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item) => (
-              <Card key={item.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
+              <ModernCard 
+                key={item.id} 
+                gradient={
+                  item.status === 'good' ? 'green' : 
+                  item.status === 'low' ? 'orange' : 
+                  item.status === 'expiring' ? 'pink' : 'cyan'
+                }
+                className="group"
+              >
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-sm">{item.name}</h3>
-                      <p className="text-xs text-muted-foreground">{item.category}</p>
+                      <h3 className="font-bold text-lg mb-1">{item.name}</h3>
+                      <p className="text-sm text-muted-foreground font-medium">{item.category}</p>
                     </div>
-                    <Badge className={`text-xs ${getStatusColor(item.status)}`}>
-                      {getStatusIcon(item.status)}
-                      <span className="ml-1 capitalize">{item.status}</span>
-                    </Badge>
+                    <div className="flex flex-col items-end space-y-2">
+                      <Badge className={`text-xs font-semibold ${getStatusColor(item.status)} shadow-sm`}>
+                        {getStatusIcon(item.status)}
+                        <span className="ml-1 capitalize">{item.status}</span>
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="space-y-3">
