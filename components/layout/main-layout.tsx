@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode } from 'react'
+import React, { ReactNode, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
@@ -19,7 +19,6 @@ import {
   Menu,
   X
 } from 'lucide-react'
-import { useState } from 'react'
 
 interface DashboardLayoutProps {
   children: ReactNode

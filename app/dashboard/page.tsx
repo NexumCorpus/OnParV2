@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
 import { GradientButton } from '@/components/ui/gradient-button'

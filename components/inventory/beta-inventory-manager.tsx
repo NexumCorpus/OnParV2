@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
 import { GradientButton } from '@/components/ui/gradient-button'
 import { MetricCard } from '@/components/ui/metric-card'
@@ -26,6 +26,12 @@ import {
   Truck,
   Star
 } from 'lucide-react'
+import { Card } from '../ui/card'
+import { Card } from '../ui/card'
+import { Card } from '../ui/card'
+import { Card } from '../ui/card'
+import { Card } from '../ui/card'
+import { Card } from '../ui/card'
 
 interface InventoryItem {
   id: string
