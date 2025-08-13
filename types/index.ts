@@ -345,16 +345,17 @@ export interface MetricCardData {
 // AI Insights types
 export interface AIInsight {
   id: string
+  user_id: string
   type: 'waste_reduction' | 'cost_optimization' | 'inventory_optimization' | 'menu_optimization'
   title: string
   description: string
   impact: 'high' | 'medium' | 'low'
-  estimatedSavings: number
+  estimated_savings: number
   actionable: boolean
   confidence: number
-  dataPoints: string[]
-  recommendedActions: string[]
-  relatedItems: Array<{
+  data_points: string[]
+  recommended_actions: string[]
+  related_items: Array<{
     id: string
     name: string
     type: 'inventory' | 'menu' | 'recipe'
@@ -365,6 +366,67 @@ export interface AIInsight {
   timeframe: string
   priority: 'urgent' | 'high' | 'medium' | 'low'
   category: string
+  status: 'pending' | 'in_progress' | 'completed' | 'dismissed'
+  implementation_date?: string
+  completion_date?: string
+  actual_savings?: number
+  created_at: string
+  updated_at: string
+}
+
+export interface AIInsightImplementation {
+  id: string
+  insight_id: string
+  user_id: string
+  action_taken: string
+  notes?: string
+  impact_measured?: number
+  success_rating?: number // 1-5 rating
+  created_at: string
+}
+
+export interface WasteAnalysisData {
+  id: string
+  user_id: string
+  analysis_date: string
+  total_inventory_value: number
+  monthly_spend: number
+  average_waste_percentage: number
+  inventory_turnover: number
+  cost_efficiency_score: number
+  seasonal_factor: number
+  data_quality_score: number
+  created_at: string
+}
+
+export interface ActionPlan {
+  id: string
+  priority: 'high' | 'medium' | 'low'
+  category: 'ordering' | 'storage' | 'preparation' | 'menu'
+  description: string
+  expectedSavings: number
+  implementationSteps: string[]
+  timeframe: string
+}
+
+export interface ImpactMetrics {
+  actualSavings: number
+  wasteReduction: number
+  efficiencyGain: number
+  implementationSuccess: boolean
+  timeToComplete: number
+  userSatisfaction: number
+}
+
+export interface WasteAnalysis {
+  totalWaste: number
+  wasteByCategory: Record<string, number>
+  trendAnalysis: {
+    direction: 'increasing' | 'decreasing' | 'stable'
+    rate: number
+  }
+  seasonalFactors: Record<string, number>
+  recommendations: string[]
 }
 
 // Export all types

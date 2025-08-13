@@ -23,16 +23,25 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <head>
+        <meta name="theme-color" content="hsl(0 0% 100%)" />
+        <meta name="color-scheme" content="light dark" />
+      </head>
+      <body className="font-sans antialiased">
         <ErrorBoundary>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+          <ThemeProvider>
             {children}
-            <Toaster richColors position="top-right" />
+            <Toaster 
+              richColors 
+              position="top-right" 
+              toastOptions={{
+                style: {
+                  background: 'hsl(var(--card))',
+                  color: 'hsl(var(--card-foreground))',
+                  border: '1px solid hsl(var(--border))',
+                },
+              }}
+            />
           </ThemeProvider>
         </ErrorBoundary>
       </body>

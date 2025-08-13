@@ -1,32 +1,133 @@
 import { Database } from './supabase'
+import { supabase } from './supabase'
+import { AIInsight, WasteAnalysisData, ActionPlan, ImpactMetrics, WasteAnalysis } from '@/types'
 
 type InventoryItem = Database['public']['Tables']['inventory_items']['Row']
 type MenuItem = Database['public']['Tables']['menu_items']['Row']
 
-export interface AIInsight {
-  id: string
-  type: 'waste_reduction' | 'cost_optimization' | 'inventory_optimization' | 'menu_optimization'
-  title: string
-  description: string
-  impact: 'high' | 'medium' | 'low'
-  estimatedSavings: number
-  actionable: boolean
-  confidence: number
-  dataPoints: string[]
-  recommendedActions: string[]
-  relatedItems: Array<{
-    id: string
-    name: string
-    type: 'inventory' | 'menu' | 'recipe'
-    currentValue: number
-    suggestedValue: number
-    unit?: string
-  }>
-  timeframe: string
-  priority: 'urgent' | 'high' | 'medium' | 'low'
-  category: string
+// Database functions for AI insights
+export async function saveAIInsight(insight: Omit<AIInsight, 'id' | 'created_at' | 'updated_at'>): Promise<AIInsight | null> {
+  try {
+    const { data, error } = await supabase
+      .from('ai_insights')
+      .insert({
+        user_id: insight.user_id,
+        type: insight.type,
+        title: insight.title,
+        description: insight.description,
+        impact: insight.impact,
+        estimated_savings: insight.estimated_savings,
+        actionable: insight.actionable,
+        confidence: insight.confidence,
+        data_points: insight.data_points,
+        recommended_actions: insight.recommended_actions,
+        related_items: insight.related_items,
+        timeframe: insight.timeframe,
+        priority: insight.priority,
+        category: insight.category,
+        status: insight.status || 'pending'
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error saving AI insight:', error)
+      return null
+    }
+
+    return data
+  } catch (error) {
+    console.error('Error saving AI insight:', error)
+    return null
+  }
 }
 
+export async function getAIInsights(userId: string): Promise<AIInsight[]> {
+  try {
+    const { data, error } = await supabase
+      .from('ai_insights')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching AI insights:', error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error('Error fetching AI insights:', error)
+    return []
+  }
+}
+
+export async function updateAIInsightStatus(
+  insightId: string, 
+  status: 'pending' | 'in_progress' | 'completed' | 'dismissed',
+  actualSavings?: number
+): Promise<boolean> {
+  try {
+    const updateData: any = { 
+      status,
+      updated_at: new Date().toISOString()
+    }
+
+    if (status === 'in_progress') {
+      updateData.implementation_date = new Date().toISOString()
+    } else if (status === 'completed') {
+      updateData.completion_date = new Date().toISOString()
+      if (actualSavings !== undefined) {
+        updateData.actual_savings = actualSavings
+      }
+    }
+
+    const { error } = await supabase
+      .from('ai_insights')
+      .update(updateData)
+      .eq('id', insightId)
+
+    if (error) {
+      console.error('Error updating AI insight status:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error updating AI insight status:', error)
+    return false
+  }
+}
+
+export async function saveWasteAnalysisData(data: Omit<WasteAnalysisData, 'id' | 'created_at'>): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('waste_analysis_data')
+      .upsert({
+        user_id: data.user_id,
+        analysis_date: data.analysis_date,
+        total_inventory_value: data.total_inventory_value,
+        monthly_spend: data.monthly_spend,
+        average_waste_percentage: data.average_waste_percentage,
+        inventory_turnover: data.inventory_turnover,
+        cost_efficiency_score: data.cost_efficiency_score,
+        seasonal_factor: data.seasonal_factor,
+        data_quality_score: data.data_quality_score
+      })
+
+    if (error) {
+      console.error('Error saving waste analysis data:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error saving waste analysis data:', error)
+    return false
+  }
+}
+
+// Cost-effective AI insights generation (placeholder algorithms)
 export function generateAIInsights(
   inventoryItems: InventoryItem[],
   menuItems: MenuItem[],
@@ -35,6 +136,67 @@ export function generateAIInsights(
   restaurantName?: string
 ): AIInsight[] {
   return generateEnhancedInsights(inventoryItems, menuItems, monthlySpend, monthlyBudget, restaurantName)
+}
+
+// Generate and save insights to database
+export async function generateAndSaveInsights(
+  userId: string,
+  inventoryItems: InventoryItem[],
+  menuItems: MenuItem[],
+  monthlySpend: number,
+  monthlyBudget?: number | null,
+  restaurantName?: string
+): Promise<AIInsight[]> {
+  // Generate insights using cost-effective algorithms
+  const insights = generateEnhancedInsights(inventoryItems, menuItems, monthlySpend, monthlyBudget, restaurantName)
+  
+  // Save waste analysis data
+  const wasteAnalysisData: Omit<WasteAnalysisData, 'id' | 'created_at'> = {
+    user_id: userId,
+    analysis_date: new Date().toISOString().split('T')[0],
+    total_inventory_value: inventoryItems.reduce((sum, item) => sum + (item.quantity * item.price_per_unit), 0),
+    monthly_spend: monthlySpend,
+    average_waste_percentage: menuItems.length > 0 
+      ? menuItems.reduce((sum, item) => sum + item.waste_percentage, 0) / menuItems.length
+      : 5,
+    inventory_turnover: inventoryItems.length > 0 
+      ? monthlySpend / Math.max(inventoryItems.reduce((sum, item) => sum + (item.quantity * item.price_per_unit), 0), 1)
+      : 0,
+    cost_efficiency_score: calculateCostEfficiency(inventoryItems, monthlySpend),
+    seasonal_factor: calculateSeasonalFactors(inventoryItems).multiplier,
+    data_quality_score: Math.min(100, (inventoryItems.length + menuItems.length) / 20 * 100)
+  }
+
+  await saveWasteAnalysisData(wasteAnalysisData)
+
+  // Save insights to database
+  const savedInsights: AIInsight[] = []
+  for (const insight of insights) {
+    const insightToSave: Omit<AIInsight, 'id' | 'created_at' | 'updated_at'> = {
+      user_id: userId,
+      type: insight.type,
+      title: insight.title,
+      description: insight.description,
+      impact: insight.impact,
+      estimated_savings: insight.estimatedSavings,
+      actionable: insight.actionable,
+      confidence: insight.confidence,
+      data_points: insight.dataPoints,
+      recommended_actions: insight.recommendedActions,
+      related_items: insight.relatedItems,
+      timeframe: insight.timeframe,
+      priority: insight.priority,
+      category: insight.category,
+      status: 'pending'
+    }
+
+    const saved = await saveAIInsight(insightToSave)
+    if (saved) {
+      savedInsights.push(saved)
+    }
+  }
+
+  return savedInsights
 }
 
 function generateEnhancedInsights(
@@ -323,7 +485,7 @@ function generateEnhancedInsights(
         'Develop creative ways to use near-expiry ingredients',
         'Set up automated low-stock alerts to prevent over-ordering'
       ],
-      relatedItems: items.filter(item => {
+      relatedItems: inventoryItems.filter(item => {
         const daysToExpiry = item.expiry_date 
           ? Math.ceil((new Date(item.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
           : 999
