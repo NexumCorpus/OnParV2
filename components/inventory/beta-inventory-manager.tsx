@@ -188,6 +188,16 @@ export function BetaInventoryManager() {
           icon={Package}
           gradient="purple"
         />
+          gradient="blue"
+        />
+
+        <MetricCard
+          title="Items Tracked"
+          value={inventoryItems.length}
+          subtitle={`Across ${categories.length - 1} categories`}
+          icon={Package}
+          gradient="purple"
+        />
       </div>
 
       {/* Modern Inventory Interface */}

@@ -1,23 +1,38 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { CSP_HEADER } from './lib/security-middleware'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Create response with security headers
+  // Create response with enhanced security headers
   const response = NextResponse.next()
   
-  // Add essential security headers
+  // Enhanced security headers
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('Referrer-Policy', 'origin-when-cross-origin')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Content-Security-Policy', CSP_HEADER)
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
   
-  // Handle CORS for API routes
+  // Handle CORS for API routes with stricter controls
   if (pathname.startsWith('/api/')) {
-    response.headers.set('Access-Control-Allow-Origin', (typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_APP_URL : undefined) || '*')
+    const origin = request.headers.get('origin')
+    const allowedOrigins = [
+      process.env.NEXT_PUBLIC_APP_URL,
+      'http://localhost:3000',
+      'https://localhost:3000'
+    ].filter(Boolean)
+    
+    if (origin && allowedOrigins.includes(origin)) {
+      response.headers.set('Access-Control-Allow-Origin', origin)
+    }
+    
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
+    response.headers.set('Access-Control-Max-Age', '86400')
   }
   
   // Handle preflight requests

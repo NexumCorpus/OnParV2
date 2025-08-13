@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import Link from 'next/link'
 import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
 import { GradientButton } from '@/components/ui/gradient-button'
@@ -40,8 +40,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const { isDesktop, isMobile } = useBreakpoint()
   
-  // Realistic beta demo data that shows clear value
-  const [metrics, setMetrics] = useState({
+  // Memoized metrics to prevent unnecessary re-renders
+  const metrics = useMemo(() => ({
     totalInventoryValue: 12450,
     monthlySpend: 8200,
     lowStockItems: 8,
@@ -54,14 +54,24 @@ export default function DashboardPage() {
     wasteBeforeBeta: 8.2,
     wasteAfterBeta: 6.7,
     projectedAnnualSavings: 15000
-  })
+  }), [])
 
-  const [activeTab, setActiveTab] = useState('overview')
+  // Memoized calculations
+  const calculatedMetrics = useMemo(() => ({
+    totalAttentionItems: metrics.lowStockItems + metrics.expiringItems,
+    wasteImprovement: (metrics.wasteBeforeBeta - metrics.wasteAfterBeta).toFixed(1),
+    efficiencyTrend: "+12% this month"
+  }), [metrics])
+
+  const handleLoadingComplete = useCallback(() => {
+    setLoading(false)
+  }, [])
 
   useEffect(() => {
-    // Simulate realistic loading
-    setTimeout(() => setLoading(false), 600)
-  }, [])
+    // Optimized loading with cleanup
+    const timer = setTimeout(handleLoadingComplete, 600)
+    return () => clearTimeout(timer)
+  }, [handleLoadingComplete])
 
   if (loading) {
     return (
@@ -78,8 +88,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
-        <div className="space-y-8 p-6">
+      <div className="space-y-8">
           {/* Modern Hero Section */}
           <div className="relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-indigo-600/10 rounded-3xl"></div>
@@ -459,7 +468,6 @@ export default function DashboardPage() {
           </ModernCard>
 
         </div>
-      </div>
       </div>
     </DashboardLayout>
   )
