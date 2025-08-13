@@ -11,7 +11,11 @@
     "type-check": "tsc --noEmit",
     "build:analyze": "ANALYZE=true npm run build",
     "postbuild": "echo 'Build completed successfully'",
-    "health": "curl -f http://localhost:3000/api/health || exit 1"
+    "health": "curl -f http://localhost:3000/api/health || exit 1",
+    "deploy:check": "node scripts/deploy-beta.js",
+    "deploy:vercel": "npm run deploy:check && vercel --prod",
+    "beta:setup": "node scripts/deploy-beta.js && echo 'Ready for beta launch!'",
+    "beta:demo": "echo 'Starting demo mode...' && npm run dev"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
