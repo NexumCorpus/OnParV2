@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Button } from './button'
+import { Card, CardContent } from './card'
+import { Badge } from './badge'
 import { Accessibility, Plus, Minus, Eye, EyeOff, Contrast, Type } from 'lucide-react'
 
 export function AccessibilityToolbar() {
