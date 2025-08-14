@@ -3,20 +3,20 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Avatar, AvatarFallback } from '../ui/avatar'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { FeedbackButton } from '@/components/ui/feedback-button'
-import { getCurrentUser, signOut } from '@/lib/auth'
-import { supabase } from '@/lib/supabase'
+} from '../ui/dropdown-menu'
+import { ThemeToggle } from '../ui/theme-toggle'
+import { FeedbackButton } from '../ui/feedback-button'
+import { getCurrentUser, signOut } from '../../lib/auth'
+import { supabase } from '../../lib/supabase'
 import { ChefHat, User, Settings, CreditCard, BarChart3, LogOut, Bell, Star, Zap, Plug } from 'lucide-react'
 import { toast } from 'sonner'
 

@@ -1,7 +1,7 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Button } from './button'
+import { cn } from '../../lib/utils'
 import { forwardRef } from 'react'
 
 interface GradientButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

@@ -1,7 +1,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 const alertVariants = cva(
   "relative w-full rounded-[var(--radius-lg)] border px-6 py-5 text-sm shadow-[var(--shadow-sm)] transition-all duration-[var(--duration-normal)] [&>svg~*]:pl-8 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-6 [&>svg]:top-6 [&>svg]:text-current animate-in slide-in-from-top-2 fade-in-0",
