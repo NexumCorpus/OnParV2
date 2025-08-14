@@ -6,12 +6,12 @@ import { ChefHat, TrendingDown, DollarSign, Smartphone, CheckCircle, Star, MapPi
 import { toast } from 'sonner'
 
 // Direct component imports to avoid path resolution issues
-import { Button } from '../../components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
-import { Input } from '../../components/ui/input'
-import { Label } from '../../components/ui/label'
-import { Textarea } from '../../components/ui/textarea'
-import { Badge } from '../../components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
+import { Textarea } from '../components/ui/textarea'
+import { Badge } from '../components/ui/badge'
 
 export default function BetaSignupPage() {
   const [formData, setFormData] = useState({
