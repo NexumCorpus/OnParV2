@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
 import { GradientButton } from '@/components/ui/gradient-button'
 import { MetricCard } from '@/components/ui/metric-card'
