@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { supabase } from '@/lib/supabase'
-import { logError, logUserAction } from '@/lib/error-logging'
+import { supabase } from '../../../../lib/supabase'
+import { logError, logUserAction } from '../../../../lib/error-logging'
 
 const stripe = new Stripe((typeof process !== 'undefined' ? process.env.STRIPE_SECRET_KEY : undefined) || 'sk_test_placeholder', {
   apiVersion: '2023-10-16',

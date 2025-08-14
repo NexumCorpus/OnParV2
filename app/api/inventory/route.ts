@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createInventoryItem, getInventoryItems, updateInventoryItem, deleteInventoryItem } from '@/lib/inventory'
-import { getCurrentUser } from '@/lib/auth'
-import { logError, logUserAction } from '@/lib/error-logging'
+import { createInventoryItem, getInventoryItems, updateInventoryItem, deleteInventoryItem } from '../../../lib/inventory'
+import { getCurrentUser } from '../../../lib/auth'
+import { logError, logUserAction } from '../../../lib/error-logging'
 
 export const dynamic = 'force-dynamic'
 

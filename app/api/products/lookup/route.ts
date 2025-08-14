@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
-import { SECURITY_HEADERS, getClientIP } from '@/lib/security'
-import { apiRateLimiter } from '@/lib/rate-limiter'
+import { supabase } from '../../../../lib/supabase'
+import { SECURITY_HEADERS, getClientIP } from '../../../../lib/security'
+import { apiRateLimiter } from '../../../../lib/rate-limiter'
 
 export const dynamic = 'force-dynamic'
 

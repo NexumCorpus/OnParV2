@@ -1,8 +1,8 @@
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { CheckCircle, ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import Link from 'next/link'
 
 function SuccessContent() {

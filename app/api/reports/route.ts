@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
-import { logError, logUserAction } from '@/lib/error-logging'
-import { supabase } from '@/lib/supabase'
+import { getCurrentUser } from '../../../lib/auth'
+import { logError, logUserAction } from '../../../lib/error-logging'
+import { supabase } from '../../../lib/supabase'
 
 export const dynamic = 'force-dynamic'
 

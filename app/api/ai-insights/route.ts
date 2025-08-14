@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { secureApiRoute, sanitizeInput } from '@/lib/security-middleware'
+import { secureApiRoute, sanitizeInput } from '../../../lib/security-middleware'
 
 export const dynamic = 'force-dynamic'
 

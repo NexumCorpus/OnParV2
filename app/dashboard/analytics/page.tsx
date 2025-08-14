@@ -1,7 +1,7 @@
 'use client'
 
-import { DashboardLayout } from '@/components/layout/main-layout'
-import { BetaWasteAnalytics } from '@/components/analytics/beta-waste-analytics'
+import { DashboardLayout } from '../../../components/layout/main-layout'
+import { BetaWasteAnalytics } from '../../../components/analytics/beta-waste-analytics'
 
 export default function AnalyticsPage() {
   return (

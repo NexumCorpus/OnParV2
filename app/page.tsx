@@ -1,9 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Badge } from '../components/ui/badge'
 import { ChefHat, TrendingDown, DollarSign, Smartphone, BarChart3, Shield, Zap, Star, ArrowRight, CheckCircle, Users, Clock, Award } from 'lucide-react'
 
 export default function HomePage() {

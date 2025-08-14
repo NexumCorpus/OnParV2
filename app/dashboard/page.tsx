@@ -1,10 +1,10 @@
 'use client'
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
-import { DashboardLayout } from '@/components/layout/main-layout'
-import { ModernCard, CardContent } from '@/components/ui/modern-card'
-import { MetricCard } from '@/components/ui/metric-card'
-import { useBreakpoint } from '@/hooks/use-breakpoint'
+import { DashboardLayout } from '../../components/layout/main-layout'
+import { ModernCard, CardContent } from '../../components/ui/modern-card'
+import { MetricCard } from '../../components/ui/metric-card'
+import { useBreakpoint } from '../../hooks/use-breakpoint'
 import { DollarSign, Package, AlertTriangle, TrendingDown } from 'lucide-react'
 
 export default function DashboardPage() {

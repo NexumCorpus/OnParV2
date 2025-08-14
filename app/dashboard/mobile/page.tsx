@@ -1,7 +1,7 @@
 'use client'
 
-import { DashboardLayout } from '@/components/layout/main-layout'
-import { BetaMobileInterface } from '@/components/mobile/beta-mobile-interface'
+import { DashboardLayout } from '../../../components/layout/main-layout'
+import { BetaMobileInterface } from '../../../components/mobile/beta-mobile-interface'
 
 export default function MobilePage() {
   return (

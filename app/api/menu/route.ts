@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createMenuItem, getMenuItems, updateMenuItem, deleteMenuItem } from '@/lib/menu'
-import { getCurrentUser } from '@/lib/auth'
-import { logError, logUserAction } from '@/lib/error-logging'
+import { createMenuItem, getMenuItems, updateMenuItem, deleteMenuItem } from '../../../lib/menu'
+import { getCurrentUser } from '../../../lib/auth'
+import { logError, logUserAction } from '../../../lib/error-logging'
 
 export const dynamic = 'force-dynamic'
 

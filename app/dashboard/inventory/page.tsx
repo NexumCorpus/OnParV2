@@ -1,7 +1,7 @@
 'use client'
 
-import { DashboardLayout } from '@/components/layout/main-layout'
-import { BetaInventoryManager } from '@/components/inventory/beta-inventory-manager'
+import { DashboardLayout } from '../../../components/layout/main-layout'
+import { BetaInventoryManager } from '../../../components/inventory/beta-inventory-manager'
 
 export default function InventoryPage() {
   return (
