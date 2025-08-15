@@ -1,13 +1,13 @@
 'use client'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '../ui/badge'
+import { Alert, AlertDescription } from '../ui/alert'
+import { Button } from '../ui/button'
 import { AlertTriangle, Calendar, DollarSign, Zap, TrendingUp, Star, ArrowRight, Target, Lightbulb } from 'lucide-react'
-import { Database } from '@/lib/supabase'
-import { getLowStockItems, getExpiringItems, calculateEstimatedSavings } from '@/lib/inventory'
-import { generateAIInsights, AIInsight } from '@/lib/ai-insights'
+import { Database } from '../../lib/supabase'
+import { getLowStockItems, getExpiringItems, calculateEstimatedSavings } from '../../lib/inventory'
+import { generateAIInsights, AIInsight } from '../../lib/ai-insights'
 import { useState, useEffect } from 'react'
 
 type InventoryItem = Database['public']['Tables']['inventory_items']['Row']

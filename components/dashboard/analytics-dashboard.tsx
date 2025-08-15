@@ -1,17 +1,17 @@
 'use client'
 
 import * as React from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Typography } from '@/components/ui/typography'
-import { Stack, Inline } from '@/components/ui/spacing'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CardsGrid } from '@/components/ui/responsive-grid'
-import { RevenueChart } from '@/components/charts/revenue-chart'
-import { InventoryChart } from '@/components/charts/inventory-chart'
-import { WasteReductionChart } from '@/components/charts/waste-reduction-chart'
-import { useBreakpoint } from '@/hooks/use-breakpoint'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Typography } from '../ui/typography'
+import { Stack, Inline } from '../ui/spacing'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { CardsGrid } from '../ui/responsive-grid'
+import { RevenueChart } from '../charts/revenue-chart'
+import { InventoryChart } from '../charts/inventory-chart'
+import { WasteReductionChart } from '../charts/waste-reduction-chart'
+import { useBreakpoint } from '../../hooks/use-breakpoint'
 import { 
   BarChart3, 
   TrendingUp, 

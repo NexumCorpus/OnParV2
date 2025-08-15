@@ -1,11 +1,11 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ModernCard, CardContent } from '@/components/ui/modern-card'
-import { MetricCard } from '@/components/ui/metric-card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
+import { ModernCard, CardContent } from '../ui/modern-card'
+import { MetricCard } from '../ui/metric-card'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Badge } from '../ui/badge'
 import { 
   Package, 
   Plus, 

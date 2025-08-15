@@ -1,12 +1,12 @@
 'use client'
 
 import * as React from 'react'
-import { ChartContainer, SimpleBarChart, SimplePieChart, ChartActions } from '@/components/ui/chart'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Typography } from '@/components/ui/typography'
-import { Stack, Inline } from '@/components/ui/spacing'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ChartContainer, SimpleBarChart, SimplePieChart, ChartActions } from '../ui/chart'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '../ui/badge'
+import { Typography } from '../ui/typography'
+import { Stack, Inline } from '../ui/spacing'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { 
   Package, 
   AlertTriangle, 

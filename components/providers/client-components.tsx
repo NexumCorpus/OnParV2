@@ -1,7 +1,7 @@
 'use client'
 
-import { MobileBottomNav } from '@/components/dashboard/mobile-bottom-nav'
-import { AccessibilityToolbar } from '@/components/ui/accessibility-toolbar'
+import { MobileBottomNav } from '../dashboard/mobile-bottom-nav'
+import { AccessibilityToolbar } from '../ui/accessibility-toolbar'
 
 export function ClientComponents() {
   return (

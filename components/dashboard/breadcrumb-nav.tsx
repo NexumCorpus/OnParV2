@@ -10,7 +10,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
+} from '../ui/breadcrumb'
 import { Home, LayoutDashboard, Package, ChefHat, Settings, CreditCard, BarChart3 } from 'lucide-react'
 
 const routeMap: Record<string, { label: string; icon?: React.ComponentType<{ className?: string }> }> = {

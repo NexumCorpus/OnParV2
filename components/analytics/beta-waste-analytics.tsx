@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
-import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/modern-card'
-import { GradientButton } from '@/components/ui/gradient-button'
-import { MetricCard } from '@/components/ui/metric-card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ModernCard, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/modern-card'
+import { Card } from '../ui/card'
+import { GradientButton } from '../ui/gradient-button'
+import { MetricCard } from '../ui/metric-card'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Progress } from '../ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
 import { 
   TrendingDown, 
   TrendingUp,

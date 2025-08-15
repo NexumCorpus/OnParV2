@@ -4,11 +4,11 @@ import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '../../lib/utils'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Typography } from '@/components/ui/typography'
-import { Stack, Inline } from '@/components/ui/spacing'
-import { useTheme } from '@/components/providers/theme-provider'
+import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Typography } from '../ui/typography'
+import { Stack, Inline } from '../ui/spacing'
+import { useTheme } from '../providers/theme-provider'
 import {
   LayoutDashboard,
   Package,
