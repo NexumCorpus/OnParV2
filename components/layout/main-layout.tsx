@@ -38,7 +38,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 page-transition">
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div 
@@ -47,9 +47,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Enhanced Sidebar with Toast-POS fluidity */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-72 transform bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200 dark:border-gray-800 transition-transform duration-300 ease-in-out lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-72 transform glass-card border-r border-white/10 dark:border-white/5",
+        "transition-all duration-500 cubic-bezier(0.16, 1, 0.3, 1) lg:translate-x-0",
+        "shadow-2xl lg:shadow-xl",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <div className="flex h-full flex-col">
@@ -87,18 +89,39 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-200",
+                    "flex items-center space-x-4 px-5 py-4 rounded-2xl text-sm font-semibold",
+                    "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)",
+                    "hover:scale-[1.02] hover:translate-x-1",
+                    "relative overflow-hidden group",
                     isActive
-                      ? "bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg shadow-blue-500/25"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
+                      ? "bg-gradient-to-r from-primary via-chart-2 to-chart-3 text-white shadow-xl shadow-primary/30"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-white/80 dark:hover:bg-white/10 hover:text-gray-900 dark:hover:text-gray-100 hover:shadow-lg"
                   )}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  <item.icon className={cn(
-                    "h-5 w-5",
-                    isActive ? "text-white" : "text-gray-500 dark:text-gray-400"
-                  )} />
-                  <span>{item.name}</span>
+                  {/* Animated background for active state */}
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-chart-2/20 to-chart-3/20 rounded-2xl animate-pulse" />
+                  )}
+                  
+                  {/* Icon with enhanced animations */}
+                  <div className="relative z-10 flex items-center space-x-4">
+                    <div className={cn(
+                      "p-2 rounded-xl transition-all duration-300",
+                      isActive 
+                        ? "bg-white/20 shadow-lg" 
+                        : "group-hover:bg-primary/10 group-hover:scale-110"
+                    )}>
+                      <item.icon className={cn(
+                        "h-5 w-5 transition-all duration-300",
+                        isActive ? "text-white" : "text-gray-500 dark:text-gray-400 group-hover:text-primary"
+                      )} />
+                    </div>
+                    <span className="relative z-10 font-semibold">{item.name}</span>
+                  </div>
+                  
+                  {/* Hover effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-chart-2/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </Link>
               )
             })}

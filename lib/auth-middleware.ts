@@ -1,259 +1,407 @@
+/**
+ * Enterprise Authentication Middleware
+ * 
+ * Provides middleware functions for protecting routes and checking permissions
+ * using the enterprise authentication system.
+ * 
+ * Requirements: 9.1, 9.2, 9.3
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from './supabase'
+import { EnterpriseAuthService, AuthUser, Permission } from './enterprise-auth'
+import { logError, logUserAction } from './error-logging'
+import { getClientIP } from './security'
 
-// Authentication middleware for API routes
+export interface AuthContext {
+  user: AuthUser
+  tenantId: string
+  organizationId?: string
+  locationId?: string
+}
+
+export interface AuthMiddlewareOptions {
+  requiredPermissions?: Permission[]
+  requireMFA?: boolean
+  allowServiceRole?: boolean
+  rateLimitKey?: string
+}
+
+/**
+ * Authentication middleware for API routes
+ */
 export async function withAuth(
-  handler: (request: NextRequest, context: { user: any }) => Promise<NextResponse>,
-  options: {
-    requireAuth?: boolean
-    requiredRole?: string
-  } = {}
-) {
-  return async (request: NextRequest) => {
-    try {
-      // Check authentication if required
-      if (options.requireAuth !== false) {
-        // Get auth token from request headers
-        const authHeader = request.headers.get('authorization')
-        const token = authHeader?.replace('Bearer ', '')
-
-        if (!token) {
-          return NextResponse.json(
-            { error: 'Authentication required' },
-            { status: 401 }
-          )
-        }
-
-        // Verify token with Supabase
-        const { data: { user }, error } = await supabase.auth.getUser(token)
-
-        if (error || !user) {
-          return NextResponse.json(
-            { error: 'Invalid authentication token' },
-            { status: 401 }
-          )
-        }
-
-        return handler(request, { user })
-      }
-
-      return handler(request, { user: null })
-    } catch (error) {
-      console.error('Auth middleware error:', error)
+  request: NextRequest,
+  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>,
+  options: AuthMiddlewareOptions = {}
+): Promise<NextResponse> {
+  try {
+    // Extract authorization header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
+        { error: 'Missing or invalid authorization header' },
+        { status: 401 }
       )
     }
-  }
-}
-
-// CORS middleware
-export function withCors(
-  handler: (request: NextRequest) => Promise<NextResponse>,
-  options: {
-    origin?: string | string[]
-    methods?: string[]
-    headers?: string[]
-    credentials?: boolean
-  } = {}
-) {
-  return async (request: NextRequest) => {
-    const {
-      origin = '*',
-      methods = ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      headers = ['Content-Type', 'Authorization'],
-      credentials = true
-    } = options
-
-    // Handle preflight requests
-    if (request.method === 'OPTIONS') {
-      return new NextResponse(null, {
-        status: 200,
-        headers: {
-          'Access-Control-Allow-Origin': Array.isArray(origin) ? origin.join(', ') : origin,
-          'Access-Control-Allow-Methods': methods.join(', '),
-          'Access-Control-Allow-Headers': headers.join(', '),
-          'Access-Control-Allow-Credentials': credentials.toString(),
-          'Access-Control-Max-Age': '86400'
-        }
-      })
-    }
-
-    const response = await handler(request)
-
-    // Add CORS headers to response
-    response.headers.set('Access-Control-Allow-Origin', Array.isArray(origin) ? origin.join(', ') : origin)
-    response.headers.set('Access-Control-Allow-Methods', methods.join(', '))
-    response.headers.set('Access-Control-Allow-Headers', headers.join(', '))
-    response.headers.set('Access-Control-Allow-Credentials', credentials.toString())
-
-    return response
-  }
-}
-
-// Request validation middleware
-export function withValidation<T>(
-  handler: (request: NextRequest, context: { body: T; user?: any }) => Promise<NextResponse>,
-  schema: {
-    body?: (data: unknown) => T
-    query?: (data: unknown) => any
-  }
-) {
-  return async (request: NextRequest, context: { user?: any } = {}) => {
-    try {
-      let validatedBody: T | undefined
-      let validatedQuery: any
-
-      // Validate request body
-      if (schema.body && (request.method === 'POST' || request.method === 'PUT' || request.method === 'PATCH')) {
-        try {
-          const body = await request.json()
-          validatedBody = schema.body(body)
-        } catch (error) {
-          return NextResponse.json(
-            { 
-              error: 'Invalid request body',
-              details: error instanceof Error ? error.message : 'Validation failed'
-            },
-            { status: 400 }
-          )
-        }
-      }
-
-      // Validate query parameters
-      if (schema.query) {
-        try {
-          const url = new URL(request.url)
-          const queryParams = Object.fromEntries(url.searchParams.entries())
-          validatedQuery = schema.query(queryParams)
-        } catch (error) {
-          return NextResponse.json(
-            { 
-              error: 'Invalid query parameters',
-              details: error instanceof Error ? error.message : 'Validation failed'
-            },
-            { status: 400 }
-          )
-        }
-      }
-
-      return handler(request, { 
-        body: validatedBody!,
-        query: validatedQuery,
-        user: context.user
-      })
-    } catch (error) {
-      console.error('Validation middleware error:', error)
+    
+    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
+    
+    // Verify access token
+    const user = await EnterpriseAuthService.verifyAccessToken(token)
+    if (!user) {
       return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
+        { error: 'Invalid or expired token' },
+        { status: 401 }
       )
     }
-  }
-}
-
-// Error handling middleware
-export function withErrorHandling(
-  handler: (request: NextRequest) => Promise<NextResponse>
-) {
-  return async (request: NextRequest) => {
-    try {
-      return await handler(request)
-    } catch (error) {
-      console.error('API Error:', error)
-
-      // Handle specific error types
-      if (error instanceof Error) {
-        if (error.message.includes('not found')) {
-          return NextResponse.json(
-            { error: 'Resource not found' },
-            { status: 404 }
-          )
-        }
-
-        if (error.message.includes('unauthorized')) {
-          return NextResponse.json(
-            { error: 'Unauthorized' },
-            { status: 401 }
-          )
-        }
-
-        if (error.message.includes('forbidden')) {
-          return NextResponse.json(
-            { error: 'Forbidden' },
-            { status: 403 }
-          )
-        }
-
-        if (error.message.includes('validation')) {
-          return NextResponse.json(
-            { error: 'Validation error', details: error.message },
-            { status: 400 }
-          )
-        }
-      }
-
+    
+    // Check MFA requirement
+    if (options.requireMFA && !user.mfaEnabled) {
       return NextResponse.json(
-        { 
-          error: 'Internal server error',
-          message: process.env.NODE_ENV === 'development' ? error.message : undefined
-        },
-        { status: 500 }
+        { error: 'Multi-factor authentication required' },
+        { status: 403 }
       )
     }
+    
+    // Check permissions
+    if (options.requiredPermissions && options.requiredPermissions.length > 0) {
+      const hasPermission = EnterpriseAuthService.hasAllPermissions(
+        user,
+        options.requiredPermissions
+      )
+      
+      if (!hasPermission) {
+        logUserAction('permission_denied', {
+          requiredPermissions: options.requiredPermissions,
+          userPermissions: user.permissions
+        }, user.id, user.tenantId)
+        
+        return NextResponse.json(
+          { error: 'Insufficient permissions' },
+          { status: 403 }
+        )
+      }
+    }
+    
+    // Create auth context
+    const context: AuthContext = {
+      user,
+      tenantId: user.tenantId,
+      organizationId: user.organizationId,
+      locationId: user.locationId
+    }
+    
+    // Log successful authentication
+    logUserAction('api_access', {
+      endpoint: request.url,
+      method: request.method,
+      ip: getClientIP(request)
+    }, user.id, user.tenantId)
+    
+    // Call the handler with auth context
+    return await handler(request, context)
+    
+  } catch (error) {
+    logError(error as Error, 'AuthMiddleware.withAuth')
+    return NextResponse.json(
+      { error: 'Authentication failed' },
+      { status: 500 }
+    )
   }
 }
 
-// Logging middleware
-export function withLogging(
-  handler: (request: NextRequest) => Promise<NextResponse>,
-  options: {
-    logRequests?: boolean
-    logResponses?: boolean
-    logErrors?: boolean
-  } = {}
+/**
+ * Permission checking middleware
+ */
+export function requirePermissions(...permissions: Permission[]) {
+  return (options: Omit<AuthMiddlewareOptions, 'requiredPermissions'> = {}) => ({
+    ...options,
+    requiredPermissions: permissions
+  })
+}
+
+/**
+ * Role-based middleware
+ */
+export function requireRole(role: string) {
+  return async (
+    request: NextRequest,
+    handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
+  ): Promise<NextResponse> => {
+    return withAuth(request, async (req, context) => {
+      if (context.user.role !== role) {
+        return NextResponse.json(
+          { error: `Role '${role}' required` },
+          { status: 403 }
+        )
+      }
+      return handler(req, context)
+    })
+  }
+}
+
+/**
+ * MFA requirement middleware
+ */
+export function requireMFA() {
+  return { requireMFA: true }
+}
+
+/**
+ * Tenant isolation middleware
+ */
+export async function withTenantIsolation(
+  request: NextRequest,
+  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
+): Promise<NextResponse> {
+  return withAuth(request, async (req, context) => {
+    // Set tenant context for database queries
+    // This would typically be done through a database connection context
+    req.headers.set('x-tenant-id', context.tenantId)
+    
+    return handler(req, context)
+  })
+}
+
+/**
+ * Rate limiting middleware with user context
+ */
+export async function withRateLimit(
+  request: NextRequest,
+  handler: (req: NextRequest, context?: AuthContext) => Promise<NextResponse>,
+  options: { 
+    limit: number
+    window: number // in seconds
+    keyGenerator?: (req: NextRequest, context?: AuthContext) => string
+  }
+): Promise<NextResponse> {
+  try {
+    // Try to get auth context (optional for rate limiting)
+    let context: AuthContext | undefined
+    
+    const authHeader = request.headers.get('authorization')
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7)
+      const user = await EnterpriseAuthService.verifyAccessToken(token)
+      if (user) {
+        context = {
+          user,
+          tenantId: user.tenantId,
+          organizationId: user.organizationId,
+          locationId: user.locationId
+        }
+      }
+    }
+    
+    // Generate rate limit key
+    const key = options.keyGenerator 
+      ? options.keyGenerator(request, context)
+      : context?.user.id || getClientIP(request)
+    
+    // Check rate limit (implementation would use Redis or similar)
+    const isAllowed = await checkRateLimit(key, options.limit, options.window)
+    
+    if (!isAllowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded' },
+        { status: 429 }
+      )
+    }
+    
+    return handler(request, context)
+    
+  } catch (error) {
+    logError(error as Error, 'AuthMiddleware.withRateLimit')
+    return NextResponse.json(
+      { error: 'Rate limiting failed' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * Audit logging middleware
+ */
+export function withAuditLog(
+  eventType: string,
+  sensitiveFields: string[] = []
 ) {
-  const { logRequests = true, logResponses = false, logErrors = true } = options
-
-  return async (request: NextRequest) => {
-    const startTime = Date.now()
-    const requestId = crypto.randomUUID()
-
-    if (logRequests) {
-      console.log(`[${requestId}] ${request.method} ${request.url}`, {
-        headers: Object.fromEntries(request.headers.entries()),
-        timestamp: new Date().toISOString()
-      })
-    }
-
-    try {
-      const response = await handler(request)
-      const duration = Date.now() - startTime
-
-      if (logResponses) {
-        console.log(`[${requestId}] Response ${response.status}`, {
-          duration: `${duration}ms`,
-          timestamp: new Date().toISOString()
-        })
+  return (
+    handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
+  ) => {
+    return async (request: NextRequest, context: AuthContext): Promise<NextResponse> => {
+      const startTime = Date.now()
+      
+      try {
+        // Execute handler
+        const response = await handler(request, context)
+        
+        // Log successful operation
+        const duration = Date.now() - startTime
+        
+        logUserAction(eventType, {
+          method: request.method,
+          url: request.url,
+          duration,
+          status: response.status,
+          ip: getClientIP(request)
+        }, context.user.id, context.tenantId)
+        
+        return response
+        
+      } catch (error) {
+        // Log failed operation
+        const duration = Date.now() - startTime
+        
+        logError(error as Error, `AuditLog.${eventType}`, context.user.id, undefined, context.tenantId)
+        
+        logUserAction(`${eventType}_failed`, {
+          method: request.method,
+          url: request.url,
+          duration,
+          error: (error as Error).message,
+          ip: getClientIP(request)
+        }, context.user.id, context.tenantId)
+        
+        throw error
       }
-
-      return response
-    } catch (error) {
-      const duration = Date.now() - startTime
-
-      if (logErrors) {
-        console.error(`[${requestId}] Error after ${duration}ms:`, error)
-      }
-
-      throw error
     }
   }
 }
 
-// Compose multiple middlewares
-export function compose<T>(...middlewares: Array<(handler: T) => T>) {
-  return (handler: T): T => {
+/**
+ * Data access logging middleware
+ */
+export function withDataAccessLog(
+  dataType: string,
+  accessType: 'read' | 'write' | 'delete'
+) {
+  return (
+    handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>
+  ) => {
+    return async (request: NextRequest, context: AuthContext): Promise<NextResponse> => {
+      try {
+        const response = await handler(request, context)
+        
+        // Log data access
+        logUserAction('data_access', {
+          dataType,
+          accessType,
+          method: request.method,
+          url: request.url,
+          ip: getClientIP(request)
+        }, context.user.id, context.tenantId)
+        
+        return response
+        
+      } catch (error) {
+        // Log failed data access
+        logUserAction('data_access_failed', {
+          dataType,
+          accessType,
+          method: request.method,
+          url: request.url,
+          error: (error as Error).message,
+          ip: getClientIP(request)
+        }, context.user.id, context.tenantId)
+        
+        throw error
+      }
+    }
+  }
+}
+
+/**
+ * Compose multiple middleware functions
+ */
+export function compose(...middlewares: Array<(handler: any) => any>) {
+  return (handler: any) => {
     return middlewares.reduceRight((acc, middleware) => middleware(acc), handler)
+  }
+}
+
+// Helper functions
+
+async function checkRateLimit(
+  key: string,
+  limit: number,
+  windowSeconds: number
+): Promise<boolean> {
+  // Implementation would use Redis or similar for distributed rate limiting
+  // For now, return true (no rate limiting)
+  return true
+}
+
+/**
+ * Utility function to extract user from request
+ */
+export async function getUserFromRequest(request: NextRequest): Promise<AuthUser | null> {
+  try {
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null
+    }
+    
+    const token = authHeader.substring(7)
+    return await EnterpriseAuthService.verifyAccessToken(token)
+    
+  } catch (error) {
+    return null
+  }
+}
+
+/**
+ * Utility function to check if user has permission
+ */
+export async function checkUserPermission(
+  request: NextRequest,
+  permission: Permission
+): Promise<boolean> {
+  const user = await getUserFromRequest(request)
+  if (!user) {
+    return false
+  }
+  
+  return EnterpriseAuthService.hasPermission(user, permission)
+}
+
+/**
+ * Create a protected API route handler
+ */
+export function createProtectedRoute(
+  handler: (req: NextRequest, context: AuthContext) => Promise<NextResponse>,
+  options: AuthMiddlewareOptions = {}
+) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    return withAuth(request, handler, options)
+  }
+}
+
+/**
+ * Create a public API route handler with optional auth
+ */
+export function createPublicRoute(
+  handler: (req: NextRequest, context?: AuthContext) => Promise<NextResponse>
+) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    try {
+      // Try to get auth context but don't require it
+      const user = await getUserFromRequest(request)
+      const context = user ? {
+        user,
+        tenantId: user.tenantId,
+        organizationId: user.organizationId,
+        locationId: user.locationId
+      } : undefined
+      
+      return await handler(request, context)
+      
+    } catch (error) {
+      logError(error as Error, 'PublicRoute')
+      return NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      )
+    }
   }
 }

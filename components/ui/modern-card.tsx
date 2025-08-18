@@ -30,13 +30,36 @@ export function ModernCard({
 }: ModernCardProps) {
   return (
     <Card className={cn(
-      'backdrop-blur-sm border-0 shadow-lg',
+      // Toast-POS level base styling
+      'glass-card backdrop-blur-xl border-0 shadow-xl rounded-3xl overflow-hidden',
+      'transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1)',
+      
+      // Enhanced gradient backgrounds
       gradient && gradientClasses[gradient],
-      hover && 'hover:shadow-xl hover:scale-[1.02] transition-all duration-300',
-      glow && 'shadow-2xl shadow-primary/10',
+      
+      // Buttery smooth hover effects
+      hover && 'toast-hover cursor-pointer',
+      hover && 'hover:shadow-2xl hover:border-primary/20',
+      hover && 'hover:bg-gradient-to-br hover:from-background/80 hover:to-muted/40',
+      
+      // Premium glow effects
+      glow && 'shadow-2xl shadow-primary/20 ring-1 ring-primary/10',
+      glow && 'hover:shadow-primary/30 hover:ring-primary/20',
+      
+      // Responsive enhancements
+      'transform-gpu will-change-transform',
+      
       className
     )}>
-      {children}
+      <div className="relative z-10">
+        {children}
+      </div>
+      
+      {/* Subtle animated background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-chart-2/5 opacity-0 hover:opacity-100 transition-opacity duration-500" />
+      
+      {/* Glass reflection effect */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
     </Card>
   )
 }

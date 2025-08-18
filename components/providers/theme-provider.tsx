@@ -29,6 +29,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
     <NextThemesProvider 
       {...themeConfig} 
       {...props}
+      forcedTheme={undefined}
     >
       <ThemeEnhancer>
         {children}
