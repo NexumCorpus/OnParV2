@@ -219,6 +219,19 @@ describe('InventoryService', () => {
   it('validates name length 1-200 chars')
   it('validates quantity >= 0')
   it('validates price_per_unit >= 0')
+
+  // adjustQuantity — race-safe relative updates
+  it('adjustQuantity applies positive delta to current quantity')
+  it('adjustQuantity applies negative delta to current quantity')
+  it('adjustQuantity floors at 0 via GREATEST(0, quantity + delta) — never negative')
+  it('adjustQuantity returns null when item is soft-deleted (0 rows affected)')
+  it('adjustQuantity only affects items WHERE deleted_at IS NULL')
+
+  // Soft-delete filtering
+  it('getInventoryItems excludes soft-deleted items (deleted_at IS NOT NULL)')
+  it('getLowStockItems excludes soft-deleted items')
+  it('getExpiringItems excludes soft-deleted items')
+  it('getCount excludes soft-deleted items')
 })
 ```
 
@@ -318,6 +331,9 @@ test('mobile menu opens and closes')
 test('displays inventory table')
 test('search filters items by name')
 test('add item dialog opens and validates')
+test('mobile stepper adjusts quantity and shows server-confirmed value')
+test('waste event atomically decrements inventory quantity')
+test('soft-deleted items do not appear in inventory list')
 ```
 
 ---

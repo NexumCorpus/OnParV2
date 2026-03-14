@@ -407,6 +407,44 @@ This keeps the notification system simple for MVP. Email delivery can be added p
 
 ---
 
+## Step 8b: Deployment Environment Setup
+
+### Required Environment Variables
+
+| Variable | Where to Get It | Required By |
+|----------|----------------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase Dashboard → Settings → API | All tiers |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API | All tiers |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Settings → API (never expose client-side) | Server actions |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe Dashboard → Developers → API keys | TIER 7 |
+| `STRIPE_SECRET_KEY` | Stripe Dashboard → Developers → API keys | TIER 7 |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Developers → Webhooks (see below) | TIER 7 |
+| `NEXT_PUBLIC_APP_URL` | Your deployment URL (e.g., `https://onpar.app`) | Auth redirects |
+
+### Stripe Webhook Setup
+
+1. Go to Stripe Dashboard → Developers → Webhooks
+2. Click "Add endpoint"
+3. Endpoint URL: `{NEXT_PUBLIC_APP_URL}/api/webhook/stripe`
+4. Select events: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_succeeded`, `invoice.payment_failed`
+5. Copy the signing secret → set as `STRIPE_WEBHOOK_SECRET`
+
+### Supabase Setup
+
+1. Create project at [supabase.com](https://supabase.com)
+2. Enable Email auth provider (Authentication → Providers)
+3. Run migration: paste `supabase/migrations/001_initial_schema.sql` into SQL Editor
+4. Run seed data: paste `supabase/seed.sql` into SQL Editor
+5. Verify Storage bucket `avatars` was created by migration (Storage → Buckets)
+
+### Migration Order
+
+Migrations MUST be applied BEFORE launching the Next.js app:
+1. `001_initial_schema.sql` — all tables, indexes, RLS policies, storage buckets
+2. `seed.sql` — sample products for barcode lookup (optional but recommended)
+
+---
+
 ## Step 9: Final README
 
 Create a clean `README.md`:

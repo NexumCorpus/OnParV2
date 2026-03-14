@@ -108,11 +108,35 @@ const stats = {
 
 ### Mobile: 2-column grid for KPI cards (scrollable), charts stack vertically, full width.
 
+### Empty State (Zero Inventory Items)
+
+When `totalItems === 0`, replace the charts and KPI section with:
+```
+┌────────────────────────────────────────────────────────┐
+│  📦 Welcome to OnPar!                                  │
+│                                                        │
+│  Add your first inventory items to see your dashboard  │
+│  come alive with real-time KPIs, charts, and AI        │
+│  insights.                                             │
+│                                                        │
+│  [+ Add Your First Item]    [📥 Import CSV]            │
+└────────────────────────────────────────────────────────┘
+```
+Quick Actions panel still renders (it's useful even with zero data). KPI cards show zeroes (not blank).
+
 ---
 
 ## Step 2: Analytics Page
 
 ### `app/(dashboard)/analytics/page.tsx`
+
+### Empty State (Insufficient Data)
+
+When the selected date range has fewer than 3 data points for any chart, show inline in that chart's container:
+```
+"Not enough data for this time range. Try selecting a longer period or check back after a few more days of usage."
+```
+Charts with zero data points show empty axes with a centered message (not a blank white box).
 
 ### Desktop Wireframe
 

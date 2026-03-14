@@ -508,6 +508,8 @@ CREATE INDEX idx_inventory_user_id ON inventory_items(user_id);
 CREATE INDEX idx_inventory_expiry ON inventory_items(expiry_date);
 CREATE INDEX idx_inventory_category ON inventory_items(category);
 CREATE INDEX idx_inventory_supplier ON inventory_items(supplier_id);
+-- Optimizes the most common query pattern: active items for a user (soft-delete filter)
+CREATE INDEX idx_inventory_user_active ON inventory_items(user_id) WHERE deleted_at IS NULL;
 
 CREATE TRIGGER trg_inventory_updated_at
   BEFORE UPDATE ON inventory_items FOR EACH ROW
@@ -722,7 +724,10 @@ CREATE TABLE ai_insights (
   -- DEDUP: Prevent duplicate pending insights of the same type+title per user.
   -- refreshAIInsights() deletes pending insights then re-inserts; this constraint
   -- is a safety net against concurrent refresh calls that slip past the delete.
-  UNIQUE (user_id, type, title) -- upsert target for saveInsights()
+  -- NOTE: Includes status so a dismissed insight doesn't block a new pending one
+  -- with the same title (e.g., user dismisses "Reduce Pizza Waste", next refresh
+  -- can create a fresh pending insight with the same title).
+  UNIQUE (user_id, type, title, status) -- upsert target for saveInsights()
 );
 
 ALTER TABLE ai_insights ENABLE ROW LEVEL SECURITY;
@@ -861,6 +866,28 @@ CREATE POLICY "stripe_subs_select_own" ON stripe_subscriptions
 CREATE TRIGGER trg_stripe_subs_updated_at
   BEFORE UPDATE ON stripe_subscriptions FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+------------------------------------------------------------
+-- STORAGE BUCKETS
+------------------------------------------------------------
+
+-- Avatar uploads (TIER 7 settings page)
+INSERT INTO storage.buckets (id, name, public) VALUES ('avatars', 'avatars', true);
+
+CREATE POLICY "avatar_upload_own" ON storage.objects
+  FOR INSERT TO authenticated WITH CHECK (
+    bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+CREATE POLICY "avatar_read_public" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+CREATE POLICY "avatar_update_own" ON storage.objects
+  FOR UPDATE TO authenticated USING (
+    bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text
+  );
+CREATE POLICY "avatar_delete_own" ON storage.objects
+  FOR DELETE TO authenticated USING (
+    bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 ```
 
 ## Step 11: Seed Data
@@ -930,6 +957,7 @@ export interface InventoryItem {
   reorder_point: number
   max_stock_level: number | null
   price_per_unit: number
+  deleted_at: string | null    // soft-delete timestamp; null = active item
   created_at: string
   updated_at: string
 }
@@ -1117,6 +1145,18 @@ export type RecordWasteInput = {
   inventory_item_id: string; quantity: number; unit: string;
   reason: WasteReason; notes?: string | null;
 }
+export type CreateSupplierInput = {
+  name: string; contact_email?: string | null; contact_phone?: string | null;
+  address?: string | null; notes?: string | null;
+  rating?: number | null; is_active?: boolean;
+}
+
+// Standardized error codes — use these instead of raw strings in ActionResult.error
+export const ERROR_CODES = {
+  PLAN_LIMIT_REACHED: 'PLAN_LIMIT_REACHED',
+  ITEM_DELETED: 'ITEM_DELETED',
+  CONCURRENT_MODIFICATION: 'CONCURRENT_MODIFICATION',
+} as const
 ```
 
 ## Step 12b: Create Database Types Stub

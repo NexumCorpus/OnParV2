@@ -470,9 +470,10 @@ calculateConfidence(counts: {
 
 // Save generated insights to ai_insights table
 // Set status = 'pending', return created records with IDs
-// Uses INSERT ... ON CONFLICT (user_id, type, title) DO UPDATE SET
+// Uses INSERT ... ON CONFLICT (user_id, type, title, status) DO UPDATE SET
 //   description = EXCLUDED.description, estimated_savings = EXCLUDED.estimated_savings,
 //   confidence = EXCLUDED.confidence, updated_at = NOW()
+// The UNIQUE includes status so dismissed/completed insights don't block new pending ones.
 // This prevents duplicates from concurrent refreshAIInsights() calls (see TIER 1 UNIQUE constraint)
 saveInsights(userId: string, insights: AIInsight[]): Promise<AIInsight[]>
 
@@ -870,7 +871,7 @@ export async function dismissInsight(insightId: string): Promise<ActionResult>
 
 // Save generated insights to ai_insights table (returns created records with IDs)
 // MUST be called within the refreshAIInsights transaction (not standalone).
-// Uses INSERT ... ON CONFLICT (user_id, insight_type, title) DO UPDATE to prevent duplicates.
+// Uses INSERT ... ON CONFLICT (user_id, type, title, status) DO UPDATE to prevent duplicates.
 export async function saveInsights(insights: AIInsight[]): Promise<ActionResult>
 
 // Save waste analysis snapshot for historical tracking
