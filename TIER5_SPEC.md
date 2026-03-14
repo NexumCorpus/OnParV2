@@ -843,8 +843,9 @@ Create `lib/actions/waste.ts`:
 //    { success: false, error: 'Item has been deleted and cannot have waste recorded against it.' }
 // 4. Calculate estimated_value = quantity * price_per_unit
 // 5. INSERT waste_event record
-// 6. DECREMENT inventory_items.quantity by the waste quantity:
-//    UPDATE inventory_items SET quantity = quantity - $wasteQty WHERE id = $itemId AND deleted_at IS NULL
+// 6. DECREMENT inventory via adjustQuantity(itemId, -wasteQty) from TIER 3 inventory service.
+//    This uses the race-safe relative UPDATE (not an absolute set), preventing conflicts
+//    with concurrent stepper adjustments on mobile.
 // 7. These two operations should both succeed or both fail (use Supabase transaction or sequential with rollback)
 export async function recordWasteEvent(data: RecordWasteInput): Promise<ActionResult>
 

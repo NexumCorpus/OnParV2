@@ -78,8 +78,16 @@ calculateEstimatedSavings(userId: string): Promise<{
 // Get unique categories for filter dropdown (deleted_at IS NULL)
 getCategories(userId: string): Promise<string[]>
 
+// RACE-SAFE relative quantity adjustment (used by mobile stepper + waste logging)
+// Uses: UPDATE inventory_items SET quantity = GREATEST(0, quantity + $delta) WHERE id = $id AND deleted_at IS NULL
+// $delta is positive (restock) or negative (use/waste). GREATEST(0, ...) prevents negative inventory.
+// This MUST be used instead of updateInventoryItem({ quantity: absoluteValue }) for any
+// concurrent-safe quantity change (stepper buttons, waste decrement, recipe deductions).
+adjustQuantity(id: string, delta: number): Promise<InventoryItem>
+
 // Bulk update quantities (for quick adjustments) — only for non-deleted items
-bulkUpdateQuantities(updates: Array<{ id: string; quantity: number }>): Promise<void>
+// Uses adjustQuantity internally (relative deltas, NOT absolute sets)
+bulkUpdateQuantities(updates: Array<{ id: string; delta: number }>): Promise<void>
 
 // Get total count of inventory items for a user (used by dashboard KPIs)
 // SELECT count(*) FROM inventory_items WHERE user_id = $1 AND deleted_at IS NULL
@@ -222,7 +230,7 @@ export const INVENTORY_UNITS = [
 ```
 
 #### Mobile card behavior:
-- **Inline quantity stepper:** [−5] [−] qty [+] [+5] buttons directly on card. Chef adjusts quantity WITHOUT opening any dialog. Each button auto-saves after 1s debounce (no "Save" button needed).
+- **Inline quantity stepper:** [−5] [−] qty [+] [+5] buttons directly on card. Chef adjusts quantity WITHOUT opening any dialog. Each button accumulates a delta (e.g., tap [+] twice = delta +2), then auto-saves after 1s debounce using `adjustQuantity(id, delta)` — a **relative** UPDATE, NOT an absolute set. This prevents race conditions with concurrent waste logging (see TIER 5 `recordWasteEvent` which also decrements relatively).
 - **"Log Waste" quick-action:** Opens pre-filled waste form (item already selected). See TIER 5 for the minimal waste form.
 - **Swipe left:** Reveals [Edit] [Delete] actions.
 - **Tap card body** (not buttons): Opens full-screen detail/edit page.
@@ -315,9 +323,9 @@ export const INVENTORY_UNITS = [
 └────────────────────────────────────┘
 ```
 
-**Desktop:** Simple dialog with +/- buttons and direct input. Updates quantity only.
+**Desktop:** Simple dialog with +/- buttons and direct input. The +/- buttons use `adjustQuantity(id, delta)` for race safety. The "enter new quantity" text input calculates the delta from current and calls `adjustQuantity(id, newQty - currentQty)`.
 
-**Mobile:** This dialog is NOT needed — the inline [−5] [−] qty [+] [+5] stepper on the inventory card (see mobile wireframe above) replaces it entirely. Each tap auto-saves after 1s debounce. Zero dialogs, zero navigation. The chef adjusts quantities without ever leaving the inventory list.
+**Mobile:** This dialog is NOT needed — the inline [−5] [−] qty [+] [+5] stepper on the inventory card (see mobile wireframe above) replaces it entirely. Stepper accumulates deltas, auto-saves after 1s debounce via `adjustQuantity()`. Zero dialogs, zero navigation. The chef adjusts quantities without ever leaving the inventory list.
 
 ---
 
