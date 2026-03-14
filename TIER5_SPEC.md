@@ -844,16 +844,18 @@ Create `lib/actions/waste.ts`:
 // recordWasteEvent MUST:
 // 1. Validate input with wasteEventSchema
 // 2. Open a Supabase transaction (or use sequential ops with manual rollback)
-// 3. Fetch the inventory item to get price_per_unit (with FOR UPDATE row lock to prevent TOCTOU race)
+// 3. Fetch the inventory item to get price_per_unit (with FOR UPDATE row lock to prevent TOCTOU race).
+//    The FOR UPDATE lock prevents any concurrent DELETE or adjustQuantity from modifying this row
+//    until the transaction commits, so step 7 cannot encounter a deleted item.
 // 4. GUARD: Verify item is NOT soft-deleted (deleted_at IS NULL). If deleted, return
 //    { success: false, error: 'Item has been deleted and cannot have waste recorded against it.' }
 // 5. Calculate estimated_value = quantity * price_per_unit
-// 6. INSERT waste_event record
+// 6. INSERT waste_event record (inventory_item_id is guaranteed valid due to step 3 lock)
 // 7. DECREMENT inventory via adjustQuantity(itemId, -wasteQty) from TIER 3 inventory service.
 //    This uses the race-safe relative UPDATE (not an absolute set), preventing conflicts
 //    with concurrent stepper adjustments on mobile.
-//    If adjustQuantity returns null / 0 rows affected (item deleted between step 3 and now),
-//    ROLLBACK and return { success: false, error: 'Item was deleted during operation.' }
+//    NOTE: Because step 3 holds a FOR UPDATE lock, adjustQuantity returning null here would
+//    indicate a bug (the lock should prevent concurrent deletion). Treat as unexpected error.
 // 8. COMMIT transaction. Both INSERT + UPDATE succeed or both fail.
 export async function recordWasteEvent(data: RecordWasteInput): Promise<ActionResult>
 

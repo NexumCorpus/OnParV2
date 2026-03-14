@@ -84,9 +84,14 @@ getCategories(userId: string): Promise<string[]>
 // $delta is positive (restock) or negative (use/waste). GREATEST(0, ...) prevents negative inventory.
 // This MUST be used instead of updateInventoryItem({ quantity: absoluteValue }) for any
 // concurrent-safe quantity change (stepper buttons, waste decrement, recipe deductions).
+//
+// Implementation (Supabase):
+//   const { data } = await supabase.rpc('adjust_quantity', { item_id: id, delta })
+//   return data?.[0] ?? null   // Supabase returns [] for 0 rows, NOT null
+//
 // RETURNS null if 0 rows affected (item was soft-deleted). Callers MUST handle null:
 //   - Mobile stepper: show toast "Item no longer exists", remove card from list
-//   - Waste logging: rollback waste_event INSERT, return error to user
+//   - Waste logging: unexpected under FOR UPDATE lock — treat as error
 //   - Recipe deduction: return error "Ingredient item was deleted"
 adjustQuantity(id: string, delta: number): Promise<InventoryItem | null>
 
@@ -573,6 +578,13 @@ export async function bulkDeleteItems(ids: string[]): Promise<ActionResult>
 // RACE SAFETY: The count check + bulk INSERT must run in a single transaction with
 // SELECT ... FOR UPDATE or pg_advisory_xact_lock(hashtext(userId)) to prevent
 // two concurrent imports from both passing the limit check against the same stale count.
+//
+// ROLLBACK STRATEGY: All-or-nothing via Supabase RPC stored procedure:
+//   1. Parse + validate ALL rows client-side first (reject with per-row errors if any fail)
+//   2. Call supabase.rpc('bulk_import_inventory', { userId, items: validRows })
+//   3. The RPC function runs in a single SQL transaction: count check → INSERT ALL → COMMIT
+//   4. If any INSERT fails (constraint violation), PostgreSQL rolls back the entire tx automatically
+//   5. Return row-level errors from the RPC response if applicable
 export async function importFromCSV(formData: FormData): Promise<ActionResult>
 
 // ActionResult is imported from @/types — do NOT redefine locally

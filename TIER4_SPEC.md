@@ -399,6 +399,18 @@ export async function deleteRecipe(id: string): Promise<ActionResult>
 // inside a single transaction. Use SELECT ... FOR UPDATE on the recipe row
 // to serialize concurrent ingredient changes (prevents interleaved recalculations
 // from overwriting each other with stale intermediate cost values).
+//
+// Implementation: Use a Supabase RPC stored procedure:
+//   CREATE FUNCTION add_recipe_ingredient(p_recipe_id uuid, p_item_id uuid, ...)
+//   RETURNS void AS $$
+//     SELECT * FROM recipes WHERE id = p_recipe_id FOR UPDATE;
+//     INSERT INTO recipe_ingredients (...) VALUES (...);
+//     UPDATE recipes SET cost_per_serving = (SELECT SUM(quantity_needed * cost_per_unit)
+//       FROM recipe_ingredients WHERE recipe_id = p_recipe_id) / serving_size,
+//       profit_margin = ... WHERE id = p_recipe_id;
+//   $$ LANGUAGE sql;
+//
+// This ensures atomicity — the function runs in a single transaction automatically.
 export async function addIngredient(data: AddIngredientInput): Promise<ActionResult>
 export async function removeIngredient(id: string): Promise<ActionResult>
 ```
