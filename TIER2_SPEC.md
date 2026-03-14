@@ -521,6 +521,8 @@ Create `app/(dashboard)/error.tsx` — error boundary for dashboard pages:
 ```tsx
 'use client'
 
+import * as Sentry from '@sentry/nextjs'
+import { useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 
 export default function DashboardError({
@@ -530,6 +532,10 @@ export default function DashboardError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  useEffect(() => {
+    Sentry.captureException(error)
+  }, [error])
+
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-12">
       <h2 className="text-xl font-semibold">Something went wrong</h2>
@@ -558,6 +564,93 @@ export async function signOut() {
   redirect('/login')
 }
 ```
+
+---
+
+## Step 8b: Error Resilience Patterns
+
+These patterns apply to ALL server actions and data fetching in Tiers 2-9.
+
+### Server Action Error Handling
+
+All server actions return `ActionResult`. Standardize error responses:
+
+```typescript
+// Supabase connection failure:
+if (error) {
+  logger.error({ err: error, userId }, 'Database operation failed')
+  return { success: false, error: 'Unable to reach the database. Please try again.' }
+}
+
+// Auth session expired:
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) {
+  return { success: false, error: 'SESSION_EXPIRED' }
+  // Client-side: if error === 'SESSION_EXPIRED', redirect to /login
+}
+
+// Validation failure:
+const parsed = schema.safeParse(input)
+if (!parsed.success) {
+  return { success: false, error: 'Validation failed', fieldErrors: parsed.error.flatten().fieldErrors }
+}
+```
+
+### Client-Side Network Detection
+
+Add to `app/(dashboard)/layout.tsx` — show offline banner when network drops:
+
+```tsx
+// In the dashboard layout client component wrapper:
+import { useSyncExternalStore } from 'react'
+
+function useOnlineStatus() {
+  return useSyncExternalStore(
+    (cb) => {
+      window.addEventListener('online', cb)
+      window.addEventListener('offline', cb)
+      return () => {
+        window.removeEventListener('online', cb)
+        window.removeEventListener('offline', cb)
+      }
+    },
+    () => navigator.onLine,
+    () => true // SSR assumes online
+  )
+}
+
+// Render in layout:
+// {!isOnline && <div className="bg-yellow-500 text-center text-sm py-1">You're offline. Changes will sync when reconnected.</div>}
+```
+
+### Middleware Request Logging
+
+Add to `middleware.ts` at the start of the middleware function:
+
+```typescript
+import { logger } from '@/lib/utils/logger'
+
+// At start of middleware function:
+logger.info({ path: request.nextUrl.pathname, method: request.method }, 'request')
+```
+
+---
+
+## Step 8c: Accessibility Foundation (WCAG 2.1 AA)
+
+These requirements apply to ALL components built in Tiers 2-9. Accessibility is built-in, not bolted on.
+
+1. **Semantic HTML** — Use `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<footer>`. No `<div>` soup for structural elements.
+2. **Keyboard navigation** — Every interactive element reachable via Tab. Focus order matches visual order. Escape closes modals/dialogs/dropdowns.
+3. **Focus indicators** — All focusable elements show `ring-2 ring-brand-500 ring-offset-2` on `focus-visible`. Never remove focus outlines.
+4. **Color contrast** — WCAG AA minimum: 4.5:1 for normal text, 3:1 for large text (18px+ or 14px+ bold). Use Tailwind's accessible palette. Never use color alone to convey information.
+5. **Form labels** — Every input has a visible `<label>`. Error messages use `aria-describedby`. Required fields use `aria-required="true"`.
+6. **Skip link** — Add `<a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background">Skip to content</a>` as first child of `<body>` in root layout.
+7. **Alt text** — All informational images have descriptive `alt`. Decorative images use `alt=""`. Icons with meaning have `aria-label`.
+8. **ARIA on custom components** — Dialogs: `role="dialog"` + `aria-modal="true"`. Tabs: `role="tablist/tab/tabpanel"`. Status alerts: `role="alert"`. shadcn/ui handles most of this — don't override.
+9. **Charts** — All Recharts components must have `aria-label` describing the data. Provide a tabular data fallback for screen readers (visually hidden `<table>` with the same data).
+
+**These are NOT optional polish. Every component MUST satisfy these from initial creation.**
 
 ---
 

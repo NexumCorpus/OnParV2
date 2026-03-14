@@ -29,11 +29,11 @@ After scaffolding, ensure:
 ## Step 3: Install Dependencies
 
 ```bash
-npm install @supabase/supabase-js @supabase/ssr stripe @stripe/stripe-js recharts react-hook-form @hookform/resolvers zod date-fns lucide-react sonner next-themes class-variance-authority clsx tailwind-merge
+npm install @supabase/supabase-js @supabase/ssr stripe @stripe/stripe-js recharts react-hook-form @hookform/resolvers zod date-fns lucide-react sonner next-themes class-variance-authority clsx tailwind-merge @sentry/nextjs pino
 ```
 
 ```bash
-npm install -D @types/node vitest @vitejs/plugin-react @vitest/coverage-v8 jsdom playwright @playwright/test
+npm install -D @types/node vitest @vitejs/plugin-react @vitest/coverage-v8 jsdom playwright @playwright/test @next/bundle-analyzer pino-pretty
 ```
 
 ## Step 4: Configure TypeScript (STRICT)
@@ -93,6 +93,11 @@ const nextConfig: NextConfig = {
 
 export default nextConfig
 ```
+
+### Performance Budgets (enforced in CI — see Tier 8)
+- First Load JS: **< 300KB** (compressed) for any route
+- Largest Contentful Paint: **< 2.5s**
+- Time to Interactive: **< 3.5s**
 
 ## Step 6: Configure Tailwind CSS 4
 
@@ -220,6 +225,59 @@ export const APP_NAME = 'OnPar'
 export const APP_DESCRIPTION = 'Smart Restaurant Inventory Management'
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 ```
+
+## Step 7d: Observability Setup
+
+### Structured Logging — `lib/utils/logger.ts`
+
+```typescript
+import pino from 'pino'
+
+export const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  transport: process.env.NODE_ENV === 'development'
+    ? { target: 'pino-pretty' }
+    : undefined,
+})
+
+// Usage examples:
+// logger.info({ userId, action: 'createItem' }, 'Inventory item created')
+// logger.error({ err, userId }, 'Failed to create item')
+// logger.warn({ itemId, quantity }, 'Low stock detected')
+```
+
+### Sentry Error Tracking — `sentry.client.config.ts`
+
+```typescript
+import * as Sentry from '@sentry/nextjs'
+
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.1,             // 10% of transactions in production
+  replaysSessionSampleRate: 0,        // No session replays
+  replaysOnErrorSampleRate: 1.0,      // Capture replay on every error
+  environment: process.env.NODE_ENV,
+  enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,  // Disabled if no DSN
+})
+```
+
+### Sentry Server Config — `sentry.server.config.ts`
+
+```typescript
+import * as Sentry from '@sentry/nextjs'
+
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.1,
+  profilesSampleRate: 0.1,
+  environment: process.env.NODE_ENV,
+  enabled: !!process.env.NEXT_PUBLIC_SENTRY_DSN,
+})
+```
+
+### Sentry Edge Config — `sentry.edge.config.ts`
+
+Same as server config but without `profilesSampleRate`.
 
 ## Step 8: Set Up Supabase Client Files
 
@@ -353,6 +411,11 @@ STRIPE_WEBHOOK_SECRET=your_stripe_webhook_secret
 # App
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 NODE_ENV=development
+
+# Observability
+NEXT_PUBLIC_SENTRY_DSN=              # Sentry project DSN (get from sentry.io)
+SENTRY_AUTH_TOKEN=                    # For source map uploads during build
+LOG_LEVEL=info                        # pino log level: debug | info | warn | error
 ```
 
 `.env.local` (create with placeholder values so the app can build):
@@ -374,6 +437,17 @@ Create `supabase/migrations/001_initial_schema.sql`:
 ```sql
 -- OnPar Database Schema v2 (Clean Redesign)
 -- Single migration file replacing 20+ fragmented migrations
+--
+-- FUTURE-PROOFING: Multi-User / Team Support
+-- Current: All tables use user_id as the ownership key (single-restaurant).
+-- Future migration path when team support is added:
+--   1. Create `organizations` table (id, name, owner_id, created_at)
+--   2. Create `org_members` table (org_id, user_id, role, invited_at, joined_at)
+--   3. Add `org_id uuid` column to: inventory_items, recipes, menu_items, suppliers, waste_events
+--   4. RLS policies change from `auth.uid() = user_id` to:
+--      `org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid())`
+--   5. user_id remains on rows to track who created/modified each record
+-- NO SCHEMA CHANGES NEEDED NOW. This documents the intended migration path.
 
 ------------------------------------------------------------
 -- UTILITY FUNCTIONS
@@ -1067,6 +1141,75 @@ INSERT INTO products (barcode, name, brand, category, unit, average_price) VALUE
   ('486159486159', 'Kosher Salt', 'Crystal Pure', 'Seasonings', 'containers', 3.99),
   ('159357159357', 'Vanilla Extract', 'Pure Essence', 'Baking', 'bottles', 9.99)
 ON CONFLICT (barcode) DO NOTHING;
+
+-- ============================================================
+-- DEVELOPMENT SEED DATA
+-- ============================================================
+-- This data provides realistic restaurant inventory so that
+-- dashboards, charts, and analytics render meaningfully.
+-- Replace DEMO_USER_ID with the actual UUID after creating a
+-- demo account via Supabase Auth, or use a seed trigger.
+--
+-- To use: After signing up your first dev account, copy its UUID
+-- and run: UPDATE ... SET user_id = '<your-uuid>' WHERE user_id = 'DEMO_USER_ID';
+-- Or simply use the SQL below as a template.
+
+-- Suppliers (5)
+-- INSERT INTO suppliers (id, user_id, name, contact_email, contact_phone, rating, is_active) VALUES
+--   (gen_random_uuid(), DEMO_USER_ID, 'Fresh Farms Direct', 'orders@freshfarms.com', '555-0101', 4, true),
+--   (gen_random_uuid(), DEMO_USER_ID, 'Ocean Catch Seafood', 'sales@oceancatch.com', '555-0102', 5, true),
+--   (gen_random_uuid(), DEMO_USER_ID, 'Valley Meats Co', 'info@valleymeats.com', '555-0103', 3, true),
+--   (gen_random_uuid(), DEMO_USER_ID, 'Artisan Bakery Supply', 'wholesale@artisanbakery.com', '555-0104', 4, true),
+--   (gen_random_uuid(), DEMO_USER_ID, 'Green Valley Produce', 'orders@greenvalley.com', '555-0105', 4, true);
+
+-- Inventory Items (25) — spread across categories with varied stock levels
+-- Categories: Produce, Protein, Dairy, Dry Goods, Beverages
+-- Include items at: normal stock, low stock (qty <= reorder_point), near expiry (within 3 days), overstocked
+-- Example rows (generate 25 like this with realistic quantities and prices):
+-- INSERT INTO inventory_items (id, user_id, name, category, quantity, unit, expiry_date, reorder_point, max_stock_level, price_per_unit) VALUES
+--   (gen_random_uuid(), DEMO_USER_ID, 'Roma Tomatoes', 'Produce', 5.0, 'lbs', CURRENT_DATE + 2, 20, 50, 3.49),   -- LOW STOCK + NEAR EXPIRY
+--   (gen_random_uuid(), DEMO_USER_ID, 'Atlantic Salmon', 'Protein', 8.0, 'lbs', CURRENT_DATE + 1, 10, 25, 16.99), -- NEAR EXPIRY
+--   (gen_random_uuid(), DEMO_USER_ID, 'All-Purpose Flour', 'Dry Goods', 120.0, 'lbs', CURRENT_DATE + 180, 30, 60, 2.49), -- OVERSTOCKED
+--   (gen_random_uuid(), DEMO_USER_ID, 'Whole Milk', 'Dairy', 15.0, 'gallons', CURRENT_DATE + 5, 10, 30, 3.49),   -- NORMAL
+--   ... (21 more items covering all categories)
+
+-- Recipes (8) with ingredients
+-- INSERT INTO recipes (id, user_id, name, category, serving_size, prep_time_minutes, cook_time_minutes, difficulty_level, cost_per_serving, selling_price, profit_margin) VALUES
+--   (gen_random_uuid(), DEMO_USER_ID, 'Caesar Salad', 'Appetizer', 4, 15, 0, 'easy', 3.20, 14.00, 77.14),
+--   (gen_random_uuid(), DEMO_USER_ID, 'Grilled Salmon', 'Entree', 2, 10, 20, 'medium', 8.50, 28.00, 69.64),
+--   (gen_random_uuid(), DEMO_USER_ID, 'Margherita Pizza', 'Entree', 2, 20, 15, 'medium', 4.10, 18.00, 77.22),
+--   ... (5 more recipes)
+
+-- Menu Items (10) with sales and waste metrics
+-- INSERT INTO menu_items (id, user_id, name, category, selling_price, sales_percentage, waste_percentage, is_active) VALUES
+--   (gen_random_uuid(), DEMO_USER_ID, 'Caesar Salad', 'Appetizer', 14.00, 12.5, 2.1, true),
+--   (gen_random_uuid(), DEMO_USER_ID, 'Grilled Salmon', 'Entree', 28.00, 18.3, 4.2, true),
+--   ... (8 more menu items)
+
+-- Waste Events (30) — distributed over past 90 days
+-- Reasons: expired (40%), spoiled (25%), overproduction (20%), prep_waste (10%), other (5%)
+-- INSERT INTO waste_events (id, user_id, inventory_item_id, quantity, unit, estimated_value, reason, notes, recorded_at) VALUES
+--   (gen_random_uuid(), DEMO_USER_ID, <tomato_id>, 3.0, 'lbs', 10.47, 'expired', 'Past expiry date', NOW() - INTERVAL '2 days'),
+--   (gen_random_uuid(), DEMO_USER_ID, <salmon_id>, 1.5, 'lbs', 25.49, 'spoiled', 'Discoloration noticed', NOW() - INTERVAL '5 days'),
+--   ... (28 more waste events spread across 90 days)
+
+-- Waste Analysis Snapshots (12) — one per week for past 3 months
+-- INSERT INTO waste_analysis_snapshots (id, user_id, analysis_date, total_inventory_value, monthly_spend, average_waste_percentage, inventory_turnover, cost_efficiency_score, seasonal_factor, data_quality_score) VALUES
+--   (gen_random_uuid(), DEMO_USER_ID, CURRENT_DATE - 7, 4500.00, 12000.00, 6.8, 2.67, 82.5, 1.0, 0.75),
+--   (gen_random_uuid(), DEMO_USER_ID, CURRENT_DATE - 14, 4200.00, 11800.00, 7.2, 2.81, 80.1, 1.0, 0.72),
+--   ... (10 more snapshots)
+
+-- AI Insights (5) — mix of statuses
+-- INSERT INTO ai_insights (id, user_id, type, title, description, impact, estimated_savings, confidence, priority, status) VALUES
+--   (gen_random_uuid(), DEMO_USER_ID, 'high_waste', 'Reduce Tomato Waste', 'Tomato waste is 8.5% above average. Consider smaller orders.', 'high', 120.00, 0.85, 1, 'pending'),
+--   (gen_random_uuid(), DEMO_USER_ID, 'overstock', 'Flour Overstocked', 'Current flour stock is 4x reorder point. Pause orders.', 'medium', 60.00, 0.92, 2, 'pending'),
+--   (gen_random_uuid(), DEMO_USER_ID, 'cost_saving', 'Switch Olive Oil Supplier', 'Competitor offers 15% lower pricing.', 'medium', 45.00, 0.70, 3, 'in_progress'),
+--   (gen_random_uuid(), DEMO_USER_ID, 'budget_alert', 'Budget 85% Used', 'Monthly spend approaching budget limit.', 'high', 0, 0.95, 1, 'pending'),
+--   (gen_random_uuid(), DEMO_USER_ID, 'high_waste', 'Salmon Spoilage Pattern', 'Tuesday deliveries spoil by Friday. Shift to Thursday.', 'high', 200.00, 0.80, 1, 'completed');
+
+-- NOTE: The above INSERT statements use placeholder IDs and DEMO_USER_ID.
+-- To activate: create a dev account, capture its UUID, and run these inserts
+-- with the real user_id. Cross-reference inventory_item_id values as needed.
 ```
 
 ## Step 12: TypeScript Types
@@ -1515,7 +1658,11 @@ vitest.config.ts
 package.json (via create-next-app, then modify scripts)
 lib/utils.ts
 lib/utils/formatting.ts
+lib/utils/logger.ts
 lib/config.ts
+sentry.client.config.ts
+sentry.server.config.ts
+sentry.edge.config.ts
 lib/supabase/client.ts
 lib/supabase/server.ts
 lib/supabase/admin.ts

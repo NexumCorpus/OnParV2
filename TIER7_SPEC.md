@@ -300,6 +300,71 @@ export async function updateAvatar(formData: FormData): Promise<ActionResult>
 
 ---
 
+## Step 6b: Data Export & Account Management
+
+### Full Data Export
+
+Add "Export My Data" button to the settings page (Profile tab or a dedicated "Data" section).
+
+Add to `lib/actions/settings.ts`:
+
+```typescript
+export async function exportAllData(): Promise<ActionResult<{ downloadUrl: string }>>
+// 1. Query all user data tables in PARALLEL:
+//    - inventory_items (WHERE user_id AND deleted_at IS NULL)
+//    - recipes + recipe_ingredients (JOIN)
+//    - menu_items
+//    - suppliers
+//    - waste_events
+//    - ai_insights
+//    - waste_analysis_snapshots
+// 2. Convert each to CSV using lib/utils/csv.ts
+// 3. Create JSON file with user profile + settings
+// 4. Bundle into ZIP using JSZip (npm install jszip)
+// 5. Upload ZIP to Supabase Storage (temp bucket 'exports', 1-hour signed URL)
+// 6. Return { success: true, data: { downloadUrl } }
+```
+
+**Dependency:** `npm install jszip` (add to TIER 1 install command or install here).
+
+### Account Deletion
+
+Add to settings page — "Danger Zone" section at bottom:
+
+```
+┌──────────────────────────────────────────────────────┐
+│  ⚠ Danger Zone                                       │
+│                                                      │
+│  Delete your account and all associated data.        │
+│  This action is irreversible.                        │
+│                                                      │
+│  [Delete Account]  (opens confirmation dialog)       │
+└──────────────────────────────────────────────────────┘
+```
+
+Confirmation dialog requires typing the user's email address to confirm.
+
+Add to `lib/actions/settings.ts`:
+
+```typescript
+export async function deleteAccount(confirmEmail: string): Promise<ActionResult>
+// 1. Verify confirmEmail matches the authenticated user's email
+// 2. If Stripe subscription exists: cancel it immediately
+// 3. Delete Stripe customer record
+// 4. Delete all user data (CASCADE handles via user_id FK on most tables)
+// 5. Delete uploaded files from Supabase Storage (avatars bucket)
+// 6. Delete Supabase auth user via admin client
+// 7. Sign out and redirect to homepage
+```
+
+### Privacy Compliance Note
+These features satisfy:
+- **GDPR Article 17** — Right to erasure (account deletion)
+- **GDPR Article 20** — Data portability (full data export as CSV/JSON)
+- No cookie consent banner needed — Supabase auth cookies are essential (not tracking)
+
+---
+
 ## Verification Checklist
 
 1. `npm run build` passes

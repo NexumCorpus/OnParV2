@@ -919,6 +919,74 @@ export const wasteEventSchema = z.object({
 19. Confidence scoring follows exact formula
 20. All formulas match the specifications in this document
 
+## Inline Tests (Vitest)
+
+Engine functions are PURE (no database, no side effects). They are trivially testable. Write these tests NOW, not in Tier 8.
+
+Create `tests/unit/engines/waste-analysis.test.ts`:
+
+```typescript
+import { describe, it, expect } from 'vitest'
+// Import engine functions directly — no mocks needed
+
+describe('Waste Analysis Engine', () => {
+  describe('waste rate calculation', () => {
+    it('calculates correctly: (wasteQty / inboundQty) * 100', () => {
+      // wasteQty: 5, inboundQty: 100 → 5.0%
+    })
+    it('returns 0 for zero inbound', () => { /* ... */ })
+  })
+
+  describe('risk levels', () => {
+    it('critical: >20% waste OR >$500 waste value', () => { /* ... */ })
+    it('high: >10% waste OR >$200 waste value', () => { /* ... */ })
+    it('medium: >5% waste OR >$50 waste value', () => { /* ... */ })
+    it('low: everything else', () => { /* ... */ })
+  })
+
+  describe('savings calculation', () => {
+    it('calculates: wasteValue * (reductionPct / 100)', () => { /* ... */ })
+  })
+
+  describe('seasonal multipliers', () => {
+    it('returns correct multiplier for each month', () => { /* ... */ })
+  })
+
+  describe('empty input handling', () => {
+    it('returns zero values for empty waste events array', () => { /* ... */ })
+    it('never returns NaN or undefined', () => { /* ... */ })
+  })
+})
+```
+
+Create `tests/unit/engines/waste-predictions.test.ts`:
+
+```typescript
+describe('Waste Predictions Engine', () => {
+  it('generates 30-day forecast', () => { /* ... */ })
+  it('alert thresholds trigger correctly', () => { /* ... */ })
+  it('prevention ROI = implementationCost / monthlySavings', () => { /* ... */ })
+  it('payback months calculation is correct', () => { /* ... */ })
+})
+```
+
+Create `tests/unit/engines/ai-insights.test.ts`:
+
+```typescript
+describe('AI Insights Engine', () => {
+  it('confidence scoring with data quality weighting', () => { /* ... */ })
+  it('high-waste threshold: >2% above average', () => { /* ... */ })
+  it('overstock threshold: >3x reorder point', () => { /* ... */ })
+  it('low performer: <5% sales AND >3% waste', () => { /* ... */ })
+  it('budget alert: >80% of monthly budget', () => { /* ... */ })
+  it('deduplication: same (user, type, title) produces single insight', () => { /* ... */ })
+})
+```
+
+Run: `npx vitest run tests/unit/engines/`
+
+---
+
 ## File Summary
 
 ```
@@ -944,4 +1012,7 @@ components/waste/benchmark-strategies.tsx
 components/insights/insight-card.tsx
 components/insights/insight-filters.tsx
 components/insights/insight-stats.tsx
+tests/unit/engines/waste-analysis.test.ts
+tests/unit/engines/waste-predictions.test.ts
+tests/unit/engines/ai-insights.test.ts
 ```

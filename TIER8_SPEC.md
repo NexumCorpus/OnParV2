@@ -4,11 +4,14 @@
 Tiers 1-7 must be complete: Full application functional.
 
 ## Overview
-1. Vitest unit tests for all business logic engines
-2. Vitest integration tests for services
+
+**NOTE:** Unit tests for services (Tier 3) and engines (Tier 5) were written inline alongside those tiers. This tier sets up the testing infrastructure, writes E2E tests, configures CI/CD, and fills any remaining test gaps.
+
+1. Vitest configuration and shared test setup
+2. Any remaining unit tests not covered in Tiers 3-5
 3. Playwright E2E tests for critical user flows
-4. GitHub Actions CI pipeline
-5. Coverage targets
+4. GitHub Actions CI/CD pipeline with deployment strategy
+5. Coverage targets and bundle size enforcement
 
 ---
 
@@ -398,6 +401,15 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
+
+      # Enforce: no build bypasses allowed
+      - name: Enforce strict builds
+        run: |
+          if grep -q 'ignoreDuringBuilds.*true' next.config.ts 2>/dev/null || grep -q 'ignoreDuringBuilds.*true' next.config.js 2>/dev/null; then
+            echo "::error::ignoreDuringBuilds must not be true. Fix TypeScript/ESLint errors instead of suppressing them."
+            exit 1
+          fi
+
       - run: npm run build
 
   e2e-tests:
@@ -421,6 +433,51 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
+```
+
+---
+
+## Step 9b: Deployment Strategy
+
+### Vercel Environment Configuration
+
+Three environments, each with its own Supabase project:
+
+| Environment | Trigger | Supabase | Stripe Keys | Purpose |
+|-------------|---------|----------|-------------|---------|
+| **Preview** | Every PR | Preview project | Test keys | PR review, QA |
+| **Staging** | Push to `main` | Staging project | Test keys | Pre-production validation |
+| **Production** | Manual promote from staging | Production project | Live keys | User-facing |
+
+### Vercel Setup
+
+1. Connect repo to Vercel
+2. Set environment variables per environment (Settings → Environment Variables)
+3. Enable "Preview Deployments" for all branches
+4. Set Production branch to `main` (auto-deploys to staging; manual promote to production)
+
+### Rollback Plan
+
+Vercel keeps every deployment immutable. To rollback:
+1. Go to Vercel Dashboard → Deployments
+2. Find last known-good deployment
+3. Click "Promote to Production"
+
+No code changes needed. Instant rollback. Zero downtime.
+
+### Environment Variable Checklist
+
+Each environment needs:
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+NEXT_PUBLIC_SENTRY_DSN
+SENTRY_AUTH_TOKEN
+NEXT_PUBLIC_APP_URL
 ```
 
 ---

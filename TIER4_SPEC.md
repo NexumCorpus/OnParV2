@@ -353,6 +353,23 @@ Add a tab bar at the top of the recipes page:
 - 5-8%: yellow text with warning icon
 - > 8%: red text with alert icon
 
+### Optional Recipe Link (COGS Flow)
+
+Menu items have an optional `recipe_id` (FK to recipes, nullable, ON DELETE SET NULL).
+
+**When `recipe_id` is set**, display an extra column/badge in the menu items table:
+- Calculate `food_cost_percentage = (recipe.cost_per_serving / menu_item.selling_price) * 100`
+- Show as a color-coded badge:
+  - **Green** (`< 30%`): Healthy margin
+  - **Yellow** (`30-35%`): Watch closely
+  - **Red** (`> 35%`): Review pricing or recipe cost
+
+**When `recipe_id` is NULL**:
+- Show "No recipe linked" in muted text with a small "Link" button
+- This is normal for drinks, pre-made items, third-party products
+
+**Linking UI**: In the Add/Edit Menu Item dialog (Step 7), add an optional "Linked Recipe" dropdown populated from the user's recipes via `recipeService.getRecipes(userId)`. This enables cost-of-goods-sold analysis without forcing every menu item to have a recipe
+
 ---
 
 ## Step 7: Add/Edit Menu Item Dialog
@@ -373,6 +390,11 @@ Add a tab bar at the top of the recipes page:
 │  │ Sales %        │ │ Waste %        │  │
 │  │ (0-100)        │ │ (0-100)        │  │
 │  └────────────────┘ └────────────────┘  │
+│                                          │
+│  ┌────────────────────────────────────┐  │
+│  │ Linked Recipe (optional)        ▼ │  │
+│  │ None / Caesar Salad / ...         │  │
+│  └────────────────────────────────────┘  │
 │                                          │
 │  ☑ Active on menu                       │
 │                                          │
@@ -447,6 +469,44 @@ export async function toggleMenuItemActive(id: string): Promise<ActionResult>
 15. Add/Edit/Delete menu items works
 16. Recipe cards have margin-based color coding
 
+## Inline Tests (Vitest)
+
+Write unit tests alongside the implementation. Do NOT defer these to Tier 8.
+
+Create `tests/unit/services/recipes.test.ts`:
+
+```typescript
+import { describe, it, expect } from 'vitest'
+
+describe('Recipe Cost Calculations', () => {
+  it('calculateRecipeCost sums ingredient costs correctly', () => {
+    // ingredients: [{quantity_needed: 2, cost_per_unit: 3.50}, {quantity_needed: 1, cost_per_unit: 5.00}]
+    // expected: 2 * 3.50 + 1 * 5.00 = 12.00
+  })
+
+  it('cost_per_serving = totalCost / serving_size', () => {
+    // totalCost: 12.00, serving_size: 4
+    // expected: 3.00
+  })
+
+  it('profit_margin = ((selling_price - cost_per_serving) / selling_price) * 100', () => {
+    // selling_price: 14.00, cost_per_serving: 3.00
+    // expected: ((14 - 3) / 14) * 100 = 78.57
+  })
+
+  it('recipe with zero ingredients → cost = 0, margin = 100%', () => { /* ... */ })
+
+  it('food_cost_percentage = (cost_per_serving / selling_price) * 100', () => {
+    // For COGS link: cost_per_serving: 8.50, selling_price: 28.00
+    // expected: 30.36%
+  })
+})
+```
+
+Run: `npx vitest run tests/unit/services/recipes`
+
+---
+
 ## File Summary
 
 ```
@@ -466,4 +526,5 @@ components/recipes/menu-items-tab.tsx
 components/recipes/menu-item-table.tsx
 components/recipes/add-menu-item-dialog.tsx
 components/recipes/menu-performance-summary.tsx
+tests/unit/services/recipes.test.ts
 ```

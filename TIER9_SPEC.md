@@ -355,18 +355,22 @@ export const metadata: Metadata = {
 
 ---
 
-## Step 7: Accessibility Polish
+## Step 7: Accessibility Audit & Polish
 
-- All interactive elements have visible focus indicators (ring-2 ring-brand-500)
-- All images have alt text
-- Color contrast meets WCAG AA (4.5:1 for text, 3:1 for large text)
-- Semantic HTML: nav, main, section, article, aside, footer
-- Skip-to-content link at top of page
-- All form inputs have associated labels
-- Error messages linked via aria-describedby
-- Charts have aria-labels with summary data
-- Keyboard navigation: Tab through all interactive elements
-- Screen reader: test with narrator announcements
+**NOTE:** WCAG 2.1 AA foundations were established in Tier 2 (Step 8c) and applied in all subsequent tiers. This step is an **AUDIT** to verify compliance and fix any gaps — not the initial implementation.
+
+### Audit Checklist
+
+1. **Run axe-core** browser extension on every page — fix all critical/serious issues
+2. **Tab through** all interactive elements on every page — verify focus order matches visual order
+3. **Test with screen reader** (VoiceOver on Mac, NVDA on Windows) — verify all content is announced
+4. **Verify color contrast** using browser dev tools — 4.5:1 for text, 3:1 for large text
+5. **Check all charts** have `aria-label` describing the data AND tabular data fallback
+6. **Verify skip-to-content** link works (focus → Enter → jumps to `#main-content`)
+7. **Check all forms** — every input has `<label>`, errors use `aria-describedby`, required fields use `aria-required`
+8. **Verify focus indicators** — `ring-2 ring-brand-500` on `focus-visible` for all interactive elements
+9. **Check semantic HTML** — `<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`, `<footer>` used correctly
+10. **Mobile touch targets** — minimum 44px on all interactive elements (already enforced by Tier 2 mobile UX guidelines)
 
 ---
 

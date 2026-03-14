@@ -359,6 +359,101 @@ For now, implement CSV export with key metrics table.
 
 ---
 
+## Step 4b: Dynamic Imports for Charts (Performance)
+
+Recharts is ~200KB. Use `next/dynamic` for ALL chart components to avoid loading this on every page:
+
+```typescript
+import dynamic from 'next/dynamic'
+import { Skeleton } from '@/components/ui/skeleton'
+
+// In app/(dashboard)/analytics/page.tsx and app/(dashboard)/page.tsx:
+const WasteTrendChart = dynamic(() => import('@/components/charts/line-chart'), {
+  loading: () => <Skeleton className="h-64 w-full" />,
+  ssr: false,  // Charts render client-side only
+})
+
+const InventoryPieChart = dynamic(() => import('@/components/charts/pie-chart'), {
+  loading: () => <Skeleton className="h-64 w-full" />,
+  ssr: false,
+})
+
+// Apply this pattern to ALL Recharts-based components:
+// - components/charts/area-chart.tsx
+// - components/charts/bar-chart.tsx
+// - components/charts/line-chart.tsx
+// - components/charts/pie-chart.tsx
+// - components/charts/donut-chart.tsx
+// - components/charts/combo-chart.tsx
+```
+
+This keeps First Load JS under the 300KB budget (set in Tier 1).
+
+---
+
+## Step 4c: Notification System
+
+### Architecture
+Notifications are **computed on-demand** at page load (no real-time push, no cron, no database table in MVP). They're derived from current data state and displayed in the dashboard header.
+
+### `lib/services/notifications.ts`
+
+```typescript
+export interface AppNotification {
+  id: string           // deterministic hash of type+itemId for dedup
+  type: 'low_stock' | 'expiring_soon' | 'waste_alert' | 'budget_warning' | 'insight_available'
+  title: string
+  message: string
+  severity: 'info' | 'warning' | 'critical'
+  actionUrl?: string   // link to relevant page
+  createdAt: Date      // when the condition became true (approximated)
+}
+
+export async function getNotifications(userId: string): Promise<AppNotification[]> {
+  // Run these checks in PARALLEL via Promise.all:
+  //
+  // 1. Low stock: items where quantity <= reorder_point
+  //    → type: 'low_stock', severity: 'warning', actionUrl: '/inventory'
+  //
+  // 2. Expiring soon: items expiring within 3 days
+  //    → type: 'expiring_soon'
+  //    → severity: 'critical' if ≤1 day, else 'warning'
+  //    → actionUrl: '/inventory'
+  //
+  // 3. Waste alert: if latest waste snapshot shows avg_waste > 10%
+  //    → type: 'waste_alert', severity: 'warning', actionUrl: '/waste'
+  //
+  // 4. Budget warning: if monthly spend > 80% of budget
+  //    → type: 'budget_warning'
+  //    → severity: 'warning' if 80-99%, 'critical' if >= 100%
+  //    → actionUrl: '/analytics'
+  //
+  // 5. Pending insights: count of ai_insights with status='pending'
+  //    → type: 'insight_available', severity: 'info', actionUrl: '/insights'
+  //
+  // Sort: severity (critical first) → createdAt (newest first)
+  // Return max 20 notifications
+}
+```
+
+### UI Location
+
+Add to `components/layout/topbar.tsx`:
+- **Bell icon** (lucide-react `Bell`) in the top bar, right side
+- **Badge** showing count of critical + warning notifications (red if any critical, yellow if warning-only)
+- **Click** opens a `Popover` (shadcn/ui) showing notification cards
+- Each card: icon (by type), title, message, action link, dismiss button
+- **Dismiss** hides for current session only (`sessionStorage`)
+- **No separate notifications page in MVP** — the dropdown IS the full list
+
+### Data Flow
+```
+Dashboard layout (server) → getNotifications(userId) → pass as prop to Topbar (client)
+Topbar renders bell icon + badge + dropdown
+```
+
+---
+
 ## Verification Checklist
 
 1. `npm run build` passes
@@ -396,4 +491,5 @@ components/analytics/cost-analytics.tsx
 components/analytics/performance-analytics.tsx
 components/analytics/date-range-selector.tsx
 components/analytics/metrics-summary-table.tsx
+lib/services/notifications.ts
 ```

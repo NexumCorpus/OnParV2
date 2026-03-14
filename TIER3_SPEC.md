@@ -615,6 +615,74 @@ export async function importFromCSV(formData: FormData): Promise<ActionResult>
 17. Mobile card layout renders correctly
 18. Pagination works (if >20 items)
 
+## Inline Tests (Vitest)
+
+Write unit tests alongside the implementation. Do NOT defer these to Tier 8.
+
+Create `tests/unit/services/inventory.test.ts`:
+
+```typescript
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// Mock Supabase server client
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn(() => ({
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    // ... mock chain as needed
+  })),
+}))
+
+describe('Inventory Service', () => {
+  describe('getCount', () => {
+    it('returns correct count for a user', async () => { /* ... */ })
+    it('excludes soft-deleted items', async () => { /* ... */ })
+  })
+
+  describe('getLowStockItems', () => {
+    it('returns items where quantity <= reorder_point', async () => { /* ... */ })
+    it('returns empty array when no low stock items', async () => { /* ... */ })
+  })
+
+  describe('getExpiringItems', () => {
+    it('returns items expiring within 7 days', async () => { /* ... */ })
+    it('excludes already expired items', async () => { /* ... */ })
+  })
+})
+```
+
+Create `tests/unit/utils/csv.test.ts`:
+
+```typescript
+describe('CSV Parser', () => {
+  it('parses valid CSV rows correctly', async () => { /* ... */ })
+  it('handles missing required fields gracefully', async () => { /* ... */ })
+  it('handles malformed dates', async () => { /* ... */ })
+  it('returns empty result for empty file', async () => { /* ... */ })
+  it('rejects files exceeding row limit', async () => { /* ... */ })
+})
+```
+
+Run: `npx vitest run tests/unit/services/inventory tests/unit/utils/csv`
+
+### Server Action Error Handling Pattern
+
+All Supabase calls in server actions (inventory, suppliers) MUST follow this pattern:
+
+```typescript
+import { logger } from '@/lib/utils/logger'
+
+// In every server action:
+const { data, error } = await supabase.from('inventory_items')...
+if (error) {
+  logger.error({ err: error, userId, action: 'createItem' }, 'Database operation failed')
+  return { success: false, error: 'Something went wrong. Please try again.' }
+}
+```
+
+---
+
 ## File Summary
 
 ```
@@ -639,4 +707,6 @@ components/inventory/inventory-filters.tsx
 components/suppliers/supplier-list.tsx
 components/suppliers/add-supplier-dialog.tsx
 app/(dashboard)/inventory/add/page.tsx (mobile full-screen add form)
+tests/unit/services/inventory.test.ts
+tests/unit/utils/csv.test.ts
 ```
