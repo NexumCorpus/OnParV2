@@ -38,7 +38,7 @@ export async function createPortalSession(params: {
 // Get user's current subscription status
 export async function getSubscriptionStatus(userId: string): Promise<{
   isSubscribed: boolean
-  plan: 'free' | 'starter' | 'professional' | 'enterprise' | null
+  plan: 'free' | 'starter' | 'professional' | null
   status: string | null
   currentPeriodEnd: Date | null
   cancelAtPeriodEnd: boolean
@@ -74,7 +74,10 @@ export async function POST(request: Request) {
   }
 
   // Handle events...
-  // Use service_role Supabase client for database operations (no RLS)
+  // Use the admin client from lib/supabase/admin.ts (created in Tier 1)
+  // which uses SUPABASE_SERVICE_ROLE_KEY to bypass RLS
+  // import { createAdminClient } from '@/lib/supabase/admin'
+  // const supabase = createAdminClient()
 
   return new Response('OK', { status: 200 })
 }
@@ -242,6 +245,36 @@ export const PLANS = {
 
 ---
 
+## Step 7: Plan Limit Enforcement
+
+Create `lib/services/plan-limits.ts`:
+
+```typescript
+import { PLANS } from '@/lib/config'
+
+// Check if user can add more items based on their plan
+export async function canAddInventoryItem(userId: string): Promise<{
+  allowed: boolean
+  currentCount: number
+  limit: number
+  plan: string
+}>
+
+// Check if user can add more team members (future)
+export async function canAddUser(userId: string): Promise<{
+  allowed: boolean
+  currentCount: number
+  limit: number
+}>
+
+// Get user's current plan from subscription status
+export async function getUserPlan(userId: string): Promise<keyof typeof PLANS>
+```
+
+Integrate into inventory server actions — when creating an item, check `canAddInventoryItem()` first and return an error with upgrade prompt if limit is reached.
+
+---
+
 ## Verification Checklist
 
 1. `npm run build` passes
@@ -261,8 +294,9 @@ export const PLANS = {
 
 ```
 lib/services/stripe.ts
+lib/services/plan-limits.ts
 lib/actions/settings.ts
-lib/config.ts (pricing plans)
+lib/config.ts (add pricing plans to existing file from Tier 1)
 app/api/webhook/stripe/route.ts
 app/(marketing)/pricing/page.tsx
 app/(dashboard)/settings/page.tsx

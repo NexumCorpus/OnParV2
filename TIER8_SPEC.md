@@ -75,6 +75,14 @@ vi.mock('@/lib/supabase/server', () => ({
 
 ---
 
+## Testing Note
+
+Engine functions (`lib/engines/`) are pure functions that accept data and return results — they do **NOT** call Supabase. This means engine tests need NO mocking. Just call the function with test data and assert the output.
+
+Service tests (`lib/services/`) DO interact with Supabase and need the mock from `tests/setup.ts`.
+
+---
+
 ## Step 2: Unit Tests — Waste Analysis Engine
 
 `tests/unit/engines/waste-analysis.test.ts`:
@@ -139,11 +147,10 @@ describe('WastePredictionEngine', () => {
     it('generates overstock alert when quantity > max_stock * 1.2')
   })
 
-  describe('confidence scoring', () => {
-    it('calculates data quality = min(1, (inventoryCount + menuCount) / 20)')
-    it('base confidence = dataQuality * 80')
-    it('adds 10 for >30 waste events')
-    it('caps at 100')
+  describe('per-item prediction confidence', () => {
+    it('calculates data quality = min(1, itemWasteEventsCount / 10)')
+    it('confidence = min(95, dataQuality * 100)')
+    it('caps at 95 (not 100 — predictions are never 100% confident)')
   })
 
   describe('prevention ROI', () => {
@@ -186,6 +193,14 @@ describe('AIInsightEngine', () => {
     it('targets fast-moving items below 1.5x reorder point')
     it('estimates 15% savings on bulk orders')
   })
+
+  describe('AI insight confidence scoring', () => {
+    it('calculates data quality = min(1, (inventoryCount + menuCount) / 20)')
+    it('base confidence = dataQuality * 80')
+    it('adds 10 for >30 waste events')
+    it('adds 10 for 6+ months of waste history')
+    it('caps at 100')
+  })
 })
 ```
 
@@ -223,7 +238,7 @@ describe('RecipeService', () => {
 ```typescript
 describe('CSV Utils', () => {
   it('exports inventory items to valid CSV string')
-  it('includes headers: Name, Category, Quantity, Unit, Expiry Date, Reorder Point, Price')
+  it('includes headers: Name, Category, Quantity, Unit, Expiry Date, Reorder Point, Price Per Unit')
   it('handles commas in item names by quoting')
   it('parses valid CSV into inventory items')
   it('reports errors for invalid rows')
@@ -353,6 +368,7 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
       NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+      SUPABASE_SERVICE_ROLE_KEY: placeholder
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: placeholder
       STRIPE_SECRET_KEY: placeholder
       STRIPE_WEBHOOK_SECRET: placeholder

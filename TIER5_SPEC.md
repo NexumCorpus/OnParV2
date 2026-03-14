@@ -17,6 +17,16 @@ This tier builds:
 
 ---
 
+## Architecture Note: Engines vs Services
+
+**Engine files** (`lib/engines/`) contain pure business logic functions. They accept data as parameters and return computed results — they do **NOT** import or call Supabase directly.
+
+**Server actions** (`lib/actions/`) are the glue: they fetch data from Supabase, pass it to engine functions, and return results to the UI.
+
+This separation makes engines fully unit-testable without mocking Supabase.
+
+---
+
 ## Step 1: Waste Analysis Engine
 
 Create `lib/engines/waste-analysis.ts`:
@@ -57,9 +67,14 @@ export interface SeasonalTrend {
 ### Core Analysis Functions
 
 ```typescript
-// Analyze waste patterns from waste_events over the last 90 days
+// Analyze waste patterns from waste_events data
 // Groups by inventory item, calculates waste rate per item
-analyzeWastePatterns(userId: string): Promise<WastePattern[]>
+// NOTE: This is a PURE function — it accepts data, not userId.
+// The server action fetches waste_events and inventory, then calls this.
+analyzeWastePatterns(
+  wasteEvents: WasteEvent[],
+  inventoryItems: InventoryItem[]
+): WastePattern[]
 
 // For each item:
 //   wasteRate = (totalWasteQuantity / totalInboundQuantity) * 100
@@ -97,7 +112,8 @@ const SEASONAL_MULTIPLIERS: Record<number, number> = {
   12: 1.18, // December - holiday peak
 }
 
-getSeasonalTrends(userId: string): Promise<SeasonalTrend[]>
+// Pure function — returns seasonal data based on current month
+getSeasonalTrends(): SeasonalTrend[]
 ```
 
 ### Savings Calculations
@@ -165,8 +181,12 @@ export interface PreventionROI {
 
 ```typescript
 // Generate 30-day waste predictions for all inventory items
-// Uses 6-month historical data from waste_events
-generatePredictions(userId: string): Promise<WastePrediction[]>
+// Pure function — accepts data, server action fetches and passes it in
+generatePredictions(
+  inventoryItems: InventoryItem[],
+  wasteEvents: WasteEvent[],
+  currentMonth: number
+): WastePrediction[]
 
 // For each item:
 //   1. Calculate base waste rate from 6 months history
@@ -186,15 +206,22 @@ generatePredictions(userId: string): Promise<WastePrediction[]>
 //          if waste decreasing: factor = 0.85
 //          else: factor = 1.0
 //   3. predictedWaste = baseWasteRate * product(allFactors) * quantity * price
-//   4. confidence = min(95, dataQuality * 100)
-//      where dataQuality = min(1, wasteEventsCount / 10)
+//   4. Prediction confidence (per-item, simpler than AI insight confidence):
+//      confidence = min(95, dataQuality * 100)
+//      where dataQuality = min(1, itemWasteEventsCount / 10)
+//      NOTE: This is DIFFERENT from AI insight confidence (see ai-insights.ts)
 ```
 
 ### Alert Generation
 
 ```typescript
 // Generate alerts based on current state and predictions
-generateAlerts(userId: string): Promise<WasteAlert[]>
+// Pure function — accepts data
+generateAlerts(
+  inventoryItems: InventoryItem[],
+  predictions: WastePrediction[],
+  currentMonth: number
+): WasteAlert[]
 
 // Alert types:
 //
@@ -304,7 +331,13 @@ export interface SeasonalInsight {
 
 ```typescript
 // Generate comprehensive waste insight report
-generateReport(userId: string): Promise<WasteInsightReport>
+// Pure function — orchestrates other engine functions with pre-fetched data
+generateReport(data: {
+  wastePatterns: WastePattern[]
+  benchmarks: BenchmarkComparison[]
+  predictions: WastePrediction[]
+  avgWasteRate: number
+}): WasteInsightReport
 
 // Performance score calculation:
 //   score = 100 - (avgWasteRate * 5)
@@ -348,7 +381,8 @@ const INDUSTRY_BENCHMARKS: Record<string, { average: number; bestInClass: number
 //   below_average: userRate <= average * 1.5
 //   poor: userRate > average * 1.5
 
-compareToBenchmarks(userId: string): Promise<BenchmarkComparison[]>
+// Pure function — accepts waste patterns grouped by category
+compareToBenchmarks(categoryWasteRates: Array<{ category: string; wasteRate: number }>): BenchmarkComparison[]
 ```
 
 ---
@@ -360,8 +394,15 @@ Create `lib/engines/ai-insights.ts`:
 ### Insight Generation Algorithms
 
 ```typescript
-// Generate all AI insights for a user
-generateInsights(userId: string): Promise<AIInsight[]>
+// Generate all AI insights from user data
+// Pure function — accepts pre-fetched data, server action handles DB
+generateInsights(data: {
+  inventoryItems: InventoryItem[]
+  menuItems: MenuItem[]
+  wasteEvents: WasteEvent[]
+  monthlyBudget: number | null
+  currentMonth: number
+}): AIInsight[]
 
 // INSIGHT 1: High-waste menu items
 // Find menu items where waste_percentage > average_waste + 2
@@ -401,18 +442,23 @@ generateInsights(userId: string): Promise<AIInsight[]>
 ### Confidence Scoring
 
 ```typescript
+// AI Insight confidence scoring (DIFFERENT from per-item prediction confidence)
+// Pure function — accepts counts, not userId
+//
 // Data quality score (0-1):
-//   inventoryCount = count of inventory items
-//   menuCount = count of menu items
-//   wasteCount = count of waste events (last 90 days)
 //   dataQuality = min(1, (inventoryCount + menuCount) / 20)
 //
-// Prediction confidence (0-100):
+// Overall AI confidence (0-100):
 //   base = dataQuality * 80
 //   + 10 if wasteCount > 30
-//   + 10 if user has 6+ months of data
+//   + 10 if user has 6+ months of data (i.e., oldest waste event > 180 days ago)
 //   Clamped to 0-100
-calculateConfidence(userId: string): Promise<number>
+calculateConfidence(counts: {
+  inventoryCount: number
+  menuCount: number
+  wasteEventCount: number
+  hasLongHistory: boolean  // true if oldest waste event > 180 days ago
+}): number
 ```
 
 ### Save Insights to Database
@@ -713,9 +759,17 @@ Create `lib/actions/waste.ts`:
 ```typescript
 'use server'
 
+// Server actions are the glue between DB and pure engine functions.
+// They: 1) authenticate user, 2) fetch data from Supabase, 3) call engine functions, 4) save results
+
 export async function recordWasteEvent(data: RecordWasteInput): Promise<ActionResult>
-export async function refreshWasteAnalysis(userId: string): Promise<ActionResult>
-export async function generateAIInsights(userId: string): Promise<ActionResult>
+
+// Fetches waste_events + inventory_items, passes to engine functions, saves snapshot
+export async function refreshWasteAnalysis(): Promise<ActionResult>
+
+// Fetches all user data, calls generateInsights(), saves to ai_insights table
+export async function refreshAIInsights(): Promise<ActionResult>
+
 export async function updateInsightStatus(insightId: string, status: string, savings?: number): Promise<ActionResult>
 export async function dismissInsight(insightId: string): Promise<ActionResult>
 ```

@@ -300,7 +300,8 @@ Create `lib/utils/csv.ts`:
 
 ```typescript
 exportInventoryToCSV(items: InventoryItem[]): string
-// Columns: Name, Category, Quantity, Unit, Expiry Date, Reorder Point, Max Stock, Price Per Unit
+// Columns: Name, Category, Quantity, Unit, Expiry Date, Reorder Point, Price Per Unit
+// Note: Max Stock is omitted from CSV (optional field, rarely used in imports)
 // Returns CSV string
 // Trigger download via Blob + URL.createObjectURL
 ```
@@ -415,6 +416,22 @@ deleteSupplier(id: string): Promise<void>
 │                                          │
 │  [Cancel]            [Save Supplier]     │
 └──────────────────────────────────────────┘
+```
+
+---
+
+## Step 6b: Supplier Server Actions
+
+Create `lib/actions/suppliers.ts`:
+
+```typescript
+'use server'
+
+export async function createSupplier(formData: FormData): Promise<ActionResult>
+export async function updateSupplier(id: string, formData: FormData): Promise<ActionResult>
+export async function deleteSupplier(id: string): Promise<ActionResult>
+
+// ActionResult type is defined in types/index.ts (from Tier 1)
 ```
 
 ---
@@ -534,6 +551,7 @@ lib/services/inventory.ts
 lib/services/suppliers.ts
 lib/services/products.ts
 lib/actions/inventory.ts
+lib/actions/suppliers.ts
 lib/utils/csv.ts
 lib/utils/validation.ts (expand)
 app/(dashboard)/inventory/page.tsx

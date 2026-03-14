@@ -200,11 +200,41 @@ Detailed feature breakdown with alternating left/right layout sections:
 
 Contact form submits to `feedback` table with `feedback_type = 'general'`.
 
+Create `lib/actions/feedback.ts`:
+
+```typescript
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import type { ActionResult } from '@/types'
+
+export async function submitFeedback(formData: FormData): Promise<ActionResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { error } = await supabase.from('feedback').insert({
+    user_id: user?.id ?? null,
+    email: formData.get('email') as string,
+    feedback_type: (formData.get('subject') as string) || 'general',
+    message: formData.get('message') as string,
+    page_url: '/contact',
+  })
+
+  if (error) return { success: false, error: error.message }
+  return { success: true }
+}
+```
+
 ---
 
 ## Step 4: Onboarding Flow
 
-After signup, redirect new users to `/onboarding`:
+**IMPORTANT:** Update the signup page from Tier 2 — change the post-signup redirect from `/dashboard` to `/onboarding`. Check if the user has completed onboarding (e.g., `user.settings.onboarding_completed`) and redirect accordingly:
+- New users → `/onboarding`
+- Returning users who haven't finished → `/onboarding`
+- Users who completed onboarding → `/dashboard`
+
+Add `onboarding_completed: false` to the default user settings JSONB in the database.
 
 ### `app/(dashboard)/onboarding/page.tsx`
 
@@ -311,6 +341,37 @@ export const metadata: Metadata = {
 
 ---
 
+## Step 7b: Notification Service Stub
+
+Create `lib/services/notifications.ts`:
+
+```typescript
+// Notification delivery stub — email integration (e.g., Resend, SendGrid)
+// can be added later. For now, notifications are in-app only (via alerts and
+// the dashboard's recent alerts panel).
+
+export interface Notification {
+  id: string
+  userId: string
+  type: 'low_stock' | 'expiring' | 'budget_warning' | 'insight'
+  title: string
+  message: string
+  read: boolean
+  createdAt: Date
+}
+
+// In-app notification count (shown in topbar bell icon)
+// Combines: low stock items + expiring items + unread insights
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  // Aggregates from inventory alerts + waste alerts + pending insights
+  // No separate notifications table needed — computed on the fly
+}
+```
+
+This keeps the notification system simple for MVP. Email delivery can be added post-launch.
+
+---
+
 ## Step 8: Performance Optimization
 
 - All images use `next/image` with proper `width`/`height` or `fill`
@@ -398,10 +459,13 @@ Reduce food waste by 10-20% and save $500+ monthly.
 
 ```
 app/page.tsx (rewrite — full landing page)
-app/(marketing)/layout.tsx
+app/(marketing)/layout.tsx (rewrite — add marketing navbar + footer)
 app/(marketing)/features/page.tsx
 app/(marketing)/contact/page.tsx
+app/(auth)/signup/page.tsx (modify — redirect to /onboarding)
 app/(dashboard)/onboarding/page.tsx
+lib/actions/feedback.ts
+lib/services/notifications.ts
 components/layout/marketing-navbar.tsx
 components/layout/footer.tsx
 components/landing/hero-section.tsx

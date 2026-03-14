@@ -33,7 +33,7 @@ npm install @supabase/supabase-js @supabase/ssr stripe @stripe/stripe-js rechart
 ```
 
 ```bash
-npm install -D @types/node vitest @vitejs/plugin-react playwright @playwright/test
+npm install -D @types/node vitest @vitejs/plugin-react @vitest/coverage-v8 jsdom playwright @playwright/test
 ```
 
 ## Step 4: Configure TypeScript (STRICT)
@@ -130,19 +130,7 @@ Tailwind 4 uses CSS-first configuration. Create `app/globals.css`:
   --radius-sm: 0.25rem;
 }
 
-/* Dark mode variables */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --card: #0a0a0a;
-    --card-foreground: #fafafa;
-    --border: #27272a;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-  }
-}
-
+/* Light mode variables */
 :root {
   --background: #ffffff;
   --foreground: #09090b;
@@ -151,6 +139,17 @@ Tailwind 4 uses CSS-first configuration. Create `app/globals.css`:
   --border: #e4e4e7;
   --muted: #f4f4f5;
   --muted-foreground: #71717a;
+}
+
+/* Dark mode — class-based for next-themes compatibility */
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #0a0a0a;
+  --card-foreground: #fafafa;
+  --border: #27272a;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
 }
 
 body {
@@ -171,6 +170,55 @@ import { twMerge } from 'tailwind-merge'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+```
+
+## Step 7b: Create Formatting Utility
+
+`lib/utils/formatting.ts`:
+
+```typescript
+import { format, formatDistanceToNow, isValid, parseISO } from 'date-fns'
+
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  }).format(amount)
+}
+
+export function formatPercentage(value: number, decimals = 1): string {
+  return `${value.toFixed(decimals)}%`
+}
+
+export function formatDate(dateString: string | null): string {
+  if (!dateString) return '—'
+  const date = parseISO(dateString)
+  if (!isValid(date)) return '—'
+  return format(date, 'MMM d, yyyy')
+}
+
+export function formatRelativeDate(dateString: string): string {
+  const date = parseISO(dateString)
+  if (!isValid(date)) return '—'
+  return formatDistanceToNow(date, { addSuffix: true })
+}
+
+export function formatNumber(value: number, decimals = 0): string {
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: decimals,
+  }).format(value)
+}
+```
+
+## Step 7c: Create Base Config File
+
+`lib/config.ts`:
+
+```typescript
+// App-wide constants — pricing plans added in Tier 7
+export const APP_NAME = 'OnPar'
+export const APP_DESCRIPTION = 'Smart Restaurant Inventory Management'
+export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 ```
 
 ## Step 8: Set Up Supabase Client Files
@@ -217,6 +265,19 @@ export async function createClient() {
         },
       },
     }
+  )
+}
+```
+
+`lib/supabase/admin.ts` — Service role client (bypasses RLS, for webhooks and server-only operations):
+
+```typescript
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+export function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 }
 ```
@@ -360,6 +421,21 @@ CREATE POLICY "users_update_own" ON users
 CREATE TRIGGER trg_users_updated_at
   BEFORE UPDATE ON users FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
+-- Auto-create user profile when a new auth user signs up
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email)
+  VALUES (NEW.id, NEW.email)
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 ------------------------------------------------------------
 -- SUPPLIERS
@@ -999,6 +1075,31 @@ export interface Feedback {
   user_agent: string | null
   created_at: string
 }
+
+// Shared result type for all Server Actions
+export type ActionResult =
+  | { success: true; data?: unknown }
+  | { success: false; error: string }
+```
+
+## Step 12b: Create Database Types Stub
+
+Create `types/database.ts`:
+
+```typescript
+// This file should be regenerated from Supabase after applying migrations:
+//   npx supabase gen types typescript --local > types/database.ts
+//
+// For now, export a placeholder so imports don't break.
+// The actual generated types will replace this after Supabase is connected.
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export type Database = {
+  public: {
+    Tables: Record<string, unknown>
+  }
+}
 ```
 
 ## Step 13: Create Placeholder Pages
@@ -1186,10 +1287,14 @@ vitest.config.ts
 .gitignore
 package.json (via create-next-app, then modify scripts)
 lib/utils.ts
+lib/utils/formatting.ts
+lib/config.ts
 lib/supabase/client.ts
 lib/supabase/server.ts
+lib/supabase/admin.ts
 lib/supabase/middleware.ts
 types/index.ts
+types/database.ts
 supabase/migrations/001_initial_schema.sql
 supabase/seed.sql
 app/layout.tsx

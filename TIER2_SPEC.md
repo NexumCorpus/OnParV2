@@ -19,7 +19,7 @@ Initialize shadcn/ui (use the `new-york` style, and the default config). Then ad
 
 ```bash
 npx shadcn@latest init
-npx shadcn@latest add button card input label form separator avatar dropdown-menu sheet badge toast tabs dialog
+npx shadcn@latest add button card input label form separator avatar dropdown-menu sheet badge toast tabs dialog select alert-dialog table checkbox progress switch scroll-area tooltip
 ```
 
 Make sure all UI components live in `components/ui/`.
@@ -164,15 +164,14 @@ Create `app/(auth)/layout.tsx` — Centered card layout, split screen on desktop
 - Restaurant name: required, 2-100 chars
 - On submit:
   1. Call `supabase.auth.signUp({ email, password })`
-  2. After successful signup, create user profile in `users` table:
+  2. The database trigger (`on_auth_user_created` from Tier 1 migration) auto-creates the user profile row.
+  3. After successful signup, update the user's restaurant_name:
      ```ts
-     await supabase.from('users').insert({
-       id: user.id,
-       email: user.email,
+     await supabase.from('users').update({
        restaurant_name: restaurantName,
-     })
+     }).eq('id', user.id)
      ```
-  3. Redirect to `/dashboard`
+  4. Redirect to `/dashboard` (Tier 9 will change this to `/onboarding` for new users)
 - On error: show toast
 - Link to `/login`
 
@@ -409,6 +408,22 @@ Create `components/layout/mobile-nav.tsx`:
 
 ---
 
+## Step 6b: Marketing Layout Stub
+
+Create `app/(marketing)/layout.tsx` as a simple passthrough layout for now (Tier 9 will add the full marketing navbar and footer):
+
+```tsx
+export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen">
+      {children}
+    </div>
+  )
+}
+```
+
+This ensures marketing pages (pricing in Tier 7, features/contact in Tier 9) have a route group from the start.
+
 ## Step 7: Placeholder Pages for All Dashboard Routes
 
 Create these pages as simple server components with a heading and "Coming in Tier X" message:
@@ -485,6 +500,7 @@ app/layout.tsx  (modify to add Providers)
 app/(auth)/layout.tsx
 app/(auth)/login/page.tsx
 app/(auth)/signup/page.tsx
+app/(marketing)/layout.tsx  (stub for marketing route group)
 app/(dashboard)/layout.tsx
 app/(dashboard)/page.tsx
 app/(dashboard)/inventory/page.tsx
