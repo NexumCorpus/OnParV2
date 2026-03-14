@@ -79,6 +79,10 @@ getCategories(userId: string): Promise<string[]>
 
 // Bulk update quantities (for quick adjustments)
 bulkUpdateQuantities(updates: Array<{ id: string; quantity: number }>): Promise<void>
+
+// Get total count of inventory items for a user (used by dashboard KPIs)
+// SELECT count(*) FROM inventory_items WHERE user_id = $1
+getCount(userId: string): Promise<number>
 ```
 
 ### Validation (Zod)
@@ -518,7 +522,7 @@ export async function deleteItem(id: string): Promise<ActionResult>
 export async function bulkDeleteItems(ids: string[]): Promise<ActionResult>
 export async function importFromCSV(formData: FormData): Promise<ActionResult>
 
-type ActionResult = { success: true } | { success: false; error: string }
+// ActionResult is imported from @/types — do NOT redefine locally
 ```
 
 ---

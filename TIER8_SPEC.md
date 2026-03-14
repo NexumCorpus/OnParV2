@@ -81,6 +81,8 @@ Engine functions (`lib/engines/`) are pure functions that accept data and return
 
 Service tests (`lib/services/`) DO interact with Supabase and need the mock from `tests/setup.ts`.
 
+**Important:** The Supabase mock in `tests/setup.ts` is ONLY needed for service tests. Engine tests are pure functions and should NOT import or depend on the mock setup. Keep engine test files completely independent.
+
 ---
 
 ## Step 2: Unit Tests — Waste Analysis Engine
@@ -394,9 +396,10 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npm run test:e2e
+        if: env.SUPABASE_E2E_URL != ''
         env:
-          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_E2E_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_E2E_ANON_KEY || 'placeholder' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -463,10 +463,14 @@ calculateConfidence(counts: {
 
 ### Save Insights to Database
 
+> **IMPORTANT:** These are DB operations, NOT pure engine functions. They belong in `lib/actions/waste.ts` (server actions), not in the engine files. The server actions in Step 8 already include `refreshAIInsights()` and `updateInsightStatus()` which handle these operations.
+
 ```typescript
+// These functions live in lib/actions/waste.ts, NOT in engine files:
+
 // Save generated insights to ai_insights table
-// Set status = 'pending'
-saveInsights(userId: string, insights: AIInsight[]): Promise<void>
+// Set status = 'pending', return created records with IDs
+saveInsights(userId: string, insights: AIInsight[]): Promise<AIInsight[]>
 
 // Update insight status when user acts on it
 updateInsightStatus(
@@ -772,6 +776,26 @@ export async function refreshAIInsights(): Promise<ActionResult>
 
 export async function updateInsightStatus(insightId: string, status: string, savings?: number): Promise<ActionResult>
 export async function dismissInsight(insightId: string): Promise<ActionResult>
+
+// Save generated insights to ai_insights table (returns created records with IDs)
+export async function saveInsights(insights: AIInsight[]): Promise<ActionResult>
+
+// Save waste analysis snapshot for historical tracking
+export async function saveAnalysisSnapshot(data: WasteAnalysisSnapshot): Promise<ActionResult>
+```
+
+### Waste Event Validation
+
+Add to `lib/utils/validation.ts`:
+
+```typescript
+export const wasteEventSchema = z.object({
+  inventory_item_id: z.string().uuid(),
+  quantity: z.number().min(0.01, 'Quantity must be > 0'),
+  unit: z.string().min(1),
+  reason: z.enum(['expired', 'spoiled', 'overproduction', 'prep_waste', 'damaged', 'customer_return', 'quality_issue', 'other']),
+  notes: z.string().max(500).nullable().optional(),
+})
 ```
 
 ---

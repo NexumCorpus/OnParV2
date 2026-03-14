@@ -28,6 +28,7 @@ getRecipes(userId: string, filters?: {
   sortOrder?: 'asc' | 'desc'
 }): Promise<Recipe[]>
 
+// Supabase join: .select('*, recipe_ingredients(*, inventory_items(*))')
 getRecipe(id: string): Promise<Recipe & { ingredients: (RecipeIngredient & { inventory_item: InventoryItem })[] }>
 
 createRecipe(data: CreateRecipeInput): Promise<Recipe>
@@ -77,6 +78,9 @@ checkIngredientAvailability(recipeId: string): Promise<{
 
 // Recalculate and update cost_per_serving and profit_margin on recipe
 // Called after ingredient changes
+// cost_per_serving = calculateRecipeCost(recipeId) / recipe.serving_size
+// profit_margin = ((selling_price - cost_per_serving) / selling_price) * 100
+// These are DENORMALIZED (stored in DB) and recalculated whenever ingredients change
 recalculateRecipeCosts(recipeId: string): Promise<Recipe>
 ```
 
@@ -100,6 +104,22 @@ export const RECIPE_CATEGORIES = [
   'Beverage', 'Pizza', 'Pasta', 'Salad', 'Soup',
   'Sandwich', 'Breakfast', 'Other'
 ] as const
+
+export const menuItemSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(200),
+  category: z.string().min(1, 'Category is required'),
+  selling_price: z.number().min(0, 'Price must be >= 0'),
+  sales_percentage: z.number().min(0).max(100).optional(),
+  waste_percentage: z.number().min(0).max(100).optional(),
+  is_active: z.boolean().default(true),
+})
+
+export const ingredientSchema = z.object({
+  inventory_item_id: z.string().uuid(),
+  quantity_needed: z.number().min(0.01, 'Quantity must be > 0'),
+  unit: z.string().min(1, 'Unit is required'),
+  cost_per_unit: z.number().min(0, 'Cost must be >= 0'),
+})
 ```
 
 ---

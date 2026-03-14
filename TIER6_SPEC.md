@@ -30,7 +30,7 @@ const stats = {
   budgetUsed: user.monthly_budget ? (monthlySpend / user.monthly_budget) * 100 : 0,
   wasteRate: latestSnapshot?.average_waste_percentage ?? 0,
   potentialSavings: await inventoryService.calculateEstimatedSavings(userId),
-  activeInsights: (await insightService.getPending(userId)).length,
+  activeInsights: (await supabase.from('ai_insights').select('id').eq('user_id', userId).eq('status', 'pending')).data?.length ?? 0,
 }
 ```
 
@@ -218,6 +218,31 @@ const stats = {
 │  │  │ Monthly Waste       │ $847    │ $923       │ ↓ 8.2%│     │   │
 │  └──────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
+```
+
+### Performance Score Formulas
+
+These formulas are used by the Performance tab in the analytics page:
+
+```typescript
+// Overall score = average of 4 component scores (0-100)
+
+// Waste management score:
+//   base = 100 - (avgWastePercentage * 10)
+//   clamped 0-100
+
+// Inventory turnover score:
+//   turnover = monthlySpend / totalInventoryValue
+//   score = min(100, turnover * 50)  // 2.0x turnover = 100
+
+// Cost efficiency score:
+//   score = 100 - (wasteValue / totalInventoryValue * 100)
+//   clamped 0-100
+
+// Budget adherence score:
+//   if no budget set: 75 (neutral)
+//   else: 100 - max(0, (budgetUsed - 100))  // 100% = perfect, over = penalized
+//   clamped 0-100
 ```
 
 ---

@@ -402,9 +402,9 @@ CREATE TABLE users (
     "low_stock_threshold": 0.8,
     "expiry_warning_days": 7,
     "budget_warning_threshold": 0.9,
-    "email_notifications": true
+    "email_notifications": true,
+    "onboarding_completed": false
   }'::jsonb,
-  stripe_customer_id text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -898,7 +898,6 @@ export interface User {
   monthly_budget: number | null
   avatar_url: string | null
   settings: UserSettings
-  stripe_customer_id: string | null
   created_at: string
   updated_at: string
 }
@@ -909,6 +908,7 @@ export interface UserSettings {
   expiry_warning_days: number
   budget_warning_threshold: number
   email_notifications: boolean
+  onboarding_completed: boolean
 }
 
 export interface InventoryItem {
