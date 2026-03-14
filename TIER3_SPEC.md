@@ -23,6 +23,7 @@ Create `lib/services/inventory.ts`:
 ```typescript
 // All operations use the server-side Supabase client
 // All queries are scoped to the authenticated user via RLS
+// CRITICAL: All read queries MUST filter WHERE deleted_at IS NULL (soft-delete, see TIER 1)
 
 getInventoryItems(userId: string, filters?: {
   category?: string
@@ -56,16 +57,16 @@ deleteInventoryItem(id: string): Promise<void>
 ### Business Logic Functions
 
 ```typescript
-// Items where quantity < reorder_point
+// Items where quantity < reorder_point AND deleted_at IS NULL
 getLowStockItems(userId: string): Promise<InventoryItem[]>
 
-// Items expiring within N days (default: 7, from user settings)
+// Items expiring within N days (default: 7, from user settings) AND deleted_at IS NULL
 getExpiringItems(userId: string, withinDays?: number): Promise<InventoryItem[]>
 
-// Sum of (quantity * price_per_unit) for all items
+// Sum of (quantity * price_per_unit) for all items WHERE deleted_at IS NULL
 getTotalInventoryValue(userId: string): Promise<number>
 
-// Estimated savings from addressing low stock + expiring items
+// Estimated savings from addressing low stock + expiring items (deleted_at IS NULL)
 // Low stock savings: sum of (reorder_point - quantity) * price_per_unit * 0.15
 // Expiry savings: sum of quantity * price_per_unit * 0.20 for expiring items
 calculateEstimatedSavings(userId: string): Promise<{
@@ -74,14 +75,14 @@ calculateEstimatedSavings(userId: string): Promise<{
   totalSavings: number
 }>
 
-// Get unique categories for filter dropdown
+// Get unique categories for filter dropdown (deleted_at IS NULL)
 getCategories(userId: string): Promise<string[]>
 
-// Bulk update quantities (for quick adjustments)
+// Bulk update quantities (for quick adjustments) — only for non-deleted items
 bulkUpdateQuantities(updates: Array<{ id: string; quantity: number }>): Promise<void>
 
 // Get total count of inventory items for a user (used by dashboard KPIs)
-// SELECT count(*) FROM inventory_items WHERE user_id = $1
+// SELECT count(*) FROM inventory_items WHERE user_id = $1 AND deleted_at IS NULL
 getCount(userId: string): Promise<number>
 ```
 
@@ -604,4 +605,5 @@ components/inventory/inventory-alerts.tsx
 components/inventory/inventory-filters.tsx
 components/suppliers/supplier-list.tsx
 components/suppliers/add-supplier-dialog.tsx
+app/(dashboard)/inventory/add/page.tsx (mobile full-screen add form)
 ```

@@ -839,11 +839,13 @@ Create `lib/actions/waste.ts`:
 // recordWasteEvent MUST:
 // 1. Validate input with wasteEventSchema
 // 2. Fetch the inventory item to get price_per_unit
-// 3. Calculate estimated_value = quantity * price_per_unit
-// 4. INSERT waste_event record
-// 5. DECREMENT inventory_items.quantity by the waste quantity:
-//    UPDATE inventory_items SET quantity = quantity - $wasteQty WHERE id = $itemId
-// 6. These two operations should both succeed or both fail (use Supabase transaction or sequential with rollback)
+// 3. GUARD: Verify item is NOT soft-deleted (deleted_at IS NULL). If deleted, return
+//    { success: false, error: 'Item has been deleted and cannot have waste recorded against it.' }
+// 4. Calculate estimated_value = quantity * price_per_unit
+// 5. INSERT waste_event record
+// 6. DECREMENT inventory_items.quantity by the waste quantity:
+//    UPDATE inventory_items SET quantity = quantity - $wasteQty WHERE id = $itemId AND deleted_at IS NULL
+// 7. These two operations should both succeed or both fail (use Supabase transaction or sequential with rollback)
 export async function recordWasteEvent(data: RecordWasteInput): Promise<ActionResult>
 
 // Fetches waste_events + inventory_items, passes to engine functions, saves snapshot
