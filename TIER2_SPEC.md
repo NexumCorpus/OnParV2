@@ -228,6 +228,24 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  // Onboarding redirect — check if authenticated user has completed onboarding
+  // (Tier 9 adds the onboarding page; this middleware ensures the redirect works)
+  if (user && !pathname.startsWith('/onboarding') && !pathname.startsWith('/api')) {
+    const { data: userData } = await supabase
+      .from('users').select('settings').eq('id', user.id).single()
+    if (userData && !userData.settings?.onboarding_completed) {
+      return NextResponse.redirect(new URL('/onboarding', request.url))
+    }
+  }
+  // If user completed onboarding but visits /onboarding, redirect to dashboard
+  if (user && pathname.startsWith('/onboarding')) {
+    const { data: userData } = await supabase
+      .from('users').select('settings').eq('id', user.id).single()
+    if (userData?.settings?.onboarding_completed) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
   return response
 }
 
@@ -459,6 +477,50 @@ export default function InventoryPage() {
 }
 ```
 
+## Step 7b: Loading & Error States
+
+Create `app/(dashboard)/loading.tsx` — shown while server components are fetching data:
+
+```tsx
+import { Skeleton } from '@/components/ui/skeleton'
+
+export default function DashboardLoading() {
+  return (
+    <div className="space-y-4 p-6">
+      <Skeleton className="h-8 w-48" />
+      <div className="grid gap-4 md:grid-cols-4">
+        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+      </div>
+      <Skeleton className="h-64" />
+    </div>
+  )
+}
+```
+
+Create `app/(dashboard)/error.tsx` — error boundary for dashboard pages:
+
+```tsx
+'use client'
+
+import { Button } from '@/components/ui/button'
+
+export default function DashboardError({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 p-12">
+      <h2 className="text-xl font-semibold">Something went wrong</h2>
+      <p className="text-muted-foreground">{error.message}</p>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  )
+}
+```
+
 ---
 
 ## Step 8: Sign Out Action
@@ -513,6 +575,8 @@ app/(auth)/login/page.tsx
 app/(auth)/signup/page.tsx
 app/(marketing)/layout.tsx  (stub for marketing route group)
 app/(dashboard)/layout.tsx
+app/(dashboard)/loading.tsx   (skeleton UI while server components load)
+app/(dashboard)/error.tsx     (error boundary with retry — 'use client')
 app/(dashboard)/page.tsx
 app/(dashboard)/inventory/page.tsx
 app/(dashboard)/recipes/page.tsx

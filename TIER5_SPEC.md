@@ -489,6 +489,22 @@ saveAnalysisSnapshot(userId: string, data: WasteAnalysisSnapshot): Promise<void>
 
 ### `app/(dashboard)/waste/page.tsx`
 
+### Empty State
+
+When user has zero waste events, show:
+```
+┌────────────────────────────────────────────────────┐
+│  📊 No waste recorded yet                          │
+│                                                    │
+│  Start logging waste events to see analytics,      │
+│  predictions, and AI-powered recommendations.      │
+│                                                    │
+│  [Log Your First Waste Event →]                    │
+└────────────────────────────────────────────────────┘
+```
+
+All engine functions must return empty arrays or zero values for empty input — never NaN, Infinity, or undefined. Guard division: `wasteEvents.length > 0 ? (calculated) : 0`.
+
 ### Desktop Wireframe
 
 ```
@@ -766,6 +782,14 @@ Create `lib/actions/waste.ts`:
 // Server actions are the glue between DB and pure engine functions.
 // They: 1) authenticate user, 2) fetch data from Supabase, 3) call engine functions, 4) save results
 
+// recordWasteEvent MUST:
+// 1. Validate input with wasteEventSchema
+// 2. Fetch the inventory item to get price_per_unit
+// 3. Calculate estimated_value = quantity * price_per_unit
+// 4. INSERT waste_event record
+// 5. DECREMENT inventory_items.quantity by the waste quantity:
+//    UPDATE inventory_items SET quantity = quantity - $wasteQty WHERE id = $itemId
+// 6. These two operations should both succeed or both fail (use Supabase transaction or sequential with rollback)
 export async function recordWasteEvent(data: RecordWasteInput): Promise<ActionResult>
 
 // Fetches waste_events + inventory_items, passes to engine functions, saves snapshot

@@ -488,6 +488,7 @@ CREATE TABLE inventory_items (
   reorder_point numeric(12,3) NOT NULL DEFAULT 0,
   max_stock_level numeric(12,3),
   price_per_unit numeric(10,2) NOT NULL DEFAULT 0,
+  deleted_at timestamptz, -- soft delete: set to NOW() instead of hard deleting. All queries MUST filter WHERE deleted_at IS NULL.
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -565,8 +566,8 @@ CREATE TABLE recipes (
   cost_per_serving numeric(10,2) NOT NULL DEFAULT 0,
   selling_price numeric(10,2) NOT NULL DEFAULT 0,
   profit_margin numeric(5,2) NOT NULL DEFAULT 0,
-  popularity_score numeric(5,2) NOT NULL DEFAULT 0,
-  waste_percentage numeric(5,2) NOT NULL DEFAULT 0,
+  popularity_score numeric(5,2) NOT NULL DEFAULT 0, -- manually entered or derived from POS integration (future)
+  waste_percentage numeric(5,2) NOT NULL DEFAULT 0, -- manually entered estimate of food waste for this recipe
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
@@ -767,6 +768,8 @@ CREATE POLICY "snapshots_insert_own" ON waste_analysis_snapshots
   FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "snapshots_update_own" ON waste_analysis_snapshots
   FOR UPDATE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY "snapshots_delete_own" ON waste_analysis_snapshots
+  FOR DELETE TO authenticated USING (auth.uid() = user_id);
 
 CREATE INDEX idx_snapshots_user_id ON waste_analysis_snapshots(user_id);
 CREATE INDEX idx_snapshots_date ON waste_analysis_snapshots(analysis_date);
@@ -1080,6 +1083,36 @@ export interface Feedback {
 export type ActionResult =
   | { success: true; data?: unknown }
   | { success: false; error: string }
+
+// Subscription status enum (matches PostgreSQL subscription_status type)
+export type SubscriptionStatus =
+  | 'not_started' | 'incomplete' | 'incomplete_expired'
+  | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'paused'
+
+// Input types — used across tiers for service/action function signatures.
+// Implementations should derive these from z.infer<typeof schema> where a Zod schema exists.
+export type CreateInventoryInput = {
+  name: string; category: string; quantity: number; unit: string;
+  expiry_date?: string; reorder_point: number; max_stock_level?: number;
+  price_per_unit: number; supplier_id?: string;
+}
+export type CreateRecipeInput = {
+  name: string; description?: string | null; category: string; serving_size: number;
+  prep_time_minutes?: number | null; cook_time_minutes?: number | null;
+  difficulty_level: 'easy' | 'medium' | 'hard'; instructions?: string | null;
+  selling_price: number;
+}
+export type CreateIngredientInput = {
+  inventory_item_id: string; quantity_needed: number; unit: string; cost_per_unit: number;
+}
+export type CreateMenuItemInput = {
+  name: string; category: string; selling_price: number;
+  sales_percentage?: number; waste_percentage?: number; is_active?: boolean;
+}
+export type RecordWasteInput = {
+  inventory_item_id: string; quantity: number; unit: string;
+  reason: WasteReason; notes?: string | null;
+}
 ```
 
 ## Step 12b: Create Database Types Stub

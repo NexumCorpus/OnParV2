@@ -20,17 +20,41 @@ Replace the placeholder `app/(dashboard)/page.tsx` with real data fetching.
 ### KPI Cards — fetch from database
 
 ```typescript
-// Server component — fetches all data server-side
+// Server component — fetch ALL dashboard data in PARALLEL for performance.
+// Sequential awaits would cause 7+ round trips; Promise.all reduces to ~1 round trip.
+const [
+  totalItems,
+  lowStockItems,
+  expiringItems,
+  totalValue,
+  savings,
+  snapshotResult,
+  insightsResult,
+] = await Promise.all([
+  inventoryService.getCount(userId),
+  inventoryService.getLowStockItems(userId),
+  inventoryService.getExpiringItems(userId),
+  inventoryService.getTotalInventoryValue(userId),
+  inventoryService.calculateEstimatedSavings(userId),
+  supabase.from('waste_analysis_snapshots').select('*').eq('user_id', userId)
+    .order('analysis_date', { ascending: false }).limit(1),
+  supabase.from('ai_insights').select('id', { count: 'exact', head: true })
+    .eq('user_id', userId).eq('status', 'pending'),
+])
+
+const latestSnapshot = snapshotResult.data?.[0] ?? null
+const monthlySpend = latestSnapshot?.monthly_spend ?? 0
+
 const stats = {
-  totalItems: await inventoryService.getCount(userId),
-  lowStockCount: (await inventoryService.getLowStockItems(userId)).length,
-  expiringCount: (await inventoryService.getExpiringItems(userId)).length,
-  totalValue: await inventoryService.getTotalInventoryValue(userId),
-  monthlySpend: latestSnapshot?.monthly_spend ?? 0,
+  totalItems,
+  lowStockCount: lowStockItems.length,
+  expiringCount: expiringItems.length,
+  totalValue,
+  monthlySpend,
   budgetUsed: user.monthly_budget ? (monthlySpend / user.monthly_budget) * 100 : 0,
   wasteRate: latestSnapshot?.average_waste_percentage ?? 0,
-  potentialSavings: await inventoryService.calculateEstimatedSavings(userId),
-  activeInsights: (await supabase.from('ai_insights').select('id').eq('user_id', userId).eq('status', 'pending')).data?.length ?? 0,
+  potentialSavings: savings,
+  activeInsights: insightsResult.count ?? 0,
 }
 ```
 

@@ -516,10 +516,19 @@ Create `lib/actions/inventory.ts` with Server Actions for form submissions:
 ```typescript
 'use server'
 
+// IMPORTANT: Before inserting, call canAddInventoryItem(userId) from lib/services/plan-limits.ts
+// If limit reached, return { success: false, error: 'PLAN_LIMIT_REACHED' }
+// The client should show an upgrade prompt when it receives this error code.
 export async function createItem(formData: FormData): Promise<ActionResult>
 export async function updateItem(id: string, formData: FormData): Promise<ActionResult>
+// SOFT DELETE: UPDATE inventory_items SET deleted_at = NOW() WHERE id = $1
+// Do NOT hard-delete — preserves waste event references for historical analysis.
+// All read queries (getInventoryItems, getLowStockItems, etc.) must filter: WHERE deleted_at IS NULL
 export async function deleteItem(id: string): Promise<ActionResult>
 export async function bulkDeleteItems(ids: string[]): Promise<ActionResult>
+// IMPORTANT: Check plan limit with canAddInventoryItem(userId) BEFORE importing.
+// If currentCount + parsed.valid.length > limit, reject entire import (all-or-nothing).
+// Return { success: false, error: 'PLAN_LIMIT_REACHED' } with upgrade prompt.
 export async function importFromCSV(formData: FormData): Promise<ActionResult>
 
 // ActionResult is imported from @/types — do NOT redefine locally

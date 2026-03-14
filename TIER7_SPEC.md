@@ -268,10 +268,35 @@ export async function canAddUser(userId: string): Promise<{
 }>
 
 // Get user's current plan from subscription status
+// Implementation logic:
+// 1. Look up stripe_customers for this user_id
+// 2. If no record → return 'free'
+// 3. Look up stripe_subscriptions by customer_id
+// 4. If no subscription with status 'active' or 'trialing' → return 'free'
+// 5. Map the subscription's price_id to plan name using PLANS config stripePriceId values
+// 6. Return the matched plan key ('starter' | 'professional')
 export async function getUserPlan(userId: string): Promise<keyof typeof PLANS>
 ```
 
-Integrate into inventory server actions — when creating an item, check `canAddInventoryItem()` first and return an error with upgrade prompt if limit is reached.
+Integrate into inventory server actions — when creating an item, check `canAddInventoryItem()` first and return an error with upgrade prompt if limit is reached. CSV imports must also enforce this limit (check `currentCount + importCount > limit` before inserting).
+
+### Avatar Upload
+
+Add to `lib/actions/settings.ts`:
+
+```typescript
+export async function updateAvatar(formData: FormData): Promise<ActionResult>
+// 1. Extract file from formData
+// 2. Validate: file type must be image/jpeg, image/png, or image/webp
+// 3. Validate: max file size 2MB
+// 4. Upload to Supabase Storage bucket 'avatars' at path: {userId}/avatar.{ext}
+// 5. Use upsert: true to overwrite previous avatar
+// 6. Get public URL from Supabase Storage
+// 7. Update users.avatar_url with the public URL
+// 8. Return { success: true }
+```
+
+**Supabase Storage setup:** Create an `avatars` bucket in Supabase Dashboard (or via migration). Set RLS policy: authenticated users can upload/read their own path (`{userId}/*`).
 
 ---
 

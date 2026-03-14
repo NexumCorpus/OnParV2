@@ -279,6 +279,27 @@ Add `onboarding_completed: false` to the default user settings JSONB in the data
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
+### Onboarding Server Actions
+
+Create `lib/actions/onboarding.ts`:
+
+```typescript
+'use server'
+
+// Save Step 1 data: restaurant_name and monthly_budget
+export async function saveOnboardingStep1(formData: FormData): Promise<ActionResult>
+// Updates users table: restaurant_name, monthly_budget
+// Also saves restaurant type to user.settings JSONB (if desired)
+
+// Called when user clicks "Go to Dashboard" on Step 3
+export async function completeOnboarding(): Promise<ActionResult>
+// Sets user.settings.onboarding_completed = true via JSONB merge:
+// UPDATE users SET settings = settings || '{"onboarding_completed": true}'::jsonb WHERE id = $userId
+// Redirects to /dashboard
+```
+
+**Middleware integration:** The onboarding redirect is handled in middleware (Tier 2). When `settings.onboarding_completed` is false, the middleware redirects authenticated users to `/onboarding`. When true, it redirects `/onboarding` visitors to `/dashboard`.
+
 ---
 
 ## Step 5: Marketing Navbar
@@ -465,6 +486,7 @@ app/(marketing)/contact/page.tsx
 app/(auth)/signup/page.tsx (modify — redirect to /onboarding)
 app/(dashboard)/onboarding/page.tsx
 lib/actions/feedback.ts
+lib/actions/onboarding.ts
 lib/services/notifications.ts
 components/layout/marketing-navbar.tsx
 components/layout/footer.tsx

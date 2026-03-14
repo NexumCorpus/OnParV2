@@ -392,6 +392,9 @@ Create `lib/actions/recipes.ts`:
 export async function createRecipe(formData: FormData): Promise<ActionResult>
 export async function updateRecipe(id: string, formData: FormData): Promise<ActionResult>
 export async function deleteRecipe(id: string): Promise<ActionResult>
+// IMPORTANT: After addIngredient and removeIngredient, ALWAYS call
+// recalculateRecipeCosts(recipeId) to update the denormalized
+// cost_per_serving and profit_margin on the recipe record.
 export async function addIngredient(data: AddIngredientInput): Promise<ActionResult>
 export async function removeIngredient(id: string): Promise<ActionResult>
 ```
