@@ -572,6 +572,8 @@ export async function updateItem(id: string, formData: FormData): Promise<Action
 // All read queries (getInventoryItems, getLowStockItems, etc.) must filter: WHERE deleted_at IS NULL
 export async function deleteItem(id: string): Promise<ActionResult>
 export async function bulkDeleteItems(ids: string[]): Promise<ActionResult>
+// FILE LIMITS: Max file size 5MB. Max 500 rows per import. Validate both client-side
+// (immediate feedback) AND server-side (security). Reject with descriptive error if exceeded.
 // IMPORTANT: Check plan limit with canAddInventoryItem(userId) BEFORE importing.
 // If currentCount + parsed.valid.length > limit, reject entire import (all-or-nothing).
 // Return { success: false, error: 'PLAN_LIMIT_REACHED' } with upgrade prompt.

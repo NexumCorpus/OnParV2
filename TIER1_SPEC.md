@@ -522,6 +522,7 @@ CREATE TRIGGER trg_inventory_updated_at
 CREATE TABLE menu_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  recipe_id uuid, -- FK to recipes added via ALTER TABLE below (recipes table created after menu_items)
   name text NOT NULL,
   category text NOT NULL DEFAULT 'Main Course',
   selling_price numeric(10,2) NOT NULL DEFAULT 0,
@@ -623,6 +624,11 @@ CREATE POLICY "recipe_ingredients_delete" ON recipe_ingredients
 
 CREATE INDEX idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id);
 CREATE INDEX idx_recipe_ingredients_item ON recipe_ingredients(inventory_item_id);
+
+-- Deferred FK: menu_items.recipe_id → recipes.id (menu_items created before recipes)
+-- Nullable: menu items can exist without recipes (e.g., beverages from suppliers)
+ALTER TABLE menu_items ADD CONSTRAINT fk_menu_items_recipe
+  FOREIGN KEY (recipe_id) REFERENCES recipes(id) ON DELETE SET NULL;
 
 ------------------------------------------------------------
 -- WASTE EVENTS
@@ -888,6 +894,149 @@ CREATE POLICY "avatar_delete_own" ON storage.objects
   FOR DELETE TO authenticated USING (
     bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text
   );
+
+------------------------------------------------------------
+-- RPC STORED PROCEDURES
+-- These are called via supabase.rpc() from server actions
+-- to guarantee transactional atomicity for multi-step ops.
+------------------------------------------------------------
+
+-- Race-safe relative quantity adjustment (TIER 3 inventory service).
+-- Uses GREATEST to floor at 0 — inventory can never go negative.
+-- Returns the updated row, or nothing if item is soft-deleted.
+CREATE OR REPLACE FUNCTION adjust_quantity(p_item_id uuid, p_delta numeric)
+RETURNS SETOF inventory_items AS $$
+  UPDATE inventory_items
+  SET quantity = GREATEST(0, quantity + p_delta),
+      updated_at = now()
+  WHERE id = p_item_id AND deleted_at IS NULL
+  RETURNING *;
+$$ LANGUAGE sql;
+
+-- All-or-nothing CSV import with plan-limit enforcement (TIER 3 server actions).
+-- Atomicity is guaranteed by PostgreSQL — if any INSERT fails or limit is exceeded,
+-- the entire function call rolls back automatically.
+CREATE OR REPLACE FUNCTION bulk_import_inventory(
+  p_user_id uuid,
+  p_items jsonb,
+  p_plan_limit integer
+)
+RETURNS integer AS $$
+DECLARE
+  current_count integer;
+  new_count integer;
+BEGIN
+  -- Lock to prevent concurrent imports racing past the limit check
+  PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
+
+  SELECT count(*) INTO current_count
+  FROM inventory_items
+  WHERE user_id = p_user_id AND deleted_at IS NULL;
+
+  new_count := jsonb_array_length(p_items);
+
+  IF current_count + new_count > p_plan_limit THEN
+    RAISE EXCEPTION 'PLAN_LIMIT_REACHED: would have % items, limit is %',
+      current_count + new_count, p_plan_limit;
+  END IF;
+
+  INSERT INTO inventory_items (user_id, name, category, quantity, unit, expiry_date, reorder_point, price_per_unit)
+  SELECT
+    p_user_id,
+    (item->>'name')::text,
+    COALESCE(item->>'category', 'Uncategorized'),
+    COALESCE((item->>'quantity')::numeric, 0),
+    COALESCE(item->>'unit', 'pieces'),
+    (item->>'expiry_date')::date,
+    COALESCE((item->>'reorder_point')::numeric, 0),
+    COALESCE((item->>'price_per_unit')::numeric, 0)
+  FROM jsonb_array_elements(p_items) AS item;
+
+  RETURN new_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Atomic ingredient add with recipe cost recalculation (TIER 4 server actions).
+-- The entire function runs in a single transaction. FOR UPDATE on the recipe row
+-- serializes concurrent ingredient changes.
+CREATE OR REPLACE FUNCTION add_recipe_ingredient(
+  p_recipe_id uuid,
+  p_inventory_item_id uuid,
+  p_quantity_needed numeric,
+  p_unit text,
+  p_cost_per_unit numeric
+)
+RETURNS void AS $$
+DECLARE
+  v_serving_size numeric;
+  v_selling_price numeric;
+  v_new_cost numeric;
+BEGIN
+  -- Lock the recipe row to serialize concurrent ingredient changes
+  SELECT serving_size, selling_price INTO v_serving_size, v_selling_price
+  FROM recipes WHERE id = p_recipe_id FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Recipe not found: %', p_recipe_id;
+  END IF;
+
+  -- Insert the ingredient
+  INSERT INTO recipe_ingredients (recipe_id, inventory_item_id, quantity_needed, unit, cost_per_unit)
+  VALUES (p_recipe_id, p_inventory_item_id, p_quantity_needed, p_unit, p_cost_per_unit);
+
+  -- Recalculate cost_per_serving and profit_margin
+  SELECT COALESCE(SUM(quantity_needed * cost_per_unit), 0) INTO v_new_cost
+  FROM recipe_ingredients WHERE recipe_id = p_recipe_id;
+
+  UPDATE recipes SET
+    cost_per_serving = CASE WHEN v_serving_size > 0 THEN v_new_cost / v_serving_size ELSE 0 END,
+    profit_margin = CASE
+      WHEN v_selling_price > 0 THEN ((v_selling_price - (v_new_cost / GREATEST(v_serving_size, 1))) / v_selling_price) * 100
+      ELSE 0
+    END,
+    updated_at = now()
+  WHERE id = p_recipe_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Atomic ingredient removal with recipe cost recalculation (TIER 4 server actions).
+CREATE OR REPLACE FUNCTION remove_recipe_ingredient(p_ingredient_id uuid)
+RETURNS void AS $$
+DECLARE
+  v_recipe_id uuid;
+  v_serving_size numeric;
+  v_selling_price numeric;
+  v_new_cost numeric;
+BEGIN
+  -- Get the recipe_id before deleting
+  SELECT recipe_id INTO v_recipe_id
+  FROM recipe_ingredients WHERE id = p_ingredient_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Ingredient not found: %', p_ingredient_id;
+  END IF;
+
+  -- Lock the recipe row
+  SELECT serving_size, selling_price INTO v_serving_size, v_selling_price
+  FROM recipes WHERE id = v_recipe_id FOR UPDATE;
+
+  -- Delete the ingredient
+  DELETE FROM recipe_ingredients WHERE id = p_ingredient_id;
+
+  -- Recalculate
+  SELECT COALESCE(SUM(quantity_needed * cost_per_unit), 0) INTO v_new_cost
+  FROM recipe_ingredients WHERE recipe_id = v_recipe_id;
+
+  UPDATE recipes SET
+    cost_per_serving = CASE WHEN v_serving_size > 0 THEN v_new_cost / v_serving_size ELSE 0 END,
+    profit_margin = CASE
+      WHEN v_selling_price > 0 THEN ((v_selling_price - (v_new_cost / GREATEST(v_serving_size, 1))) / v_selling_price) * 100
+      ELSE 0
+    END,
+    updated_at = now()
+  WHERE id = v_recipe_id;
+END;
+$$ LANGUAGE plpgsql;
 ```
 
 ## Step 11: Seed Data
@@ -965,6 +1114,7 @@ export interface InventoryItem {
 export interface MenuItem {
   id: string
   user_id: string
+  recipe_id: string | null  // nullable: menu items can exist without recipes
   name: string
   category: string
   selling_price: number
