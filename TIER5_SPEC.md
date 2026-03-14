@@ -470,6 +470,10 @@ calculateConfidence(counts: {
 
 // Save generated insights to ai_insights table
 // Set status = 'pending', return created records with IDs
+// Uses INSERT ... ON CONFLICT (user_id, type, title) DO UPDATE SET
+//   description = EXCLUDED.description, estimated_savings = EXCLUDED.estimated_savings,
+//   confidence = EXCLUDED.confidence, updated_at = NOW()
+// This prevents duplicates from concurrent refreshAIInsights() calls (see TIER 1 UNIQUE constraint)
 saveInsights(userId: string, insights: AIInsight[]): Promise<AIInsight[]>
 
 // Update insight status when user acts on it
@@ -838,27 +842,35 @@ Create `lib/actions/waste.ts`:
 
 // recordWasteEvent MUST:
 // 1. Validate input with wasteEventSchema
-// 2. Fetch the inventory item to get price_per_unit
-// 3. GUARD: Verify item is NOT soft-deleted (deleted_at IS NULL). If deleted, return
+// 2. Open a Supabase transaction (or use sequential ops with manual rollback)
+// 3. Fetch the inventory item to get price_per_unit (with FOR UPDATE row lock to prevent TOCTOU race)
+// 4. GUARD: Verify item is NOT soft-deleted (deleted_at IS NULL). If deleted, return
 //    { success: false, error: 'Item has been deleted and cannot have waste recorded against it.' }
-// 4. Calculate estimated_value = quantity * price_per_unit
-// 5. INSERT waste_event record
-// 6. DECREMENT inventory via adjustQuantity(itemId, -wasteQty) from TIER 3 inventory service.
+// 5. Calculate estimated_value = quantity * price_per_unit
+// 6. INSERT waste_event record
+// 7. DECREMENT inventory via adjustQuantity(itemId, -wasteQty) from TIER 3 inventory service.
 //    This uses the race-safe relative UPDATE (not an absolute set), preventing conflicts
 //    with concurrent stepper adjustments on mobile.
-// 7. These two operations should both succeed or both fail (use Supabase transaction or sequential with rollback)
+//    If adjustQuantity returns null / 0 rows affected (item deleted between step 3 and now),
+//    ROLLBACK and return { success: false, error: 'Item was deleted during operation.' }
+// 8. COMMIT transaction. Both INSERT + UPDATE succeed or both fail.
 export async function recordWasteEvent(data: RecordWasteInput): Promise<ActionResult>
 
 // Fetches waste_events + inventory_items, passes to engine functions, saves snapshot
 export async function refreshWasteAnalysis(): Promise<ActionResult>
 
 // Fetches all user data, calls generateInsights(), saves to ai_insights table
+// DEDUP: Before inserting new insights, DELETE all existing 'pending' insights for this user
+// (completed/dismissed/in_progress insights are preserved). This prevents duplicate insights
+// from concurrent or repeated refreshes. The DELETE + INSERT must run in a single transaction.
 export async function refreshAIInsights(): Promise<ActionResult>
 
 export async function updateInsightStatus(insightId: string, status: string, savings?: number): Promise<ActionResult>
 export async function dismissInsight(insightId: string): Promise<ActionResult>
 
 // Save generated insights to ai_insights table (returns created records with IDs)
+// MUST be called within the refreshAIInsights transaction (not standalone).
+// Uses INSERT ... ON CONFLICT (user_id, insight_type, title) DO UPDATE to prevent duplicates.
 export async function saveInsights(insights: AIInsight[]): Promise<ActionResult>
 
 // Save waste analysis snapshot for historical tracking

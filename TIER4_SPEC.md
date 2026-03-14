@@ -395,6 +395,10 @@ export async function deleteRecipe(id: string): Promise<ActionResult>
 // IMPORTANT: After addIngredient and removeIngredient, ALWAYS call
 // recalculateRecipeCosts(recipeId) to update the denormalized
 // cost_per_serving and profit_margin on the recipe record.
+// RACE SAFETY: The ingredient mutation + recalculateRecipeCosts() must run
+// inside a single transaction. Use SELECT ... FOR UPDATE on the recipe row
+// to serialize concurrent ingredient changes (prevents interleaved recalculations
+// from overwriting each other with stale intermediate cost values).
 export async function addIngredient(data: AddIngredientInput): Promise<ActionResult>
 export async function removeIngredient(id: string): Promise<ActionResult>
 ```

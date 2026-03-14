@@ -79,11 +79,16 @@ calculateEstimatedSavings(userId: string): Promise<{
 getCategories(userId: string): Promise<string[]>
 
 // RACE-SAFE relative quantity adjustment (used by mobile stepper + waste logging)
-// Uses: UPDATE inventory_items SET quantity = GREATEST(0, quantity + $delta) WHERE id = $id AND deleted_at IS NULL
+// Uses: UPDATE inventory_items SET quantity = GREATEST(0, quantity + $delta)
+//       WHERE id = $id AND deleted_at IS NULL RETURNING *
 // $delta is positive (restock) or negative (use/waste). GREATEST(0, ...) prevents negative inventory.
 // This MUST be used instead of updateInventoryItem({ quantity: absoluteValue }) for any
 // concurrent-safe quantity change (stepper buttons, waste decrement, recipe deductions).
-adjustQuantity(id: string, delta: number): Promise<InventoryItem>
+// RETURNS null if 0 rows affected (item was soft-deleted). Callers MUST handle null:
+//   - Mobile stepper: show toast "Item no longer exists", remove card from list
+//   - Waste logging: rollback waste_event INSERT, return error to user
+//   - Recipe deduction: return error "Ingredient item was deleted"
+adjustQuantity(id: string, delta: number): Promise<InventoryItem | null>
 
 // Bulk update quantities (for quick adjustments) — only for non-deleted items
 // Uses adjustQuantity internally (relative deltas, NOT absolute sets)
@@ -231,6 +236,9 @@ export const INVENTORY_UNITS = [
 
 #### Mobile card behavior:
 - **Inline quantity stepper:** [−5] [−] qty [+] [+5] buttons directly on card. Chef adjusts quantity WITHOUT opening any dialog. Each button accumulates a delta (e.g., tap [+] twice = delta +2), then auto-saves after 1s debounce using `adjustQuantity(id, delta)` — a **relative** UPDATE, NOT an absolute set. This prevents race conditions with concurrent waste logging (see TIER 5 `recordWasteEvent` which also decrements relatively).
+  - **After debounce fires:** UI MUST update displayed quantity from the server response (not optimistic local state). This corrects drift when another session changed the same item concurrently.
+  - **Flush on unmount:** If the component unmounts (navigation, page close) with a pending debounce, flush it immediately — call `adjustQuantity()` synchronously in the `useEffect` cleanup. Prevents silent data loss when chef navigates away mid-adjustment.
+  - **Null response:** If `adjustQuantity()` returns null (item was deleted), show toast "Item no longer exists" and remove the card from the list.
 - **"Log Waste" quick-action:** Opens pre-filled waste form (item already selected). See TIER 5 for the minimal waste form.
 - **Swipe left:** Reveals [Edit] [Delete] actions.
 - **Tap card body** (not buttons): Opens full-screen detail/edit page.
@@ -562,6 +570,9 @@ export async function bulkDeleteItems(ids: string[]): Promise<ActionResult>
 // IMPORTANT: Check plan limit with canAddInventoryItem(userId) BEFORE importing.
 // If currentCount + parsed.valid.length > limit, reject entire import (all-or-nothing).
 // Return { success: false, error: 'PLAN_LIMIT_REACHED' } with upgrade prompt.
+// RACE SAFETY: The count check + bulk INSERT must run in a single transaction with
+// SELECT ... FOR UPDATE or pg_advisory_xact_lock(hashtext(userId)) to prevent
+// two concurrent imports from both passing the limit check against the same stale count.
 export async function importFromCSV(formData: FormData): Promise<ActionResult>
 
 // ActionResult is imported from @/types — do NOT redefine locally

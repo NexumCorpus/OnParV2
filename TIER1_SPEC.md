@@ -718,7 +718,11 @@ CREATE TABLE ai_insights (
   completion_date timestamptz,
   actual_savings numeric(10,2),
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  -- DEDUP: Prevent duplicate pending insights of the same type+title per user.
+  -- refreshAIInsights() deletes pending insights then re-inserts; this constraint
+  -- is a safety net against concurrent refresh calls that slip past the delete.
+  UNIQUE (user_id, type, title) -- upsert target for saveInsights()
 );
 
 ALTER TABLE ai_insights ENABLE ROW LEVEL SECURITY;
