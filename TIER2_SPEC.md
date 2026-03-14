@@ -453,6 +453,25 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
 
 This ensures marketing pages (pricing in Tier 7, features/contact in Tier 9) have a route group from the start.
 
+## Mobile UX Guidelines (All Tiers)
+
+**Persona:** A head chef doing inventory in a walk-in cooler. Phone in one hand. Hands cold and wet. 20 minutes before service. If he can't understand the screen in 5 seconds, the app has failed.
+
+These rules apply to ALL dashboard pages across all tiers:
+
+1. **No modals on mobile.** Replace all `<Dialog>` / `<Sheet>` with full-screen pages at `<768px`. Modals are impossible with cold fingers and a keyboard pushing content off-screen.
+2. **Minimum tap target: 44px.** All buttons, inputs, chips. No exceptions.
+3. **Font size: 16px minimum** on all form inputs. Prevents iOS auto-zoom on focus.
+4. **Chips over dropdowns.** Categories, statuses, reasons — use horizontally-scrollable pill/chip selectors. Dropdowns require precision taps that fail with wet fingers.
+5. **Inline actions on cards.** Quantity adjustments, waste logging — put [−] [+] steppers directly on the card. Don't force navigation to a separate screen for common actions.
+6. **Infinite scroll over pagination.** No "Load more" buttons. Auto-load on scroll.
+7. **Auto-save with debounce.** Quantity steppers save after 1s debounce. No "Save" button for inline edits.
+8. **Back button, not ✕.** Full-screen mobile pages use a large (44px) back-arrow top-left, not a tiny close button.
+9. **Price/cost hidden on mobile** for kitchen staff views (inventory, waste). Visible on desktop/analytics.
+10. **Batch workflows.** After logging a waste event or adjusting a count, form resets but stays on same screen. Chef is doing 20 items in a row, not one.
+
+---
+
 ## Step 7: Placeholder Pages for All Dashboard Routes
 
 Create these pages as simple server components with a heading and "Coming in Tier X" message:

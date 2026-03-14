@@ -179,37 +179,57 @@ export const INVENTORY_UNITS = [
 
 ### Mobile Wireframe (<768px)
 
+**Design principle:** This is the #1 screen for a chef doing inventory in a walk-in cooler with wet hands. Every interaction must be completable in 1-3 taps with fat fingers. No modals — full-screen pages only on mobile.
+
 ```
 ┌────────────────────────────────┐
-│  Inventory                     │
+│  Inventory                 [+] │  ← FAB (floating action button,
+│                                │    bottom-right, always visible)
+│  ┌──────────────────────────┐  │
+│  │ 🔍 Search items...       │  │  ← 44px tall, 16px font
+│  └──────────────────────────┘  │    (prevents iOS zoom)
 │                                │
+│  [All] [Low Stock] [Expiring]  │  ← Status: tap-friendly chips
+│  [Produce] [Dairy] [Meat] >>>  │  ← Category: horizontal scroll
+│                                │    chips, not dropdown
 │  ┌──────────────────────────┐  │
-│  │ 🔍 Search...             │  │
-│  └──────────────────────────┘  │
-│  [Category ▼] [Status ▼]      │
-│                    [+ Add]     │
-│                                │
-│  ┌──────────────────────────┐  │
-│  │ Tomato Sauce       $2.50 │  │
-│  │ Pantry • 24 cans         │  │
-│  │ Expires: Aug 15, 2025    │  │
-│  └──────────────────────────┘  │
-│  ┌──────────────────────────┐  │
-│  │ 🔴 Mozzarella     $12.00│  │
-│  │ Dairy • 5 kg  ⚠ low     │  │
-│  │ Expires: Feb 5 🔴        │  │
+│  │ 🔴 Mozzarella            │  │  ← Warning dot is FIRST visual
+│  │ Dairy • ⚠ LOW    5 kg   │  │  ← Status + qty prominent
+│  │ Exp Feb 5                │  │
+│  │ [−] [−5]   5   [+5] [+] │  │  ← INLINE qty stepper
+│  │         [🗑 Log Waste]    │  │  ← Quick-action: 1 tap
 │  └──────────────────────────┘  │
 │  ┌──────────────────────────┐  │
-│  │ Pasta              $3.20 │  │
-│  │ Pantry • 50 kg           │  │
+│  │ Tomato Sauce              │  │
+│  │ Pantry • OK      24 cans │  │
+│  │ Exp Aug 15               │  │
+│  │ [−] [−5]  24  [+5] [+]  │  │
+│  │         [🗑 Log Waste]    │  │
+│  └──────────────────────────┘  │
+│  ┌──────────────────────────┐  │
+│  │ Pasta                     │  │
+│  │ Pantry • OK      50 kg   │  │
 │  │ No expiry                │  │
+│  │ [−] [−5]  50  [+5] [+]  │  │
+│  │         [🗑 Log Waste]    │  │
 │  └──────────────────────────┘  │
 │                                │
-│  Load more...                  │
+│  (infinite scroll — no         │
+│   "Load more" button)          │
+│                            [+] │  ← FAB persists on scroll
 └────────────────────────────────┘
 ```
 
-Mobile uses card layout instead of table. Tap card to open edit dialog. Swipe left to delete (optional — can use long press menu instead).
+#### Mobile card behavior:
+- **Inline quantity stepper:** [−5] [−] qty [+] [+5] buttons directly on card. Chef adjusts quantity WITHOUT opening any dialog. Each button auto-saves after 1s debounce (no "Save" button needed).
+- **"Log Waste" quick-action:** Opens pre-filled waste form (item already selected). See TIER 5 for the minimal waste form.
+- **Swipe left:** Reveals [Edit] [Delete] actions.
+- **Tap card body** (not buttons): Opens full-screen detail/edit page.
+- **Infinite scroll:** No pagination buttons. Auto-loads next batch on scroll.
+- **Chip filters instead of dropdowns:** Category and status are horizontally-scrollable pill buttons. 44px height minimum. Selected chip = solid fill, unselected = outlined.
+- **FAB (+):** Floating action button, bottom-right corner, opens full-screen add form (not a modal).
+- **All form inputs:** min 44px height, 16px font-size (prevents iOS keyboard zoom).
+- **Price hidden on mobile** — not needed during walk-in count. Visible on desktop only.
 
 ---
 
@@ -257,11 +277,13 @@ Mobile uses card layout instead of table. Tap card to open edit dialog. Swipe le
 
 ### Implementation
 
-- Use shadcn Dialog component
+- **Desktop:** Use shadcn Dialog (Sheet) component
+- **Mobile (<768px):** Replace dialog with **full-screen page** (`app/(dashboard)/inventory/add/page.tsx`). Use a large back-arrow button (top-left, 44px tap target) instead of tiny ✕ close button. This avoids keyboard-pushes-modal-offscreen issues.
 - react-hook-form + zod validation
-- Category: dropdown with predefined categories + "Other" option for custom
-- Unit: dropdown with predefined units
-- Supplier: dropdown populated from user's suppliers (from suppliers table)
+- Category: **chip/pill selector** (not dropdown) — predefined categories + "Other" for custom
+- Unit: **chip/pill selector** — `[lbs] [kg] [oz] [gal] [cans] [pieces] [cases]`
+- Supplier: searchable autocomplete dropdown (optional field — can be skipped)
+- All inputs: min 44px height, 16px font-size
 - On save: calls `createInventoryItem` or `updateInventoryItem`
 - Success: toast notification, close dialog, refresh list
 - Error: show inline error messages
@@ -292,7 +314,9 @@ Mobile uses card layout instead of table. Tap card to open edit dialog. Swipe le
 └────────────────────────────────────┘
 ```
 
-Simple dialog with +/- buttons and direct input. Updates quantity only.
+**Desktop:** Simple dialog with +/- buttons and direct input. Updates quantity only.
+
+**Mobile:** This dialog is NOT needed — the inline [−5] [−] qty [+] [+5] stepper on the inventory card (see mobile wireframe above) replaces it entirely. Each tap auto-saves after 1s debounce. Zero dialogs, zero navigation. The chef adjusts quantities without ever leaving the inventory list.
 
 ---
 

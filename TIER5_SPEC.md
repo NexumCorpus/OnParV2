@@ -549,7 +549,7 @@ All engine functions must return empty arrays or zero values for empty input —
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
-### Log Waste Tab Wireframe
+### Log Waste Tab Wireframe (Desktop)
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -592,6 +592,60 @@ All engine functions must return empty arrays or zero values for empty input —
 │  │ Mar 11     │ Chicken  │ 1.5 kg │ $12.75│ Quality     │           │
 └──────────────────────────────────────────────────────────────────────┘
 ```
+
+### Log Waste — Mobile Wireframe (<768px)
+
+**Design principle:** A chef in a walk-in cooler pulls expired lettuce from the shelf. He needs to log it in under 15 seconds. Wet hands, cold fingers, phone in one hand. 3-4 taps max.
+
+**Entry point 1:** Tap [Log Waste] button on inventory card (item pre-selected).
+**Entry point 2:** Tap [Log Waste] tab on waste page (manual item selection).
+
+```
+┌────────────────────────────────┐
+│  ← Log Waste                   │
+│                                │
+│  ┌──────────────────────────┐  │
+│  │ 🔍 Search item...        │  │  ← Searchable autocomplete
+│  └──────────────────────────┘  │    Type "lett" → "Lettuce"
+│  (Pre-filled if coming from    │    (skip if pre-filled)
+│   inventory card tap)          │
+│                                │
+│  ── How much? ──────────────── │
+│                                │
+│  [−5] [−]    3    [+] [+5]    │  ← Same stepper as inventory
+│              lbs               │    Unit auto-filled
+│                                │
+│  Value: $6.90 (auto-calc)     │
+│                                │
+│  ── Why? ───────────────────── │
+│                                │
+│  [Expired]  [Spoiled]          │  ← Chip/pill buttons
+│  [Overproduction] [Prep Waste] │    One tap to select
+│  [Damaged]  [Quality] [Other]  │    44px height min
+│                                │
+│  [+ Add note]                  │  ← Collapsed by default
+│                                │
+│  ┌──────────────────────────┐  │
+│  │     [Record Waste]       │  │  ← Full-width, 48px, green
+│  └──────────────────────────┘  │
+│                                │
+│  ── Today's Waste ──────────── │
+│                                │
+│  Lettuce  3 lbs  $6.90 Expired │  ← Simple list, no table
+│  Milk     2 gal  $6.98 Spoiled │
+└────────────────────────────────┘
+```
+
+#### Mobile waste logging behavior:
+- **Full-screen page** (not modal). When tapped from inventory card, item is pre-filled — chef only enters quantity + reason = **2 taps + done**.
+- **Reason chips** (not dropdown): Large pill buttons, 44px height. Selected = solid fill. Most common reasons first (Expired, Spoiled).
+- **Quantity stepper** (not text input): Same [−5] [−] qty [+] [+5] as inventory. Tap center number to type a value.
+- **Auto-calculate value:** `quantity × item.price_per_unit`, read-only.
+- **Notes collapsed by default** behind "Add note" link.
+- **Today's Waste** shown as simple stacked list (not table columns).
+- **After recording:** Brief toast "Logged: Lettuce 3 lbs", form resets for next item. Chef stays on same screen to log multiple items in a batch.
+
+---
 
 ### Alerts Tab Wireframe
 
