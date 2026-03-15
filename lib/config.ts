@@ -41,3 +41,35 @@ export const RECIPE_CATEGORIES = [
 ] as const
 
 export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number]
+
+// Subscription plan configuration
+export const PLANS = {
+  free: {
+    name: 'Free',
+    price: { monthly: 0, annual: 0 },
+    limits: { items: 50, users: 1 },
+    features: ['Basic tracking', '50 items max', '1 user'],
+  },
+  starter: {
+    name: 'Starter',
+    price: { monthly: 29, annual: 23 },
+    stripePriceId: {
+      monthly: process.env.STRIPE_STARTER_MONTHLY_PRICE_ID ?? 'price_starter_monthly',
+      annual: process.env.STRIPE_STARTER_ANNUAL_PRICE_ID ?? 'price_starter_annual',
+    },
+    limits: { items: 500, users: 3 },
+    features: ['All tracking', 'Waste analysis', 'AI insights', 'CSV import', 'Email alerts', '3 users'],
+  },
+  professional: {
+    name: 'Professional',
+    price: { monthly: 79, annual: 63 },
+    stripePriceId: {
+      monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? 'price_pro_monthly',
+      annual: process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? 'price_pro_annual',
+    },
+    limits: { items: Infinity, users: 10 },
+    features: ['Everything in Starter', 'API access', 'Priority support', 'Custom reports', '10 users'],
+  },
+} as const
+
+export type PlanKey = keyof typeof PLANS
