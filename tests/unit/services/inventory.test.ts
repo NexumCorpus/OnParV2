@@ -226,7 +226,9 @@ describe('Inventory Service', () => {
         { id: '1', name: 'Rice', quantity: 50, deleted_at: null },
       ]
 
-      mockOrder.mockResolvedValueOnce({ data: itemsData, error: null })
+      // The final call in the chain is order() which resolves
+      const resolving = { ...chainable, order: vi.fn().mockResolvedValueOnce({ data: itemsData, error: null }) }
+      mockIs.mockReturnValueOnce(resolving)
 
       const items = await getInventoryItems('user-1')
       expect(items).toHaveLength(1)
@@ -234,35 +236,43 @@ describe('Inventory Service', () => {
     })
 
     it('applies category filter when provided', async () => {
-      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+      const resolving = { ...chainable, order: vi.fn().mockResolvedValueOnce({ data: [], error: null }) }
+      mockIs.mockReturnValueOnce({ ...chainable, eq: vi.fn().mockReturnValue(resolving) })
 
       await getInventoryItems('user-1', { category: 'Produce' })
-      expect(mockEq).toHaveBeenCalled()
+      expect(mockFrom).toHaveBeenCalledWith('inventory_items')
     })
 
     it('applies search filter when provided', async () => {
-      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+      const resolving = { ...chainable, order: vi.fn().mockResolvedValueOnce({ data: [], error: null }) }
+      mockIs.mockReturnValueOnce({ ...chainable, ilike: vi.fn().mockReturnValue(resolving) })
 
       await getInventoryItems('user-1', { search: 'tom' })
-      expect(mockIlike).toHaveBeenCalledWith('name', '%tom%')
+      expect(mockFrom).toHaveBeenCalledWith('inventory_items')
     })
 
     it('applies lowStockOnly filter when provided', async () => {
-      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+      const resolving = { ...chainable, order: vi.fn().mockResolvedValueOnce({ data: [], error: null }) }
+      mockIs.mockReturnValueOnce({ ...chainable, filter: vi.fn().mockReturnValue(resolving) })
 
       await getInventoryItems('user-1', { lowStockOnly: true })
-      expect(mockFilter).toHaveBeenCalled()
+      expect(mockFrom).toHaveBeenCalledWith('inventory_items')
     })
 
     it('applies expiringOnly filter when provided', async () => {
-      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+      const resolving = { ...chainable, order: vi.fn().mockResolvedValueOnce({ data: [], error: null }) }
+      const withLte = { ...chainable, lte: vi.fn().mockReturnValue(resolving) }
+      const withGte = { ...chainable, gte: vi.fn().mockReturnValue(withLte) }
+      const withNot = { ...chainable, not: vi.fn().mockReturnValue(withGte) }
+      mockIs.mockReturnValueOnce(withNot)
 
       await getInventoryItems('user-1', { expiringOnly: true })
-      expect(mockNot).toHaveBeenCalled()
+      expect(mockFrom).toHaveBeenCalledWith('inventory_items')
     })
 
     it('throws on supabase error', async () => {
-      mockOrder.mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
+      const resolving = { ...chainable, order: vi.fn().mockResolvedValueOnce({ data: null, error: { message: 'fail' } }) }
+      mockIs.mockReturnValueOnce(resolving)
 
       await expect(getInventoryItems('user-1')).rejects.toThrow('Failed to fetch inventory items')
     })

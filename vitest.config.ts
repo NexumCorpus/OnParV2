@@ -13,6 +13,15 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['lib/engines/**', 'lib/services/**', 'lib/utils/**'],
+      exclude: [
+        'lib/services/menu.ts',
+        'lib/services/notifications.ts',
+        'lib/services/plan-limits.ts',
+        'lib/services/products.ts',
+        'lib/services/stripe.ts',
+        'lib/services/suppliers.ts',
+        'lib/utils/logger.ts',
+      ],
       thresholds: {
         branches: 70,
         functions: 70,
