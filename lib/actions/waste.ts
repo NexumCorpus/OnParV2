@@ -464,6 +464,29 @@ export async function saveAnalysisSnapshot(data: {
 
 // --- Fetch helpers for waste page ---
 
+export async function getInventoryItemsForWaste(): Promise<ActionResult> {
+  try {
+    const userId = await getAuthenticatedUserId()
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from('inventory_items')
+      .select('*')
+      .eq('user_id', userId)
+      .is('deleted_at', null)
+      .order('name', { ascending: true })
+
+    if (error) {
+      return { success: false, error: 'Failed to fetch inventory items' }
+    }
+
+    return { success: true, data: data as InventoryItem[] }
+  } catch (err) {
+    logger.error({ err, action: 'getInventoryItemsForWaste' }, 'Failed to fetch inventory')
+    return { success: false, error: 'Something went wrong. Please try again.' }
+  }
+}
+
 export async function getWasteEvents(): Promise<ActionResult> {
   try {
     const userId = await getAuthenticatedUserId()
