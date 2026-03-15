@@ -12,6 +12,7 @@ import { inventoryItemSchema } from '@/lib/utils/validation'
 import { parseInventoryCSV } from '@/lib/utils/csv'
 import { logger } from '@/lib/utils/logger'
 import { CSV_MAX_FILE_SIZE_BYTES, CSV_MAX_ROWS } from '@/lib/config'
+import { lookupByBarcode } from '@/lib/services/products'
 import type { ActionResult } from '@/types'
 
 async function getAuthenticatedUserId(): Promise<string> {
@@ -144,6 +145,16 @@ export async function adjustItemQuantity(
   } catch (err) {
     logger.error({ err, id, delta, action: 'adjustItemQuantity' }, 'Failed to adjust quantity')
     return { success: false, error: 'Something went wrong. Please try again.' }
+  }
+}
+
+export async function lookupBarcode(barcode: string): Promise<ActionResult> {
+  try {
+    const product = await lookupByBarcode(barcode)
+    return { success: true, data: product }
+  } catch (err) {
+    logger.error({ err, barcode, action: 'lookupBarcode' }, 'Failed to lookup barcode')
+    return { success: false, error: 'Failed to lookup barcode' }
   }
 }
 

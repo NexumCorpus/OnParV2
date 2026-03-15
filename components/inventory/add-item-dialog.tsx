@@ -16,8 +16,8 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { INVENTORY_CATEGORIES, INVENTORY_UNITS } from '@/lib/config'
 import { inventoryItemSchema, type InventoryItemFormValues } from '@/lib/utils/validation'
-import { createItem } from '@/lib/actions/inventory'
-import { lookupByBarcode } from '@/lib/services/products'
+import { createItem, lookupBarcode } from '@/lib/actions/inventory'
+import type { Product } from '@/types'
 import { toast } from 'sonner'
 import type { Supplier } from '@/types'
 
@@ -67,8 +67,9 @@ export function AddItemDialog({
     if (!barcodeSearch.trim()) return
     setBarcodeLoading(true)
     try {
-      const product = await lookupByBarcode(barcodeSearch.trim())
-      if (product) {
+      const result = await lookupBarcode(barcodeSearch.trim())
+      if (result.success && result.data) {
+        const product = result.data as Product
         setValue('name', product.name)
         if (product.category) setValue('category', product.category)
         setValue('unit', product.unit)

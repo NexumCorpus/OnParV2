@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { Plus, Upload } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import {
@@ -12,21 +11,11 @@ import {
   getInventoryItems,
 } from '@/lib/services/inventory'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { KpiCards } from '@/components/dashboard/kpi-cards'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import { RecentAlerts } from '@/components/dashboard/recent-alerts'
-import type { InventoryItem, WasteAnalysisSnapshot } from '@/types'
-
-const PieChartComponent = dynamic(() => import('@/components/charts/pie-chart'), {
-  loading: () => <Skeleton className="h-[300px] w-full" />,
-  ssr: false,
-})
-
-const LineChartComponent = dynamic(() => import('@/components/charts/line-chart'), {
-  loading: () => <Skeleton className="h-[300px] w-full" />,
-  ssr: false,
-})
+import { DashboardCharts } from '@/components/dashboard/dashboard-charts'
+import type { WasteAnalysisSnapshot } from '@/types'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -187,21 +176,10 @@ export default async function DashboardPage() {
           <KpiCards stats={stats} />
 
           {/* Charts */}
-          <div className="grid gap-6 lg:grid-cols-2">
-            <PieChartComponent
-              data={categoryPieData}
-              title="Inventory by Category"
-              description="Value distribution across categories"
-            />
-            <LineChartComponent
-              data={wasteTrendData}
-              title="Waste Trend"
-              description="Waste rate over recent analysis periods"
-              showBenchmark
-              benchmarkLabel="Industry avg"
-              color="#ef4444"
-            />
-          </div>
+          <DashboardCharts
+            categoryPieData={categoryPieData}
+            wasteTrendData={wasteTrendData}
+          />
 
           {/* Quick Actions + Recent Alerts */}
           <div className="grid gap-4 lg:grid-cols-2">
