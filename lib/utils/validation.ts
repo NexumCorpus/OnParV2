@@ -46,7 +46,7 @@ export const menuItemSchema = z.object({
   selling_price: z.number().min(0, 'Price must be >= 0'),
   sales_percentage: z.number().min(0).max(100).optional(),
   waste_percentage: z.number().min(0).max(100).optional(),
-  is_active: z.boolean().default(true),
+  is_active: z.boolean(),
 })
 
 export type MenuItemFormValues = z.infer<typeof menuItemSchema>
