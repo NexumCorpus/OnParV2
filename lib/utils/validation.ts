@@ -59,3 +59,22 @@ export const ingredientSchema = z.object({
 })
 
 export type IngredientFormValues = z.infer<typeof ingredientSchema>
+
+export const wasteEventSchema = z.object({
+  inventory_item_id: z.string().uuid(),
+  quantity: z.number().min(0.01, 'Quantity must be > 0'),
+  unit: z.string().min(1),
+  reason: z.enum([
+    'expired',
+    'spoiled',
+    'overproduction',
+    'prep_waste',
+    'damaged',
+    'customer_return',
+    'quality_issue',
+    'other',
+  ]),
+  notes: z.string().max(500).nullable().optional(),
+})
+
+export type WasteEventFormValues = z.infer<typeof wasteEventSchema>
