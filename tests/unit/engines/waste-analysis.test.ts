@@ -180,6 +180,72 @@ describe('Waste Analysis Engine', () => {
     })
   })
 
+  describe('trend analysis', () => {
+    it('returns increasing when current > prev * 1.1', () => {
+      const now = new Date()
+      const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
+      const fortyFiveDaysAgo = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000)
+
+      const items = [makeItem({ id: 'item-1', quantity: 80 })]
+      const events = [
+        // Current period (last 30 days): qty 20
+        makeWasteEvent({ id: 'w1', inventory_item_id: 'item-1', quantity: 20, estimated_value: 46, recorded_at: fifteenDaysAgo.toISOString() }),
+        // Previous period (30-60 days ago): qty 5
+        makeWasteEvent({ id: 'w2', inventory_item_id: 'item-1', quantity: 5, estimated_value: 11.5, recorded_at: fortyFiveDaysAgo.toISOString() }),
+      ]
+
+      const patterns = analyzeWastePatterns(events, items)
+      expect(patterns[0].trend).toBe('increasing')
+    })
+
+    it('returns decreasing when current < prev * 0.9', () => {
+      const now = new Date()
+      const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
+      const fortyFiveDaysAgo = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000)
+
+      const items = [makeItem({ id: 'item-1', quantity: 80 })]
+      const events = [
+        // Current period: qty 2
+        makeWasteEvent({ id: 'w1', inventory_item_id: 'item-1', quantity: 2, estimated_value: 4.6, recorded_at: fifteenDaysAgo.toISOString() }),
+        // Previous period: qty 20
+        makeWasteEvent({ id: 'w2', inventory_item_id: 'item-1', quantity: 20, estimated_value: 46, recorded_at: fortyFiveDaysAgo.toISOString() }),
+      ]
+
+      const patterns = analyzeWastePatterns(events, items)
+      expect(patterns[0].trend).toBe('decreasing')
+    })
+
+    it('returns stable when current is within 10% of previous', () => {
+      const now = new Date()
+      const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
+      const fortyFiveDaysAgo = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000)
+
+      const items = [makeItem({ id: 'item-1', quantity: 80 })]
+      const events = [
+        // Current period: qty 10
+        makeWasteEvent({ id: 'w1', inventory_item_id: 'item-1', quantity: 10, estimated_value: 23, recorded_at: fifteenDaysAgo.toISOString() }),
+        // Previous period: qty 10 (same)
+        makeWasteEvent({ id: 'w2', inventory_item_id: 'item-1', quantity: 10, estimated_value: 23, recorded_at: fortyFiveDaysAgo.toISOString() }),
+      ]
+
+      const patterns = analyzeWastePatterns(events, items)
+      expect(patterns[0].trend).toBe('stable')
+    })
+
+    it('returns stable when no previous period data', () => {
+      const now = new Date()
+      const fifteenDaysAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000)
+
+      const items = [makeItem({ id: 'item-1', quantity: 90 })]
+      const events = [
+        makeWasteEvent({ id: 'w1', inventory_item_id: 'item-1', quantity: 10, estimated_value: 23, recorded_at: fifteenDaysAgo.toISOString() }),
+      ]
+
+      const patterns = analyzeWastePatterns(events, items)
+      expect(patterns[0].trend).toBe('stable')
+    })
+  })
+
   describe('empty input handling', () => {
     it('returns zero values for empty waste events array', () => {
       const items = [makeItem()]
