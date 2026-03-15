@@ -60,10 +60,13 @@ export default function DonutChartComponent({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `${valuePrefix}${value.toLocaleString()}${valueSuffix} (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`,
-                  name,
-                ]}
+                formatter={(value, name) => {
+                  const numVal = Number(value ?? 0)
+                  return [
+                    `${valuePrefix}${numVal.toLocaleString()}${valueSuffix} (${total > 0 ? ((numVal / total) * 100).toFixed(1) : 0}%)`,
+                    String(name ?? ''),
+                  ]
+                }}
                 contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
               />
               <Legend />

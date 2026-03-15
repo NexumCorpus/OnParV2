@@ -55,7 +55,7 @@ export default function BarChartComponent({
                 />
                 <YAxis dataKey="label" type="category" tick={{ fontSize: 12 }} width={55} />
                 <Tooltip
-                  formatter={(value: number) => [`${valuePrefix}${value.toLocaleString()}`, 'Value']}
+                  formatter={(value) => [`${valuePrefix}${Number(value ?? 0).toLocaleString()}`, 'Value']}
                   contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
                 />
                 <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} animationDuration={300} name="Value" />
@@ -69,7 +69,7 @@ export default function BarChartComponent({
                   tickFormatter={(v: number) => `${valuePrefix}${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
                 />
                 <Tooltip
-                  formatter={(value: number) => [`${valuePrefix}${value.toLocaleString()}`, 'Value']}
+                  formatter={(value) => [`${valuePrefix}${Number(value ?? 0).toLocaleString()}`, 'Value']}
                   contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
                 />
                 <Legend />

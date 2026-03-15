@@ -52,8 +52,8 @@ export default function PieChartComponent({
                 dataKey="value"
                 nameKey="name"
                 animationDuration={300}
-                label={({ name, percent }: { name: string; percent: number }) =>
-                  `${name} ${(percent * 100).toFixed(0)}%`
+                label={({ name, percent }: { name?: string; percent?: number }) =>
+                  `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
                 }
                 labelLine={false}
               >
@@ -62,10 +62,13 @@ export default function PieChartComponent({
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `${valuePrefix}${value.toLocaleString()} (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`,
-                  name,
-                ]}
+                formatter={(value, name) => {
+                  const numVal = Number(value ?? 0)
+                  return [
+                    `${valuePrefix}${numVal.toLocaleString()} (${total > 0 ? ((numVal / total) * 100).toFixed(1) : 0}%)`,
+                    String(name ?? ''),
+                  ]
+                }}
                 contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
               />
               <Legend />

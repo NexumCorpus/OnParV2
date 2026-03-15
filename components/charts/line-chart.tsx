@@ -62,9 +62,9 @@ export default function LineChartComponent({
                 tickFormatter={(v: number) => `${valuePrefix}${v}${valueSuffix}`}
               />
               <Tooltip
-                formatter={(value: number, name: string) => [
-                  `${valuePrefix}${value.toLocaleString()}${valueSuffix}`,
-                  name,
+                formatter={(value, name) => [
+                  `${valuePrefix}${Number(value ?? 0).toLocaleString()}${valueSuffix}`,
+                  String(name ?? ''),
                 ]}
                 contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
               />

@@ -1,219 +1,218 @@
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { Plus, Upload } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 import {
-  Package,
-  AlertTriangle,
-  Clock,
-  DollarSign,
-  Plus,
-  BarChart3,
-  Upload,
-  Download,
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+  getCount,
+  getLowStockItems,
+  getExpiringItems,
+  getTotalInventoryValue,
+  calculateEstimatedSavings,
+  getInventoryItems,
+} from '@/lib/services/inventory'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { KpiCards } from '@/components/dashboard/kpi-cards'
+import { QuickActions } from '@/components/dashboard/quick-actions'
+import { RecentAlerts } from '@/components/dashboard/recent-alerts'
+import type { InventoryItem, WasteAnalysisSnapshot } from '@/types'
 
-const kpiCards = [
-  {
-    title: 'Total Items',
-    value: '47',
-    subtitle: '+3 new this week',
-    icon: Package,
-    iconColor: 'text-brand-600',
-  },
-  {
-    title: 'Low Stock',
-    value: '5',
-    subtitle: 'Needs attention',
-    icon: AlertTriangle,
-    iconColor: 'text-warning-500',
-  },
-  {
-    title: 'Expiring Soon',
-    value: '8',
-    subtitle: 'Within 7 days',
-    icon: Clock,
-    iconColor: 'text-danger-500',
-  },
-  {
-    title: 'Monthly Spend',
-    value: '$3,240',
-    subtitle: '68% of budget',
-    icon: DollarSign,
-    iconColor: 'text-brand-600',
-  },
-]
+const PieChartComponent = dynamic(() => import('@/components/charts/pie-chart'), {
+  loading: () => <Skeleton className="h-[300px] w-full" />,
+  ssr: false,
+})
 
-const recentActivity = [
-  'Added 5 lbs tomatoes',
-  'Updated chicken price',
-  'Low stock: Mozzarella',
-  'Waste logged: lettuce',
-  'AI: Reduce pizza waste',
-]
+const LineChartComponent = dynamic(() => import('@/components/charts/line-chart'), {
+  loading: () => <Skeleton className="h-[300px] w-full" />,
+  ssr: false,
+})
 
-const inventoryStatus = [
-  { category: 'Produce', percentage: 85 },
-  { category: 'Dairy', percentage: 62 },
-  { category: 'Meat', percentage: 45 },
-  { category: 'Pantry', percentage: 92 },
-  { category: 'Seafood', percentage: 38 },
-]
+export default async function DashboardPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-function getStatusColor(percentage: number): string {
-  if (percentage >= 70) return 'bg-brand-500'
-  if (percentage >= 50) return 'bg-warning-500'
-  return 'bg-danger-500'
-}
+  if (!user) {
+    redirect('/login')
+  }
 
-function getStatusIndicator(percentage: number): string {
-  if (percentage >= 70) return ''
-  if (percentage >= 50) return ''
-  return ''
-}
+  const userId = user.id
 
-export default function DashboardPage() {
+  // Fetch ALL dashboard data in PARALLEL for performance
+  const [
+    totalItems,
+    lowStockItems,
+    expiringItems,
+    totalValue,
+    savings,
+    snapshotResult,
+    insightsResult,
+    inventoryItems,
+    profileResult,
+  ] = await Promise.all([
+    getCount(userId),
+    getLowStockItems(userId),
+    getExpiringItems(userId),
+    getTotalInventoryValue(userId),
+    calculateEstimatedSavings(userId),
+    supabase
+      .from('waste_analysis_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .order('analysis_date', { ascending: false })
+      .limit(1),
+    supabase
+      .from('ai_insights')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'pending'),
+    getInventoryItems(userId),
+    supabase
+      .from('profiles')
+      .select('monthly_budget, restaurant_name')
+      .eq('id', userId)
+      .single(),
+  ])
+
+  const latestSnapshot = (snapshotResult.data?.[0] ?? null) as WasteAnalysisSnapshot | null
+  const monthlySpend = latestSnapshot?.monthly_spend ?? 0
+  const profile = profileResult.data as { monthly_budget: number | null; restaurant_name: string | null } | null
+  const monthlyBudget = profile?.monthly_budget ?? null
+  const restaurantName = profile?.restaurant_name ?? null
+
+  const stats = {
+    totalItems,
+    lowStockCount: lowStockItems.length,
+    expiringCount: expiringItems.length,
+    totalValue,
+    monthlySpend,
+    budgetUsed: monthlyBudget ? (monthlySpend / monthlyBudget) * 100 : 0,
+    wasteRate: latestSnapshot?.average_waste_percentage ?? 0,
+    potentialSavings: savings.totalSavings,
+    activeInsights: insightsResult.count ?? 0,
+    monthlyBudget,
+  }
+
+  // Prepare chart data
+  // Inventory by category (Pie chart)
+  const categoryValueMap = new Map<string, number>()
+  for (const item of inventoryItems) {
+    const value = item.quantity * item.price_per_unit
+    categoryValueMap.set(
+      item.category,
+      (categoryValueMap.get(item.category) ?? 0) + value
+    )
+  }
+  const categoryPieData = Array.from(categoryValueMap.entries())
+    .sort(([, a], [, b]) => b - a)
+    .map(([name, value]) => ({ name, value: Math.round(value) }))
+
+  // Waste trend data from snapshots (last 6)
+  const { data: recentSnapshotsRaw } = await supabase
+    .from('waste_analysis_snapshots')
+    .select('*')
+    .eq('user_id', userId)
+    .order('analysis_date', { ascending: true })
+    .limit(6)
+
+  const recentSnapshots = (recentSnapshotsRaw ?? []) as WasteAnalysisSnapshot[]
+  const wasteTrendData = recentSnapshots.map((s) => ({
+    label: new Date(s.analysis_date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }),
+    value: Number(s.average_waste_percentage.toFixed(1)),
+    benchmark: 5,
+  }))
+
+  // Greeting
+  const hour = new Date().getHours()
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
   return (
     <div className="space-y-6">
       {/* Page header */}
       <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">March 2026</p>
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          {restaurantName && (
+            <p className="text-sm text-muted-foreground">{restaurantName}</p>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {greeting}, {user.email?.split('@')[0] ?? 'there'}
+        </p>
       </header>
 
-      {/* KPI Cards */}
-      <section aria-label="Key performance indicators">
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          {kpiCards.map((card) => {
-            const Icon = card.icon
-            return (
-              <Card key={card.title}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                  <Icon className={`h-5 w-5 ${card.iconColor}`} aria-hidden="true" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{card.value}</div>
-                  <p className="text-xs text-muted-foreground">{card.subtitle}</p>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-      </section>
+      {/* Empty state when zero items */}
+      {totalItems === 0 ? (
+        <>
+          {/* KPI cards still show zeroes */}
+          <KpiCards stats={stats} />
 
-      {/* Activity + Quick Actions */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        {/* Recent Activity */}
-        <section className="lg:col-span-2" aria-label="Recent activity">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-3" role="list">
-                {recentActivity.map((activity) => (
-                  <li
-                    key={activity}
-                    className="flex items-center gap-2 text-sm text-muted-foreground"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-500 shrink-0" aria-hidden="true" />
-                    {activity}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </section>
-
-        {/* Quick Actions */}
-        <section aria-label="Quick actions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start min-h-[44px]" asChild>
-                <a href="/inventory">
+          <div className="rounded-lg border bg-card p-8 text-center">
+            <h2 className="text-xl font-semibold mb-2">Welcome to OnPar!</h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Add your first inventory items to see your dashboard come alive with
+              real-time KPIs, charts, and AI insights.
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <Button asChild>
+                <Link href="/inventory/add">
                   <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Add Item
-                </a>
+                  Add Your First Item
+                </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start min-h-[44px]" asChild>
-                <a href="/analytics">
-                  <BarChart3 className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Run Analysis
-                </a>
-              </Button>
-              <Button variant="outline" className="w-full justify-start min-h-[44px]" asChild>
-                <a href="/inventory">
+              <Button variant="outline" asChild>
+                <Link href="/inventory">
                   <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
                   Import CSV
-                </a>
+                </Link>
               </Button>
-              <Button variant="outline" className="w-full justify-start min-h-[44px]" asChild>
-                <a href="/analytics">
-                  <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Export Report
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
-        </section>
-      </div>
-
-      {/* Inventory Status */}
-      <section aria-label="Inventory status by category">
-        <Card>
-          <CardHeader>
-            <CardTitle>Inventory Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {inventoryStatus.map((item) => (
-                <div key={item.category} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{item.category}</span>
-                    <span className="text-muted-foreground">
-                      {item.percentage}% {getStatusIndicator(item.percentage)}
-                    </span>
-                  </div>
-                  <div
-                    className="h-2 w-full rounded-full bg-muted overflow-hidden"
-                    role="progressbar"
-                    aria-valuenow={item.percentage}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`${item.category} stock level: ${item.percentage}%`}
-                  >
-                    <div
-                      className={`h-full rounded-full transition-all ${getStatusColor(item.percentage)}`}
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
             </div>
+          </div>
 
-            {/* Screen reader accessible table */}
-            <table className="sr-only">
-              <caption>Inventory status by category</caption>
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th>Stock Level</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inventoryStatus.map((item) => (
-                  <tr key={item.category}>
-                    <td>{item.category}</td>
-                    <td>{item.percentage}%</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </CardContent>
-        </Card>
-      </section>
+          {/* Quick actions still render */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2" />
+            <QuickActions />
+          </div>
+        </>
+      ) : (
+        <>
+          {/* KPI Cards */}
+          <KpiCards stats={stats} />
+
+          {/* Charts */}
+          <div className="grid gap-6 lg:grid-cols-2">
+            <PieChartComponent
+              data={categoryPieData}
+              title="Inventory by Category"
+              description="Value distribution across categories"
+            />
+            <LineChartComponent
+              data={wasteTrendData}
+              title="Waste Trend"
+              description="Waste rate over recent analysis periods"
+              showBenchmark
+              benchmarkLabel="Industry avg"
+              color="#ef4444"
+            />
+          </div>
+
+          {/* Quick Actions + Recent Alerts */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <QuickActions />
+            <RecentAlerts
+              lowStockItems={lowStockItems}
+              expiringItems={expiringItems}
+            />
+          </div>
+        </>
+      )}
     </div>
   )
 }

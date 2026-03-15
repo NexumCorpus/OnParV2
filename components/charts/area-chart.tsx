@@ -57,7 +57,7 @@ export default function AreaChartComponent({
                 tickFormatter={(v: number) => `${valuePrefix}${v >= 1000 ? `${(v / 1000).toFixed(1)}k` : v}`}
               />
               <Tooltip
-                formatter={(value: number) => [`${valuePrefix}${value.toLocaleString()}`, 'Value']}
+                formatter={(value) => [`${valuePrefix}${Number(value ?? 0).toLocaleString()}`, 'Value']}
                 contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))' }}
               />
               <Legend />

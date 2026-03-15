@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import {
@@ -12,6 +12,12 @@ import {
   LogOut,
   Moon,
   Sun,
+  AlertTriangle,
+  Clock,
+  TrendingDown,
+  CreditCard,
+  Lightbulb,
+  X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -28,16 +34,71 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { MobileNav } from './mobile-nav'
+import type { AppNotification } from '@/lib/services/notifications'
 
 interface TopbarProps {
   userEmail?: string
   avatarUrl?: string | null
+  notifications?: AppNotification[]
 }
 
-export function Topbar({ userEmail, avatarUrl }: TopbarProps) {
+const NOTIFICATION_ICONS: Record<AppNotification['type'], typeof AlertTriangle> = {
+  low_stock: AlertTriangle,
+  expiring_soon: Clock,
+  waste_alert: TrendingDown,
+  budget_warning: CreditCard,
+  insight_available: Lightbulb,
+}
+
+const SEVERITY_COLORS: Record<AppNotification['severity'], string> = {
+  critical: 'text-red-500',
+  warning: 'text-amber-500',
+  info: 'text-blue-500',
+}
+
+export function Topbar({ userEmail, avatarUrl, notifications = [] }: TopbarProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
   const { theme, setTheme } = useTheme()
+
+  // Load dismissed IDs from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('dismissed-notifications')
+      if (stored) {
+        const parsed = JSON.parse(stored) as string[]
+        setDismissedIds(new Set(parsed))
+      }
+    } catch {
+      // Ignore sessionStorage errors
+    }
+  }, [])
+
+  function dismissNotification(id: string) {
+    setDismissedIds((prev) => {
+      const next = new Set(prev)
+      next.add(id)
+      try {
+        sessionStorage.setItem('dismissed-notifications', JSON.stringify([...next]))
+      } catch {
+        // Ignore
+      }
+      return next
+    })
+  }
+
+  const visibleNotifications = notifications.filter((n) => !dismissedIds.has(n.id))
+  const criticalCount = visibleNotifications.filter((n) => n.severity === 'critical').length
+  const warningCount = visibleNotifications.filter((n) => n.severity === 'warning').length
+  const badgeCount = criticalCount + warningCount
+  const hasCritical = criticalCount > 0
 
   const initials = userEmail
     ? userEmail.substring(0, 2).toUpperCase()
@@ -86,21 +147,83 @@ export function Topbar({ userEmail, avatarUrl }: TopbarProps) {
 
         {/* Right section */}
         <div className="flex items-center gap-2">
-          {/* Notification bell */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative min-h-[44px] min-w-[44px]"
-            aria-label="Notifications"
-          >
-            <Bell className="h-5 w-5" aria-hidden="true" />
-            <Badge
-              variant="destructive"
-              className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]"
-            >
-              3
-            </Badge>
-          </Button>
+          {/* Notification bell with popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative min-h-[44px] min-w-[44px]"
+                aria-label={`Notifications${badgeCount > 0 ? ` (${badgeCount} unread)` : ''}`}
+              >
+                <Bell className="h-5 w-5" aria-hidden="true" />
+                {badgeCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className={`absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] ${
+                      hasCritical ? 'bg-red-500' : 'bg-amber-500'
+                    }`}
+                  >
+                    {badgeCount}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0" align="end">
+              <div className="border-b px-4 py-3">
+                <h3 className="text-sm font-semibold">Notifications</h3>
+                {visibleNotifications.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {visibleNotifications.length} notification{visibleNotifications.length !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+              <ScrollArea className="max-h-80">
+                {visibleNotifications.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No notifications
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {visibleNotifications.map((notification) => {
+                      const Icon = NOTIFICATION_ICONS[notification.type]
+                      return (
+                        <div key={notification.id} className="flex items-start gap-3 p-3 hover:bg-muted/50">
+                          <Icon
+                            className={`h-4 w-4 mt-0.5 shrink-0 ${SEVERITY_COLORS[notification.severity]}`}
+                            aria-hidden="true"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium">{notification.title}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-2">
+                              {notification.message}
+                            </p>
+                            {notification.actionUrl && (
+                              <Link
+                                href={notification.actionUrl}
+                                className="text-xs text-brand-600 hover:underline mt-1 inline-block"
+                              >
+                                View details
+                              </Link>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            onClick={() => dismissNotification(notification.id)}
+                            aria-label={`Dismiss ${notification.title}`}
+                          >
+                            <X className="h-3 w-3" aria-hidden="true" />
+                          </Button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </PopoverContent>
+          </Popover>
 
           {/* User dropdown */}
           <DropdownMenu>
