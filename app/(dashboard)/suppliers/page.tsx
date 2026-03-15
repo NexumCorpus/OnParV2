@@ -1,8 +1,17 @@
-export default function SuppliersPage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Supplier Management</h1>
-      <p className="text-muted-foreground">Coming in Tier 3</p>
-    </div>
-  )
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { getSuppliers } from '@/lib/services/suppliers'
+import { SuppliersPageClient } from './suppliers-page-client'
+
+export default async function SuppliersPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  const suppliers = await getSuppliers(user.id)
+
+  return <SuppliersPageClient initialSuppliers={suppliers} />
 }
