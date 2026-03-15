@@ -27,9 +27,12 @@ export async function createItem(formData: FormData): Promise<ActionResult> {
   try {
     const userId = await getAuthenticatedUserId()
 
-    const canAdd = await canAddInventoryItem(userId)
-    if (!canAdd) {
-      return { success: false, error: 'PLAN_LIMIT_REACHED' }
+    const planCheck = await canAddInventoryItem(userId)
+    if (!planCheck.allowed) {
+      return {
+        success: false,
+        error: `PLAN_LIMIT_REACHED: You have reached your ${planCheck.plan} plan limit of ${planCheck.limit} items. Upgrade your plan to add more.`,
+      }
     }
 
     const raw = {
@@ -171,9 +174,21 @@ export async function importFromCSV(formData: FormData): Promise<ActionResult> {
       return { success: false, error: `Too many rows. Maximum is ${CSV_MAX_ROWS} rows.` }
     }
 
-    const canAdd = await canAddInventoryItem(userId)
-    if (!canAdd) {
-      return { success: false, error: 'PLAN_LIMIT_REACHED' }
+    const planCheck = await canAddInventoryItem(userId)
+    if (!planCheck.allowed) {
+      return {
+        success: false,
+        error: `PLAN_LIMIT_REACHED: You have reached your ${planCheck.plan} plan limit of ${planCheck.limit} items. Upgrade your plan to add more.`,
+      }
+    }
+
+    // Check if import would exceed limit
+    if (planCheck.currentCount + result.valid.length > planCheck.limit) {
+      const remaining = planCheck.limit - planCheck.currentCount
+      return {
+        success: false,
+        error: `Import would exceed your ${planCheck.plan} plan limit. You can add ${remaining} more items (trying to import ${result.valid.length}).`,
+      }
     }
 
     // Insert all valid items

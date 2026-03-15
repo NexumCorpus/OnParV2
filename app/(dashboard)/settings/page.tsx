@@ -1,8 +1,67 @@
-export default function SettingsPage() {
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+import { getSubscriptionStatus } from '@/lib/services/stripe'
+import { SettingsTabs } from './settings-tabs'
+import type { UserSettings } from '@/types'
+import type { PlanKey } from '@/lib/config'
+
+export const metadata = {
+  title: 'Settings - OnPar',
+}
+
+const defaultSettings: UserSettings = {
+  reorder_multiplier: 2.0,
+  low_stock_threshold: 0.8,
+  expiry_warning_days: 7,
+  budget_warning_threshold: 90,
+  email_notifications: true,
+  onboarding_completed: false,
+}
+
+export default async function SettingsPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  // Fetch user profile and subscription status in parallel
+  const [{ data: profile }, subscriptionStatus] = await Promise.all([
+    supabase.from('users').select('*').eq('id', user.id).single(),
+    getSubscriptionStatus(user.id),
+  ])
+
+  const settings: UserSettings = {
+    ...defaultSettings,
+    ...((profile?.settings as Partial<UserSettings>) ?? {}),
+  }
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Settings</h1>
-      <p className="text-muted-foreground">Coming in Tier 7</p>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <p className="text-muted-foreground">
+          Manage your account, notifications, billing, and preferences.
+        </p>
+      </div>
+
+      <SettingsTabs
+        email={user.email ?? ''}
+        restaurantName={(profile?.restaurant_name as string) ?? ''}
+        monthlyBudget={profile?.monthly_budget as number | null}
+        avatarUrl={(profile?.avatar_url as string) ?? null}
+        settings={settings}
+        plan={(subscriptionStatus.plan ?? 'free') as PlanKey}
+        subscriptionStatus={subscriptionStatus.status}
+        currentPeriodEnd={
+          subscriptionStatus.currentPeriodEnd?.toISOString() ?? null
+        }
+        cancelAtPeriodEnd={subscriptionStatus.cancelAtPeriodEnd}
+        customerId={subscriptionStatus.customerId}
+      />
     </div>
   )
 }
