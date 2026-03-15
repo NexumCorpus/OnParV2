@@ -25,3 +25,37 @@ export const supplierSchema = z.object({
 })
 
 export type SupplierFormValues = z.infer<typeof supplierSchema>
+
+export const recipeSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(200),
+  description: z.string().max(1000).nullable().optional(),
+  category: z.string().min(1, 'Category is required'),
+  serving_size: z.number().int().min(1, 'Must serve at least 1'),
+  prep_time_minutes: z.number().int().min(0).nullable().optional(),
+  cook_time_minutes: z.number().int().min(0).nullable().optional(),
+  difficulty_level: z.enum(['easy', 'medium', 'hard']),
+  instructions: z.string().nullable().optional(),
+  selling_price: z.number().min(0, 'Price must be >= 0'),
+})
+
+export type RecipeFormValues = z.infer<typeof recipeSchema>
+
+export const menuItemSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(200),
+  category: z.string().min(1, 'Category is required'),
+  selling_price: z.number().min(0, 'Price must be >= 0'),
+  sales_percentage: z.number().min(0).max(100).optional(),
+  waste_percentage: z.number().min(0).max(100).optional(),
+  is_active: z.boolean().default(true),
+})
+
+export type MenuItemFormValues = z.infer<typeof menuItemSchema>
+
+export const ingredientSchema = z.object({
+  inventory_item_id: z.string().uuid(),
+  quantity_needed: z.number().min(0.01, 'Quantity must be > 0'),
+  unit: z.string().min(1, 'Unit is required'),
+  cost_per_unit: z.number().min(0, 'Cost must be >= 0'),
+})
+
+export type IngredientFormValues = z.infer<typeof ingredientSchema>

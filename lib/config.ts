@@ -32,3 +32,12 @@ export const INFINITE_SCROLL_PAGE_SIZE = 20
 // Debounce
 export const QUANTITY_STEPPER_DEBOUNCE_MS = 1000
 export const SEARCH_DEBOUNCE_MS = 300
+
+// Recipe categories
+export const RECIPE_CATEGORIES = [
+  'Appetizer', 'Main Course', 'Side Dish', 'Dessert',
+  'Beverage', 'Pizza', 'Pasta', 'Salad', 'Soup',
+  'Sandwich', 'Breakfast', 'Other',
+] as const
+
+export type RecipeCategory = (typeof RECIPE_CATEGORIES)[number]
