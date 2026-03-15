@@ -14,35 +14,29 @@ export async function saveOnboardingStep1(formData: FormData): Promise<ActionRes
   const monthlyBudget = parseFloat(formData.get('monthly_budget') as string) || 0
   const restaurantType = formData.get('restaurant_type') as string
 
+  // Fetch current settings to merge
+  const { data: existingUser } = await supabase
+    .from('users')
+    .select('settings')
+    .eq('id', user.id)
+    .single()
+
+  const existingSettings = (existingUser?.settings as Record<string, unknown>) ?? {}
+
   const { error } = await supabase
     .from('users')
     .update({
       restaurant_name: restaurantName,
       monthly_budget: monthlyBudget,
-      settings: supabase.rpc ? undefined : undefined,
+      settings: {
+        ...existingSettings,
+        restaurant_type: restaurantType,
+        onboarding_completed: false,
+      },
     })
     .eq('id', user.id)
 
   if (error) return { success: false, error: error.message }
-
-  // Save restaurant type to settings JSONB via raw update
-  const { error: settingsError } = await supabase.rpc('update_user_settings', {
-    p_user_id: user.id,
-    p_settings: { restaurant_type: restaurantType },
-  }).catch(() => ({ error: null })) as { error: { message: string } | null }
-
-  // If RPC doesn't exist, try direct settings merge
-  if (settingsError) {
-    await supabase
-      .from('users')
-      .update({
-        settings: {
-          restaurant_type: restaurantType,
-          onboarding_completed: false,
-        },
-      })
-      .eq('id', user.id)
-  }
 
   return { success: true }
 }

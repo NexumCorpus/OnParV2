@@ -81,8 +81,14 @@ const {
   getExpiringItems,
   getInventoryItems,
   getInventoryItem,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem,
   adjustQuantity,
   getTotalInventoryValue,
+  calculateEstimatedSavings,
+  getCategories,
+  bulkUpdateQuantities,
 } = await import('@/lib/services/inventory')
 
 describe('Inventory Service', () => {
@@ -211,6 +217,210 @@ describe('Inventory Service', () => {
 
       const value = await getTotalInventoryValue('user-1')
       expect(value).toBe(75) // 10*2.5 + 5*10
+    })
+  })
+
+  describe('getInventoryItems', () => {
+    it('returns items for a user excluding soft-deleted', async () => {
+      const itemsData = [
+        { id: '1', name: 'Rice', quantity: 50, deleted_at: null },
+      ]
+
+      mockOrder.mockResolvedValueOnce({ data: itemsData, error: null })
+
+      const items = await getInventoryItems('user-1')
+      expect(items).toHaveLength(1)
+      expect(mockFrom).toHaveBeenCalledWith('inventory_items')
+    })
+
+    it('applies category filter when provided', async () => {
+      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+
+      await getInventoryItems('user-1', { category: 'Produce' })
+      expect(mockEq).toHaveBeenCalled()
+    })
+
+    it('applies search filter when provided', async () => {
+      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+
+      await getInventoryItems('user-1', { search: 'tom' })
+      expect(mockIlike).toHaveBeenCalledWith('name', '%tom%')
+    })
+
+    it('applies lowStockOnly filter when provided', async () => {
+      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+
+      await getInventoryItems('user-1', { lowStockOnly: true })
+      expect(mockFilter).toHaveBeenCalled()
+    })
+
+    it('applies expiringOnly filter when provided', async () => {
+      mockOrder.mockResolvedValueOnce({ data: [], error: null })
+
+      await getInventoryItems('user-1', { expiringOnly: true })
+      expect(mockNot).toHaveBeenCalled()
+    })
+
+    it('throws on supabase error', async () => {
+      mockOrder.mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
+
+      await expect(getInventoryItems('user-1')).rejects.toThrow('Failed to fetch inventory items')
+    })
+  })
+
+  describe('getInventoryItem', () => {
+    it('returns a single item by id', async () => {
+      const item = { id: '1', name: 'Rice', deleted_at: null }
+      mockSingle.mockResolvedValueOnce({ data: item, error: null })
+
+      const result = await getInventoryItem('1')
+      expect(result).toEqual(item)
+    })
+
+    it('returns null when item not found (PGRST116)', async () => {
+      mockSingle.mockResolvedValueOnce({ data: null, error: { code: 'PGRST116' } })
+
+      const result = await getInventoryItem('missing-id')
+      expect(result).toBeNull()
+    })
+
+    it('throws on other errors', async () => {
+      mockSingle.mockResolvedValueOnce({ data: null, error: { code: 'OTHER', message: 'fail' } })
+
+      await expect(getInventoryItem('bad-id')).rejects.toThrow('Failed to fetch inventory item')
+    })
+  })
+
+  describe('createInventoryItem', () => {
+    it('inserts a new item and returns it', async () => {
+      const newItem = { id: '1', name: 'Flour', quantity: 10, user_id: 'user-1' }
+      mockSingle.mockResolvedValueOnce({ data: newItem, error: null })
+
+      const result = await createInventoryItem({
+        user_id: 'user-1',
+        name: 'Flour',
+        category: 'Pantry',
+        quantity: 10,
+        unit: 'lbs',
+        reorder_point: 5,
+        price_per_unit: 2.0,
+      })
+      expect(result).toEqual(newItem)
+      expect(mockFrom).toHaveBeenCalledWith('inventory_items')
+      expect(mockInsert).toHaveBeenCalled()
+    })
+
+    it('throws on supabase error', async () => {
+      mockSingle.mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
+
+      await expect(
+        createInventoryItem({
+          user_id: 'user-1',
+          name: 'Flour',
+          category: 'Pantry',
+          quantity: 10,
+          unit: 'lbs',
+          reorder_point: 5,
+          price_per_unit: 2.0,
+        })
+      ).rejects.toThrow('Failed to create inventory item')
+    })
+  })
+
+  describe('updateInventoryItem', () => {
+    it('updates and returns the item', async () => {
+      const updated = { id: '1', name: 'Flour Updated', quantity: 20 }
+      mockSingle.mockResolvedValueOnce({ data: updated, error: null })
+
+      const result = await updateInventoryItem('1', { name: 'Flour Updated' })
+      expect(result).toEqual(updated)
+      expect(mockUpdate).toHaveBeenCalled()
+    })
+
+    it('throws on supabase error', async () => {
+      mockSingle.mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
+
+      await expect(updateInventoryItem('1', { name: 'X' })).rejects.toThrow(
+        'Failed to update inventory item'
+      )
+    })
+  })
+
+  describe('deleteInventoryItem', () => {
+    it('soft-deletes by setting deleted_at', async () => {
+      mockIs.mockResolvedValueOnce({ error: null })
+
+      await deleteInventoryItem('1')
+      expect(mockUpdate).toHaveBeenCalled()
+      expect(mockFrom).toHaveBeenCalledWith('inventory_items')
+    })
+
+    it('throws on supabase error', async () => {
+      mockIs.mockResolvedValueOnce({ error: { message: 'fail' } })
+
+      await expect(deleteInventoryItem('bad-id')).rejects.toThrow('Failed to delete inventory item')
+    })
+  })
+
+  describe('getCategories', () => {
+    it('returns unique sorted categories', async () => {
+      mockIs.mockResolvedValueOnce({
+        data: [{ category: 'Dairy' }, { category: 'Produce' }, { category: 'Dairy' }],
+        error: null,
+      })
+
+      const categories = await getCategories('user-1')
+      expect(categories).toEqual(['Dairy', 'Produce'])
+    })
+
+    it('throws on supabase error', async () => {
+      mockIs.mockResolvedValueOnce({ data: null, error: { message: 'fail' } })
+
+      await expect(getCategories('user-1')).rejects.toThrow('Failed to fetch categories')
+    })
+  })
+
+  describe('adjustQuantity error handling', () => {
+    it('throws on RPC error', async () => {
+      mockRpc.mockResolvedValueOnce({ data: null, error: { message: 'rpc fail' } })
+
+      await expect(adjustQuantity('1', 5)).rejects.toThrow('Failed to adjust quantity')
+    })
+  })
+
+  describe('bulkUpdateQuantities', () => {
+    it('calls adjustQuantity for each update', async () => {
+      mockRpc.mockResolvedValueOnce({ data: [{ id: '1', quantity: 15 }], error: null })
+      mockRpc.mockResolvedValueOnce({ data: [{ id: '2', quantity: 8 }], error: null })
+
+      await bulkUpdateQuantities([
+        { id: '1', delta: 5 },
+        { id: '2', delta: -2 },
+      ])
+
+      expect(mockRpc).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  describe('calculateEstimatedSavings', () => {
+    it('calculates savings from low stock and expiring items', async () => {
+      // getLowStockItems call
+      mockFilter.mockResolvedValueOnce({
+        data: [{ id: '1', quantity: 2, reorder_point: 10, price_per_unit: 5.0 }],
+        error: null,
+      })
+      // getExpiringItems call
+      mockLte.mockResolvedValueOnce({
+        data: [{ id: '2', quantity: 20, price_per_unit: 3.0 }],
+        error: null,
+      })
+
+      const result = await calculateEstimatedSavings('user-1')
+      // lowStock: (10-2) * 5.0 * 0.15 = 6.0
+      expect(result.lowStockSavings).toBeCloseTo(6.0)
+      // expiry: 20 * 3.0 * 0.20 = 12.0
+      expect(result.expirySavings).toBeCloseTo(12.0)
+      expect(result.totalSavings).toBeCloseTo(18.0)
     })
   })
 })
