@@ -216,23 +216,23 @@ CREATE POLICY "snapshots_delete_org" ON waste_analysis_snapshots FOR DELETE TO a
 -- 6. UPDATE handle_new_user TRIGGER
 ------------------------------------------------------------
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $fn$
 DECLARE
   new_org_id uuid;
 BEGIN
   INSERT INTO public.users (id, email)
   VALUES (NEW.id, NEW.email)
   ON CONFLICT (id) DO NOTHING;
-  
+
   -- Create default organization for the new user
   new_org_id := gen_random_uuid();
-  
-  INSERT INTO organizations (id, name, owner_id)
-  VALUES (new_org_id, split_part(NEW.email, '@', 1) || '''s Restaurant', NEW.id);
-  
-  INSERT INTO org_members (org_id, user_id, role)
+
+  INSERT INTO public.organizations (id, name, owner_id)
+  VALUES (new_org_id, concat(split_part(NEW.email, '@', 1), chr(39), 's Restaurant'), NEW.id);
+
+  INSERT INTO public.org_members (org_id, user_id, role)
   VALUES (new_org_id, NEW.id, 'owner');
-  
+
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$fn$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
