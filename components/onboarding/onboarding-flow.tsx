@@ -226,7 +226,8 @@ export function OnboardingFlow({
               <button
                 type="button"
                 onClick={() => {
-                  router.push('/inventory')
+                  toast.info('You can add items from the Inventory page after setup.')
+                  setStep(3)
                 }}
                 className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center transition-shadow hover:shadow-md min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
@@ -239,7 +240,8 @@ export function OnboardingFlow({
               <button
                 type="button"
                 onClick={() => {
-                  router.push('/inventory')
+                  toast.info('You can import CSV from the Inventory page after setup.')
+                  setStep(3)
                 }}
                 className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center transition-shadow hover:shadow-md min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
