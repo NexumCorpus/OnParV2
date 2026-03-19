@@ -1,57 +1,75 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { CSP_HEADER } from './lib/security-middleware'
+import { type NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { updateSession } from '@/lib/supabase/middleware'
+import { logger } from '@/lib/utils/logger'
+
+const PUBLIC_ROUTES = ['/', '/login', '/signup', '/pricing', '/features', '/contact', '/api/health', '/api/webhook']
 
 export async function middleware(request: NextRequest) {
+  logger.info({ path: request.nextUrl.pathname, method: request.method }, 'request')
+
+  const response = await updateSession(request)
   const { pathname } = request.nextUrl
-  
-  // Create response with enhanced security headers
-  const response = NextResponse.next()
-  
-  // Enhanced security headers
-  response.headers.set('X-Frame-Options', 'DENY')
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set('Content-Security-Policy', CSP_HEADER)
-  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-  
-  // Handle CORS for API routes with stricter controls
-  if (pathname.startsWith('/api/')) {
-    const origin = request.headers.get('origin')
-    const allowedOrigins = [
-      process.env.NEXT_PUBLIC_APP_URL,
-      'http://localhost:3000',
-      'https://localhost:3000'
-    ].filter(Boolean)
-    
-    if (origin && allowedOrigins.includes(origin)) {
-      response.headers.set('Access-Control-Allow-Origin', origin)
+
+  // Allow public routes
+  if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))) {
+    return response
+  }
+
+  // Allow static assets and API routes that aren't protected
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api/webhook')) {
+    return response
+  }
+
+  // Check auth for protected routes
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return request.cookies.getAll() },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+        },
+      },
     }
-    
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
-    response.headers.set('Access-Control-Max-Age', '86400')
+  )
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user && !PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(redirectUrl)
   }
-  
-  // Handle preflight requests
-  if (request.method === 'OPTIONS') {
-    return new NextResponse(null, { status: 200, headers: response.headers })
+
+  // Redirect logged-in users away from auth pages
+  if (user && (pathname === '/login' || pathname === '/signup')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
-  
+
+  // Onboarding redirect — check if authenticated user has completed onboarding
+  if (user && !pathname.startsWith('/onboarding') && !pathname.startsWith('/api')) {
+    const { data: userData } = await supabase
+      .from('users').select('settings').eq('id', user.id).single()
+    if (userData && !(userData.settings as Record<string, unknown>)?.onboarding_completed) {
+      return NextResponse.redirect(new URL('/onboarding', request.url))
+    }
+  }
+
+  // If user completed onboarding but visits /onboarding, redirect to dashboard
+  if (user && pathname.startsWith('/onboarding')) {
+    const { data: userData } = await supabase
+      .from('users').select('settings').eq('id', user.id).single()
+    if ((userData?.settings as Record<string, unknown>)?.onboarding_completed) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
   return response
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

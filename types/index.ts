@@ -1,348 +1,133 @@
-// Global type definitions for OnPar application
-
-import { Database } from '@/lib/supabase'
-
-// Database types
-export type InventoryItem = Database['public']['Tables']['inventory_items']['Row']
-export type MenuItem = Database['public']['Tables']['menu_items']['Row']
-export type User = Database['public']['Tables']['users']['Row']
-
-// User Profile type
-export interface UserProfile {
+export interface User {
   id: string
   email: string
-  restaurant_name?: string
-  monthly_budget?: number
-  premium_subscription: boolean
-  cuisine_type?: string
-  restaurant_size?: string
-  employee_count?: number
-  low_stock_threshold?: number
-  expiry_warning_days?: number
-  budget_warning_threshold?: number
+  restaurant_name: string | null
+  monthly_budget: number | null
+  avatar_url: string | null
+  settings: UserSettings
   created_at: string
+  updated_at: string
 }
 
-// Recipe types
+export interface UserSettings {
+  reorder_multiplier: number
+  low_stock_threshold: number
+  expiry_warning_days: number
+  budget_warning_threshold: number
+  email_notifications: boolean
+  onboarding_completed: boolean
+}
+
+export interface InventoryItem {
+  id: string
+  user_id: string
+  supplier_id: string | null
+  name: string
+  category: string
+  quantity: number
+  unit: string
+  expiry_date: string | null
+  reorder_point: number
+  max_stock_level: number | null
+  price_per_unit: number
+  deleted_at: string | null    // soft-delete timestamp; null = active item
+  created_at: string
+  updated_at: string
+}
+
+export interface MenuItem {
+  id: string
+  user_id: string
+  recipe_id: string | null  // nullable: menu items can exist without recipes
+  name: string
+  category: string
+  selling_price: number
+  sales_percentage: number
+  waste_percentage: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
 export interface Recipe {
   id: string
+  user_id: string
   name: string
-  description: string
+  description: string | null
   category: string
-  servings: number
-  prep_time: number
-  cook_time: number
-  difficulty: 'easy' | 'medium' | 'hard'
-  ingredients: RecipeIngredient[]
-  instructions: string[]
+  serving_size: number
+  prep_time_minutes: number | null
+  cook_time_minutes: number | null
+  difficulty_level: 'easy' | 'medium' | 'hard'
+  instructions: string | null
   cost_per_serving: number
   selling_price: number
   profit_margin: number
   popularity_score: number
   waste_percentage: number
-  tags: string[]
   created_at: string
   updated_at: string
 }
 
 export interface RecipeIngredient {
+  id: string
+  recipe_id: string
   inventory_item_id: string
-  name: string
-  quantity: number
+  quantity_needed: number
   unit: string
-  cost: number
-  notes?: string
+  cost_per_unit: number
+  created_at: string
 }
 
-// Supplier types
 export interface Supplier {
   id: string
+  user_id: string
   name: string
-  contact_person: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  state: string
-  zip: string
-  category: string
-  rating: number
-  reliability_score: number
-  avg_delivery_time: number
-  payment_terms: string
-  minimum_order: number
-  delivery_fee: number
-  notes: string
-  status: 'active' | 'inactive' | 'pending'
+  contact_email: string | null
+  contact_phone: string | null
+  address: string | null
+  notes: string | null
+  rating: number | null
+  is_active: boolean
   created_at: string
-  last_order_date?: string
-  total_orders: number
-  total_spent: number
+  updated_at: string
 }
 
-export interface SupplierOrder {
+export interface WasteEvent {
   id: string
-  supplier_id: string
-  order_date: string
-  delivery_date?: string
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
-  total_amount: number
-  items: OrderItem[]
-  notes?: string
-}
-
-export interface OrderItem {
-  inventory_item_id: string
-  name: string
+  user_id: string
+  inventory_item_id: string | null
   quantity: number
   unit: string
-  unit_price: number
-  total_price: number
-}
-
-// Notification types
-export interface Notification {
-  id: string
-  type: 'low_stock' | 'expiring' | 'expired' | 'budget' | 'waste' | 'supplier' | 'system' | 'ai_insight'
-  priority: 'low' | 'medium' | 'high' | 'critical'
-  title: string
-  message: string
-  data?: Record<string, any>
-  read: boolean
-  dismissed: boolean
+  estimated_value: number
+  reason: WasteReason
+  notes: string | null
+  recorded_at: string
   created_at: string
-  expires_at?: string
-  action_url?: string
-  action_label?: string
 }
 
-// Report types
-export interface ReportConfig {
-  name: string
-  type: 'inventory' | 'waste' | 'financial' | 'performance' | 'compliance' | 'custom'
-  dateRange: {
-    start: string
-    end: string
-    preset: string
-  }
-  filters: {
-    categories: string[]
-    suppliers: string[]
-    locations: string[]
-    status: string[]
-  }
-  metrics: string[]
-  format: 'pdf' | 'excel' | 'csv' | 'json'
-  schedule?: {
-    frequency: 'daily' | 'weekly' | 'monthly' | 'quarterly'
-    recipients: string[]
-    enabled: boolean
-  }
-}
+export type WasteReason =
+  | 'expired'
+  | 'spoiled'
+  | 'overproduction'
+  | 'prep_waste'
+  | 'damaged'
+  | 'customer_return'
+  | 'quality_issue'
+  | 'other'
 
-export interface ReportTemplate {
+export interface Product {
   id: string
+  barcode: string
   name: string
-  description: string
-  type: string
-  icon: React.ComponentType<{ className?: string }>
-  metrics: string[]
-  defaultFilters: Record<string, any>
-  isPremium?: boolean
-}
-
-export interface ReportData {
-  summary: Record<string, any>
-  inventory_details: InventoryItem[]
-  menu_details: MenuItem[]
-  metrics: string[]
-  filters_applied: Record<string, any>
-}
-
-// Analytics types
-export interface AnalyticsData {
-  totalInventoryValue: number
-  monthlySpend: number
-  wastePercentage: number
-  savingsOpportunity: number
-  topPerformingItems: MenuItem[]
-  underperformingItems: MenuItem[]
-  expiringItems: InventoryItem[]
-  lowStockItems: InventoryItem[]
-  costTrends: Array<{ date: string; value: number }>
-  wasteTrends: Array<{ date: string; value: number }>
-  categoryBreakdown: Array<{ category: string; value: number; percentage: number }>
-}
-
-// Component prop types
-export interface BaseComponentProps {
-  isPremium: boolean
-  userProfile: UserProfile
-}
-
-export interface InventoryManagerProps extends BaseComponentProps {
-  inventoryItems: InventoryItem[]
-  onItemsChange: (items: InventoryItem[]) => void
-}
-
-export interface RecipeManagerProps extends BaseComponentProps {
-  inventoryItems: InventoryItem[]
-  menuItems: MenuItem[]
-}
-
-export interface SupplierManagerProps extends BaseComponentProps {}
-
-export interface NotificationCenterProps extends BaseComponentProps {
-  inventoryItems: InventoryItem[]
-  menuItems: MenuItem[]
-}
-
-export interface ReportGeneratorProps extends BaseComponentProps {
-  inventoryItems: InventoryItem[]
-  menuItems: MenuItem[]
-}
-
-export interface AnalyticsProps extends BaseComponentProps {
-  inventoryItems: InventoryItem[]
-  menuItems: MenuItem[]
-}
-
-// Form data types
-export interface InventoryFormData {
-  name: string
-  quantity: number
+  brand: string | null
+  category: string | null
   unit: string
-  reorder_point: number
-  price_per_unit: number
-  expiry_date?: string
-  category: string
-  supplier?: string
-  notes?: string
+  average_price: number
+  created_at: string
+  updated_at: string
 }
 
-export interface RecipeFormData {
-  name: string
-  description: string
-  category: string
-  servings: number
-  prep_time: number
-  cook_time: number
-  difficulty: 'easy' | 'medium' | 'hard'
-  ingredients: RecipeIngredient[]
-  instructions: string[]
-  selling_price: number
-  tags: string[]
-}
-
-export interface SupplierFormData {
-  name: string
-  contact_person: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  state: string
-  zip: string
-  category: string
-  rating: number
-  reliability_score: number
-  avg_delivery_time: number
-  payment_terms: string
-  minimum_order: number
-  delivery_fee: number
-  notes: string
-  status: 'active' | 'inactive' | 'pending'
-}
-
-// Onboarding types
-export interface OnboardingData {
-  restaurant_name: string
-  cuisine_type: string
-  restaurant_size: string
-  location: string
-  years_in_business: string
-  monthly_budget: number
-  employee_count: number
-  avg_daily_customers: number
-  operating_hours: string
-  biggest_challenges: string[]
-  current_inventory_method: string
-  waste_estimate: number
-  primary_goals: string[]
-  expected_savings: number
-  notification_preferences: string[]
-  preferred_contact_method: string
-  add_sample_data: boolean
-  import_existing_data: boolean
-}
-
-// Filter and search types
-export interface InventoryFilters {
-  search: string
-  category: string
-  status: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-}
-
-export interface BulkAction {
-  type: 'update_quantity' | 'update_price' | 'delete' | 'reorder'
-  items: string[]
-}
-
-// Notification settings
-export interface NotificationSettings {
-  email_enabled: boolean
-  sms_enabled: boolean
-  push_enabled: boolean
-  low_stock_threshold: number
-  expiry_warning_days: number
-  budget_warning_percentage: number
-  waste_threshold_percentage: number
-  quiet_hours_start: string
-  quiet_hours_end: string
-  notification_types: {
-    low_stock: boolean
-    expiring_items: boolean
-    budget_alerts: boolean
-    waste_alerts: boolean
-    supplier_updates: boolean
-    ai_insights: boolean
-    system_updates: boolean
-  }
-}
-
-// API response types
-export interface ApiResponse<T> {
-  data: T | null
-  error: Error | null
-}
-
-export interface PaginatedResponse<T> {
-  data: T[]
-  total: number
-  page: number
-  limit: number
-  hasMore: boolean
-}
-
-// Chart and visualization types
-export interface ChartDataPoint {
-  date: string
-  value: number
-  label?: string
-}
-
-export interface MetricCardData {
-  title: string
-  value: string | number
-  change: number
-  trend: 'up' | 'down'
-  icon: React.ComponentType<{ className?: string }>
-  isGood?: boolean
-}
-
-// AI Insights types
 export interface AIInsight {
   id: string
   user_id: string
@@ -351,41 +136,31 @@ export interface AIInsight {
   description: string
   impact: 'high' | 'medium' | 'low'
   estimated_savings: number
-  actionable: boolean
   confidence: number
   data_points: string[]
   recommended_actions: string[]
-  related_items: Array<{
-    id: string
-    name: string
-    type: 'inventory' | 'menu' | 'recipe'
-    currentValue: number
-    suggestedValue: number
-    unit?: string
-  }>
+  related_items: RelatedItem[]
   timeframe: string
   priority: 'urgent' | 'high' | 'medium' | 'low'
   category: string
   status: 'pending' | 'in_progress' | 'completed' | 'dismissed'
-  implementation_date?: string
-  completion_date?: string
-  actual_savings?: number
+  implementation_date: string | null
+  completion_date: string | null
+  actual_savings: number | null
   created_at: string
   updated_at: string
 }
 
-export interface AIInsightImplementation {
+export interface RelatedItem {
   id: string
-  insight_id: string
-  user_id: string
-  action_taken: string
-  notes?: string
-  impact_measured?: number
-  success_rating?: number // 1-5 rating
-  created_at: string
+  name: string
+  type: 'inventory' | 'menu' | 'recipe'
+  currentValue: number
+  suggestedValue: number
+  unit: string
 }
 
-export interface WasteAnalysisData {
+export interface WasteAnalysisSnapshot {
   id: string
   user_id: string
   analysis_date: string
@@ -399,35 +174,60 @@ export interface WasteAnalysisData {
   created_at: string
 }
 
-export interface ActionPlan {
+export interface Feedback {
   id: string
-  priority: 'high' | 'medium' | 'low'
-  category: 'ordering' | 'storage' | 'preparation' | 'menu'
-  description: string
-  expectedSavings: number
-  implementationSteps: string[]
-  timeframe: string
+  user_id: string | null
+  email: string | null
+  feedback_type: 'bug' | 'feature_request' | 'general'
+  message: string
+  page_url: string | null
+  user_agent: string | null
+  created_at: string
 }
 
-export interface ImpactMetrics {
-  actualSavings: number
-  wasteReduction: number
-  efficiencyGain: number
-  implementationSuccess: boolean
-  timeToComplete: number
-  userSatisfaction: number
+// Shared result type for all Server Actions
+export type ActionResult =
+  | { success: true; data?: unknown }
+  | { success: false; error: string }
+
+// Subscription status enum (matches PostgreSQL subscription_status type)
+export type SubscriptionStatus =
+  | 'not_started' | 'incomplete' | 'incomplete_expired'
+  | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'paused'
+
+// Input types — used across tiers for service/action function signatures.
+// Implementations should derive these from z.infer<typeof schema> where a Zod schema exists.
+export type CreateInventoryInput = {
+  name: string; category: string; quantity: number; unit: string;
+  expiry_date?: string; reorder_point: number; max_stock_level?: number;
+  price_per_unit: number; supplier_id?: string;
+}
+export type CreateRecipeInput = {
+  name: string; description?: string | null; category: string; serving_size: number;
+  prep_time_minutes?: number | null; cook_time_minutes?: number | null;
+  difficulty_level: 'easy' | 'medium' | 'hard'; instructions?: string | null;
+  selling_price: number;
+}
+export type CreateIngredientInput = {
+  inventory_item_id: string; quantity_needed: number; unit: string; cost_per_unit: number;
+}
+export type CreateMenuItemInput = {
+  name: string; category: string; selling_price: number;
+  sales_percentage?: number; waste_percentage?: number; is_active?: boolean;
+}
+export type RecordWasteInput = {
+  inventory_item_id: string; quantity: number; unit: string;
+  reason: WasteReason; notes?: string | null;
+}
+export type CreateSupplierInput = {
+  name: string; contact_email?: string | null; contact_phone?: string | null;
+  address?: string | null; notes?: string | null;
+  rating?: number | null; is_active?: boolean;
 }
 
-export interface WasteAnalysis {
-  totalWaste: number
-  wasteByCategory: Record<string, number>
-  trendAnalysis: {
-    direction: 'increasing' | 'decreasing' | 'stable'
-    rate: number
-  }
-  seasonalFactors: Record<string, number>
-  recommendations: string[]
-}
-
-// Export all types
-export * from './index'
+// Standardized error codes — use these instead of raw strings in ActionResult.error
+export const ERROR_CODES = {
+  PLAN_LIMIT_REACHED: 'PLAN_LIMIT_REACHED',
+  ITEM_DELETED: 'ITEM_DELETED',
+  CONCURRENT_MODIFICATION: 'CONCURRENT_MODIFICATION',
+} as const

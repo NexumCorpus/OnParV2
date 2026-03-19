@@ -1,130 +1,164 @@
-import { useState, useEffect } from 'react'
-import { AIInsight } from '@/types'
+'use client'
+
+import { useState, useCallback, useMemo } from 'react'
+import {
+  getAIInsights,
+  refreshAIInsights,
+  updateInsightStatus,
+  dismissInsight,
+} from '@/lib/actions/waste'
+import type { AIInsight } from '@/types'
+
+type StatusFilter = 'all' | AIInsight['status']
+type TypeFilter = 'all' | AIInsight['type']
+
+interface AIInsightsState {
+  insights: AIInsight[]
+  loading: boolean
+  error: string | null
+  statusFilter: StatusFilter
+  typeFilter: TypeFilter
+}
 
 export function useAIInsights() {
-  const [insights, setInsights] = useState<AIInsight[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [state, setState] = useState<AIInsightsState>({
+    insights: [],
+    loading: false,
+    error: null,
+    statusFilter: 'all',
+    typeFilter: 'all',
+  })
 
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
+    setState((prev) => ({ ...prev, loading: true, error: null }))
     try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/ai-insights')
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch insights')
+      const result = await getAIInsights()
+      if (result.success && result.data) {
+        setState((prev) => ({
+          ...prev,
+          insights: result.data as AIInsight[],
+          loading: false,
+        }))
+      } else if (!result.success) {
+        setState((prev) => ({ ...prev, loading: false, error: result.error }))
       }
-      
-      setInsights(data.insights || [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch insights')
-    } finally {
-      setLoading(false)
+    } catch {
+      setState((prev) => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to load insights',
+      }))
     }
-  }
-
-  const generateInsights = async (regenerate = false) => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await fetch('/api/ai-insights', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ regenerate }),
-      })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate insights')
-      }
-      
-      setInsights(data.insights || [])
-      return data.insights
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate insights')
-      return []
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const updateInsightStatus = async (
-    insightId: string, 
-    status: 'pending' | 'in_progress' | 'completed' | 'dismissed',
-    actualSavings?: number
-  ) => {
-    try {
-      const response = await fetch(`/api/ai-insights/${insightId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status, actual_savings: actualSavings }),
-      })
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to update insight status')
-      }
-      
-      // Update local state
-      setInsights(prev => prev.map(insight => 
-        insight.id === insightId 
-          ? { 
-              ...insight, 
-              status, 
-              actual_savings: actualSavings || insight.actual_savings,
-              updated_at: new Date().toISOString()
-            }
-          : insight
-      ))
-      
-      return true
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update insight status')
-      return false
-    }
-  }
-
-  const deleteInsight = async (insightId: string) => {
-    try {
-      const response = await fetch(`/api/ai-insights/${insightId}`, {
-        method: 'DELETE',
-      })
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Failed to delete insight')
-      }
-      
-      // Update local state
-      setInsights(prev => prev.filter(insight => insight.id !== insightId))
-      
-      return true
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete insight')
-      return false
-    }
-  }
-
-  useEffect(() => {
-    fetchInsights()
   }, [])
 
+  const refresh = useCallback(async () => {
+    setState((prev) => ({ ...prev, loading: true, error: null }))
+    try {
+      const result = await refreshAIInsights()
+      if (result.success && result.data) {
+        setState((prev) => ({
+          ...prev,
+          insights: result.data as AIInsight[],
+          loading: false,
+        }))
+      } else if (!result.success) {
+        setState((prev) => ({ ...prev, loading: false, error: result.error }))
+      }
+    } catch {
+      setState((prev) => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to refresh insights',
+      }))
+    }
+  }, [])
+
+  const handleUpdateStatus = useCallback(
+    async (insightId: string, status: string, savings?: number) => {
+      const result = await updateInsightStatus(insightId, status, savings)
+      if (result.success) {
+        setState((prev) => ({
+          ...prev,
+          insights: prev.insights.map((i) =>
+            i.id === insightId ? { ...i, status: status as AIInsight['status'] } : i
+          ),
+        }))
+      }
+      return result
+    },
+    []
+  )
+
+  const handleDismiss = useCallback(
+    async (insightId: string) => {
+      const result = await dismissInsight(insightId)
+      if (result.success) {
+        setState((prev) => ({
+          ...prev,
+          insights: prev.insights.map((i) =>
+            i.id === insightId ? { ...i, status: 'dismissed' as const } : i
+          ),
+        }))
+      }
+      return result
+    },
+    []
+  )
+
+  const setStatusFilter = useCallback((filter: StatusFilter) => {
+    setState((prev) => ({ ...prev, statusFilter: filter }))
+  }, [])
+
+  const setTypeFilter = useCallback((filter: TypeFilter) => {
+    setState((prev) => ({ ...prev, typeFilter: filter }))
+  }, [])
+
+  // Filtered insights
+  const filteredInsights = useMemo(() => {
+    return state.insights.filter((insight) => {
+      if (state.statusFilter !== 'all' && insight.status !== state.statusFilter) return false
+      if (state.typeFilter !== 'all' && insight.type !== state.typeFilter) return false
+      return true
+    })
+  }, [state.insights, state.statusFilter, state.typeFilter])
+
+  // Computed stats
+  const totalSavings = useMemo(
+    () => state.insights.reduce((sum, i) => sum + i.estimated_savings, 0),
+    [state.insights]
+  )
+
+  const avgConfidence = useMemo(() => {
+    if (state.insights.length === 0) return 0
+    return state.insights.reduce((sum, i) => sum + i.confidence, 0) / state.insights.length
+  }, [state.insights])
+
+  const pendingCount = useMemo(
+    () => state.insights.filter((i) => i.status === 'pending').length,
+    [state.insights]
+  )
+
+  const completedCount = useMemo(
+    () => state.insights.filter((i) => i.status === 'completed').length,
+    [state.insights]
+  )
+
   return {
-    insights,
-    loading,
-    error,
+    insights: filteredInsights,
+    allInsights: state.insights,
+    loading: state.loading,
+    error: state.error,
+    statusFilter: state.statusFilter,
+    typeFilter: state.typeFilter,
     fetchInsights,
-    generateInsights,
-    updateInsightStatus,
-    deleteInsight,
+    refreshInsights: refresh,
+    updateStatus: handleUpdateStatus,
+    dismissInsight: handleDismiss,
+    setStatusFilter,
+    setTypeFilter,
+    totalSavings,
+    avgConfidence,
+    pendingCount,
+    completedCount,
   }
 }

@@ -1,91 +1,64 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { Slot } from "radix-ui"
 
-import { cn } from "../../lib/utils"
+import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap font-semibold ring-offset-background transition-all duration-[var(--duration-normal)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden",
+  "inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-hover shadow-[var(--shadow)] hover:shadow-[var(--shadow-md)] hover:scale-[1.02] active:scale-[0.98] border border-primary/20",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary-hover shadow-[var(--shadow)] hover:shadow-[var(--shadow-md)] hover:scale-[1.02] active:scale-[0.98] border border-secondary/20",
-        success: "bg-success text-success-foreground hover:bg-success/90 shadow-[var(--shadow)] hover:shadow-[var(--shadow-md)] hover:scale-[1.02] active:scale-[0.98] border border-success/20",
-        warning: "bg-warning text-warning-foreground hover:bg-warning/90 shadow-[var(--shadow)] hover:shadow-[var(--shadow-md)] hover:scale-[1.02] active:scale-[0.98] border border-warning/20",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-[var(--shadow)] hover:shadow-[var(--shadow-md)] hover:scale-[1.02] active:scale-[0.98] border border-destructive/20",
-        outline: "border-2 border-border bg-background hover:bg-surface hover:text-foreground hover:border-primary/50 hover:shadow-[var(--shadow-sm)] hover:scale-[1.02] active:scale-[0.98]",
-        ghost: "hover:bg-muted hover:text-foreground hover:scale-[1.02] active:scale-[0.98]",
-        link: "text-primary underline-offset-4 hover:underline hover:scale-[1.02] active:scale-[0.98] p-0 h-auto",
-        gradient: "bg-gradient-to-r from-primary to-secondary text-white hover:from-primary-hover hover:to-secondary-hover shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] hover:scale-[1.02] active:scale-[0.98] border-0",
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        destructive:
+          "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40",
+        outline:
+          "border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost:
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        sm: "h-8 px-3 text-xs rounded-[var(--radius)]",
-        default: "h-10 px-4 py-2 text-sm rounded-[var(--radius-md)]",
-        lg: "h-12 px-6 text-base rounded-[var(--radius-lg)]",
-        xl: "h-14 px-8 text-lg rounded-[var(--radius-xl)] font-bold",
-        icon: "h-10 w-10 rounded-[var(--radius-md)]",
-        "icon-sm": "h-8 w-8 rounded-[var(--radius)]",
-        "icon-lg": "h-12 w-12 rounded-[var(--radius-lg)]",
-      },
-      loading: {
-        true: "cursor-not-allowed",
-        false: "",
+        default: "h-9 px-4 py-2 has-[>svg]:px-3",
+        xs: "h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3",
+        sm: "h-8 gap-1.5 rounded-md px-3 has-[>svg]:px-2.5",
+        lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+        icon: "size-9",
+        "icon-xs": "size-6 rounded-md [&_svg:not([class*='size-'])]:size-3",
+        "icon-sm": "size-8",
+        "icon-lg": "size-10",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
-      loading: false,
     },
   }
 )
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
-  loading?: boolean
-  leftIcon?: React.ReactNode
-  rightIcon?: React.ReactNode
-}
+function Button({
+  className,
+  variant = "default",
+  size = "default",
+  asChild = false,
+  ...props
+}: React.ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot.Root : "button"
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ 
-    className, 
-    variant, 
-    size, 
-    asChild = false, 
-    loading = false,
-    leftIcon,
-    rightIcon,
-    children,
-    disabled,
-    ...props 
-  }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, loading, className }))}
-        ref={ref}
-        disabled={disabled || loading}
-        {...props}
-      >
-        {loading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-inherit">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          </div>
-        )}
-        <div className={cn("flex items-center gap-2", loading && "opacity-0")}>
-          {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-          {children}
-          {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
-        </div>
-      </Comp>
-    )
-  }
-)
-Button.displayName = "Button"
+  return (
+    <Comp
+      data-slot="button"
+      data-variant={variant}
+      data-size={size}
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
 
 export { Button, buttonVariants }
