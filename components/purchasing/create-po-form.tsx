@@ -14,7 +14,7 @@ interface LowStockItem {
   unit: string
   quantity: number
   reorder_point: number
-  unit_price: number
+  price_per_unit: number
 }
 
 interface CreatePOFormProps {
@@ -44,7 +44,7 @@ export function CreatePOForm({ supplierId, items }: CreatePOFormProps) {
     const payload = items.map(item => ({
       id: item.id,
       quantity: quantities[item.id],
-      price: item.unit_price,
+      price: item.price_per_unit,
     }))
 
     const result = await createDraftPO(supplierId, payload)
@@ -59,7 +59,7 @@ export function CreatePOForm({ supplierId, items }: CreatePOFormProps) {
     }
   }
 
-  const totalPoAmount = items.reduce((acc, item) => acc + (quantities[item.id] * item.unit_price), 0)
+  const totalPoAmount = items.reduce((acc, item) => acc + (quantities[item.id] * item.price_per_unit), 0)
 
   if (items.length === 0) {
     return (
@@ -85,7 +85,7 @@ export function CreatePOForm({ supplierId, items }: CreatePOFormProps) {
           <tbody>
             {items.map(item => {
               const qty = quantities[item.id]
-              const lineTotal = qty * item.unit_price
+              const lineTotal = qty * item.price_per_unit
 
               return (
                 <tr key={item.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
@@ -95,7 +95,7 @@ export function CreatePOForm({ supplierId, items }: CreatePOFormProps) {
                       {item.quantity} / {item.reorder_point}
                     </span>
                   </td>
-                  <td className="p-3">{formatCurrency(item.unit_price)}</td>
+                  <td className="p-3">{formatCurrency(item.price_per_unit)}</td>
                   <td className="p-3">
                     <Input 
                       type="number" 

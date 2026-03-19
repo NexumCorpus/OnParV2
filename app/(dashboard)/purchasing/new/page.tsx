@@ -25,7 +25,7 @@ interface LowStockItem {
   unit: string
   quantity: number
   reorder_point: number
-  unit_price: number
+  price_per_unit: number
 }
 
 export default async function NewPurchaseOrderPage(props: PageProps) {

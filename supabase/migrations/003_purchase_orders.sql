@@ -55,7 +55,7 @@ CREATE POLICY "po_line_update_org" ON po_line_items FOR UPDATE TO authenticated 
   po_id IN (SELECT id FROM purchase_orders WHERE org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid()))
 );
 CREATE POLICY "po_line_delete_org" ON po_line_items FOR DELETE TO authenticated USING (
-  po_id IN (SELECT id FROM purchase_orders WHERE org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid()) AND role IN ('owner', 'manager'))
+  po_id IN (SELECT id FROM purchase_orders WHERE org_id IN (SELECT org_id FROM org_members WHERE user_id = auth.uid() AND role IN ('owner', 'manager')))
 );
 
 ------------------------------------------------------------

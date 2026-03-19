@@ -155,18 +155,23 @@ export async function sendPurchaseOrder(poId: string): Promise<ActionResult> {
   try {
     const supabase = await createClient()
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('purchase_orders')
       .update({ status: 'sent', updated_at: new Date().toISOString() })
       .eq('id', poId)
       .eq('status', 'draft')
+      .select()
 
     if (error) {
       return { success: false, error: 'Failed to update PO status' }
     }
 
+    if (!data || data.length === 0) {
+      return { success: false, error: 'Purchase order not found or is not in draft status' }
+    }
+
     // SIMULATED: Send actual email to supplier here via Resend/SendGrid
-    
+
     return { success: true }
   } catch (err) {
     logger.error({ err, poId, action: 'sendPurchaseOrder' }, 'Error sending PO')
