@@ -6,6 +6,7 @@ import { NotificationSettings } from '@/components/settings/notification-setting
 import { BillingInfo } from '@/components/settings/billing-info'
 import { AppearanceSettings } from '@/components/settings/appearance-settings'
 import { DangerZone } from '@/components/settings/danger-zone'
+import { TeamSettings } from '@/components/settings/team-settings'
 import type { UserSettings } from '@/types'
 import type { PlanKey } from '@/lib/config'
 
@@ -20,6 +21,7 @@ interface SettingsTabsProps {
   currentPeriodEnd: string | null
   cancelAtPeriodEnd: boolean
   customerId: string | null
+  teamData: { orgName: string; currentUserRole: string; members: { userId: string, email: string, role: string, joinedAt: string }[] } | null
 }
 
 export function SettingsTabs({
@@ -33,11 +35,13 @@ export function SettingsTabs({
   currentPeriodEnd,
   cancelAtPeriodEnd,
   customerId,
+  teamData,
 }: SettingsTabsProps) {
   return (
     <Tabs defaultValue="profile" className="space-y-6">
       <TabsList>
         <TabsTrigger value="profile">Profile</TabsTrigger>
+        <TabsTrigger value="team">Team</TabsTrigger>
         <TabsTrigger value="notifications">Notifications</TabsTrigger>
         <TabsTrigger value="billing">Billing</TabsTrigger>
         <TabsTrigger value="appearance">Appearance</TabsTrigger>
@@ -51,6 +55,14 @@ export function SettingsTabs({
           avatarUrl={avatarUrl}
         />
         <DangerZone email={email} />
+      </TabsContent>
+
+      <TabsContent value="team">
+        <TeamSettings 
+          orgName={teamData?.orgName ?? ''}
+          currentUserRole={teamData?.currentUserRole ?? 'staff'}
+          members={teamData?.members ?? []}
+        />
       </TabsContent>
 
       <TabsContent value="notifications">

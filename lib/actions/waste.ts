@@ -5,7 +5,7 @@ import { wasteEventSchema } from '@/lib/utils/validation'
 import { logger } from '@/lib/utils/logger'
 import { analyzeWastePatterns, getSeasonalTrends } from '@/lib/engines/waste-analysis'
 import { generatePredictions, generateAlerts } from '@/lib/engines/waste-predictions'
-import { generateInsights, calculateConfidence } from '@/lib/engines/ai-insights'
+import { generateInsights } from '@/lib/engines/ai-insights'
 import { compareToBenchmarks } from '@/lib/engines/waste-benchmarks'
 import { generateReport } from '@/lib/engines/waste-insights'
 import type { ActionResult, RecordWasteInput, WasteEvent, InventoryItem, AIInsight } from '@/types'
@@ -258,7 +258,7 @@ export async function refreshAIInsights(): Promise<ActionResult> {
     const wasteEvents = (wasteResult.data ?? []) as WasteEvent[]
     const inventoryItems = (inventoryResult.data ?? []) as InventoryItem[]
     const menuItems = (menuResult.data ?? []) as Array<{
-      id: string; user_id: string; recipe_id: string | null; name: string;
+      id: string; org_id: string; user_id: string; recipe_id: string | null; name: string;
       category: string; selling_price: number; sales_percentage: number;
       waste_percentage: number; is_active: boolean; created_at: string; updated_at: string;
     }>

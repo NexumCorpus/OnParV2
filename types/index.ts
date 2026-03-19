@@ -1,3 +1,42 @@
+export interface Organization {
+  id: string
+  name: string
+  owner_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface OrgMember {
+  org_id: string
+  user_id: string
+  role: 'owner' | 'manager' | 'staff'
+  joined_at: string
+}
+
+export interface PurchaseOrder {
+  id: string
+  org_id: string
+  supplier_id: string
+  created_by: string
+  status: 'draft' | 'sent' | 'partially_received' | 'received' | 'cancelled'
+  total_amount: number
+  expected_delivery_date: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+  received_at: string | null
+}
+
+export interface PurchaseOrderLineItem {
+  id: string
+  po_id: string
+  inventory_item_id: string
+  quantity_ordered: number
+  quantity_received: number
+  unit_price: number
+  total_price: number
+}
+
 export interface User {
   id: string
   email: string
@@ -20,6 +59,7 @@ export interface UserSettings {
 
 export interface InventoryItem {
   id: string
+  org_id: string
   user_id: string
   supplier_id: string | null
   name: string
@@ -37,6 +77,7 @@ export interface InventoryItem {
 
 export interface MenuItem {
   id: string
+  org_id: string
   user_id: string
   recipe_id: string | null  // nullable: menu items can exist without recipes
   name: string
@@ -51,6 +92,7 @@ export interface MenuItem {
 
 export interface Recipe {
   id: string
+  org_id: string
   user_id: string
   name: string
   description: string | null
@@ -81,6 +123,7 @@ export interface RecipeIngredient {
 
 export interface Supplier {
   id: string
+  org_id: string
   user_id: string
   name: string
   contact_email: string | null
@@ -95,6 +138,7 @@ export interface Supplier {
 
 export interface WasteEvent {
   id: string
+  org_id: string
   user_id: string
   inventory_item_id: string | null
   quantity: number
@@ -130,6 +174,7 @@ export interface Product {
 
 export interface AIInsight {
   id: string
+  org_id: string
   user_id: string
   type: 'waste_reduction' | 'cost_optimization' | 'inventory_optimization' | 'menu_optimization'
   title: string
@@ -162,6 +207,7 @@ export interface RelatedItem {
 
 export interface WasteAnalysisSnapshot {
   id: string
+  org_id: string
   user_id: string
   analysis_date: string
   total_inventory_value: number

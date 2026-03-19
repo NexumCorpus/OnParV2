@@ -12,6 +12,7 @@ import type { WasteEvent, InventoryItem } from '@/types'
 function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem {
   return {
     id: 'item-1',
+    org_id: 'org-1',
     user_id: 'user-1',
     supplier_id: null,
     name: 'Lettuce',
@@ -32,6 +33,7 @@ function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem {
 function makeWasteEvent(overrides: Partial<WasteEvent> = {}): WasteEvent {
   return {
     id: 'waste-1',
+    org_id: 'org-1',
     user_id: 'user-1',
     inventory_item_id: 'item-1',
     quantity: 5,

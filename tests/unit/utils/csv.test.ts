@@ -4,6 +4,7 @@ import type { InventoryItem } from '@/types'
 
 const mockItem: InventoryItem = {
   id: '1',
+  org_id: 'org-1',
   user_id: 'user-1',
   supplier_id: null,
   name: 'Fresh Tomatoes',
