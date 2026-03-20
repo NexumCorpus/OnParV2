@@ -4,6 +4,10 @@ import { updateSession } from '@/lib/supabase/middleware'
 
 const PUBLIC_ROUTES = ['/', '/login', '/signup', '/pricing', '/features', '/contact', '/api/health', '/api/webhook']
 
+function isPublicRoute(pathname: string) {
+  return PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -18,14 +22,9 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    const response = await updateSession(request)
+    let supabaseResponse = await updateSession(request)
 
-    // Allow public routes
-    if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))) {
-      return response
-    }
-
-    // Check auth for protected routes
+    // Create Supabase client that shares the response cookies with updateSession
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -34,25 +33,35 @@ export async function proxy(request: NextRequest) {
           getAll() { return request.cookies.getAll() },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+            supabaseResponse = NextResponse.next({ request })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            )
           },
         },
       }
     )
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user && !PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))) {
+    // Redirect logged-in users away from auth pages (check before public route return)
+    if (user && (pathname === '/login' || pathname === '/signup')) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+
+    // Allow public routes
+    if (isPublicRoute(pathname)) {
+      return supabaseResponse
+    }
+
+    // Redirect unauthenticated users to login
+    if (!user) {
       const redirectUrl = new URL('/login', request.url)
       redirectUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(redirectUrl)
     }
 
-    // Redirect logged-in users away from auth pages
-    if (user && (pathname === '/login' || pathname === '/signup')) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-
     // Onboarding redirect — check if authenticated user has completed onboarding
-    if (user && !pathname.startsWith('/onboarding') && !pathname.startsWith('/api')) {
+    if (!pathname.startsWith('/onboarding') && !pathname.startsWith('/api')) {
       const { data: userData } = await supabase
         .from('users').select('settings').eq('id', user.id).maybeSingle()
       if (userData && !(userData.settings as Record<string, unknown>)?.onboarding_completed) {
@@ -61,7 +70,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // If user completed onboarding but visits /onboarding, redirect to dashboard
-    if (user && pathname.startsWith('/onboarding')) {
+    if (pathname.startsWith('/onboarding')) {
       const { data: userData } = await supabase
         .from('users').select('settings').eq('id', user.id).maybeSingle()
       if ((userData?.settings as Record<string, unknown>)?.onboarding_completed) {
@@ -69,10 +78,10 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    return response
+    return supabaseResponse
   } catch {
     // If proxy fails, allow public routes through and redirect others to login
-    if (PUBLIC_ROUTES.some(route => pathname === route || pathname.startsWith(route + '/'))) {
+    if (isPublicRoute(pathname)) {
       return NextResponse.next({ request })
     }
     return NextResponse.redirect(new URL('/login', request.url))
