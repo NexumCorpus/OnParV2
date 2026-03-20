@@ -27,13 +27,12 @@ export async function getNotifications(userId: string): Promise<AppNotification[
   // Run all checks in PARALLEL
   const [lowStockResult, expiringResult, snapshotResult, profileResult, insightsResult] =
     await Promise.all([
-      // 1. Low stock items
+      // 1. Low stock items (filter in JS — PostgREST can't compare columns)
       supabase
         .from('inventory_items')
         .select('*')
         .eq('user_id', userId)
-        .is('deleted_at', null)
-        .filter('quantity', 'lt', 'reorder_point' as unknown as number),
+        .is('deleted_at', null),
 
       // 2. Expiring items (within 3 days)
       supabase
@@ -61,7 +60,7 @@ export async function getNotifications(userId: string): Promise<AppNotification[
         .from('users')
         .select('monthly_budget')
         .eq('id', userId)
-        .single(),
+        .maybeSingle(),
 
       // 5. Pending insights count
       supabase
@@ -72,7 +71,9 @@ export async function getNotifications(userId: string): Promise<AppNotification[
     ])
 
   // 1. Low stock notifications
-  const lowStockItems = (lowStockResult.data ?? []) as InventoryItem[]
+  const lowStockItems = ((lowStockResult.data ?? []) as InventoryItem[]).filter(
+    item => item.quantity < item.reorder_point
+  )
   for (const item of lowStockItems) {
     notifications.push({
       id: generateId('low_stock', item.id),

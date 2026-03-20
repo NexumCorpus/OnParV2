@@ -31,7 +31,7 @@ export default async function SettingsPage() {
 
   // Fetch user profile and subscription status in parallel
   const [{ data: profile }, subscriptionStatus, teamResponse] = await Promise.all([
-    supabase.from('users').select('*').eq('id', user.id).single(),
+    supabase.from('users').select('*').eq('id', user.id).maybeSingle(),
     getSubscriptionStatus(user.id),
     getTeamMembers(),
   ])
