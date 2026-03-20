@@ -23,7 +23,6 @@ export default function InsightsPage() {
     setStatusFilter,
     totalSavings,
     avgConfidence,
-    pendingCount,
     completedCount,
   } = useAIInsights()
 

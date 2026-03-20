@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import {
   Table,
   TableBody,
@@ -51,27 +50,18 @@ function isLowStock(item: InventoryItem): boolean {
   return item.quantity < item.reorder_point
 }
 
-export function InventoryTable({
-  items,
-  selectedIds,
-  onSelectToggle,
-  onSelectAll,
+function SortHeader({
+  field,
+  children,
   onSort,
   sortBy,
-  sortOrder,
-  onEdit,
-  onDelete,
-  onAdjustQuantity,
-}: InventoryTableProps) {
-  const allSelected = items.length > 0 && selectedIds.size === items.length
-
-  const SortHeader = ({
-    field,
-    children,
-  }: {
-    field: SortField
-    children: React.ReactNode
-  }) => (
+}: {
+  field: SortField
+  children: React.ReactNode
+  onSort: (field: SortField) => void
+  sortBy: SortField
+}) {
+  return (
     <button
       className="inline-flex items-center gap-1 hover:text-foreground"
       onClick={() => onSort(field)}
@@ -85,6 +75,21 @@ export function InventoryTable({
       />
     </button>
   )
+}
+
+export function InventoryTable({
+  items,
+  selectedIds,
+  onSelectToggle,
+  onSelectAll,
+  onSort,
+  sortBy,
+  sortOrder: _sortOrder,
+  onEdit,
+  onDelete,
+  onAdjustQuantity,
+}: InventoryTableProps) {
+  const allSelected = items.length > 0 && selectedIds.size === items.length
 
   return (
     <div className="rounded-md border">
@@ -99,18 +104,18 @@ export function InventoryTable({
               />
             </TableHead>
             <TableHead>
-              <SortHeader field="name">Name</SortHeader>
+              <SortHeader field="name" onSort={onSort} sortBy={sortBy}>Name</SortHeader>
             </TableHead>
             <TableHead className="w-[120px]">Category</TableHead>
             <TableHead className="w-[100px]">
-              <SortHeader field="quantity">Qty</SortHeader>
+              <SortHeader field="quantity" onSort={onSort} sortBy={sortBy}>Qty</SortHeader>
             </TableHead>
             <TableHead className="w-[80px]">Unit</TableHead>
             <TableHead className="w-[100px]">
-              <SortHeader field="expiry_date">Expiry</SortHeader>
+              <SortHeader field="expiry_date" onSort={onSort} sortBy={sortBy}>Expiry</SortHeader>
             </TableHead>
             <TableHead className="w-[80px]">
-              <SortHeader field="price_per_unit">Price</SortHeader>
+              <SortHeader field="price_per_unit" onSort={onSort} sortBy={sortBy}>Price</SortHeader>
             </TableHead>
             <TableHead className="w-[40px]" />
           </TableRow>

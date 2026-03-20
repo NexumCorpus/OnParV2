@@ -98,7 +98,7 @@ export async function getRecipe(
     }
   })
 
-  const { recipe_ingredients: _ri, ...recipeFields } = recipe
+  const { recipe_ingredients: _recipeIngredients, ...recipeFields } = recipe
 
   return {
     ...recipeFields,
@@ -292,7 +292,7 @@ export async function checkIngredientAvailability(recipeId: string): Promise<{
   for (const ing of recipe.ingredients) {
     if (!ing.inventory_item) continue
     if (ing.inventory_item.quantity < ing.quantity_needed) {
-      const { inventory_item: _inv, ...ingredientFields } = ing
+      const { inventory_item: _inventoryItem, ...ingredientFields } = ing
       missingItems.push({
         ingredient: ingredientFields as RecipeIngredient,
         inventoryItem: ing.inventory_item,

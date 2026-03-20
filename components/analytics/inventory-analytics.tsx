@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -28,6 +29,7 @@ export function InventoryAnalytics({
   lowStockItems,
   expiringItems,
 }: InventoryAnalyticsProps) {
+  const [renderTime] = useState(() => Date.now())
   // Inventory value over time from snapshots
   const valueOverTime = snapshots
     .slice()
@@ -110,7 +112,7 @@ export function InventoryAnalytics({
                   {expiringItems.slice(0, 5).map((item) => {
                     const daysLeft = item.expiry_date
                       ? Math.ceil(
-                          (new Date(item.expiry_date).getTime() - Date.now()) /
+                          (new Date(item.expiry_date).getTime() - renderTime) /
                             (1000 * 60 * 60 * 24)
                         )
                       : 0

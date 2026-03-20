@@ -32,10 +32,11 @@ export default async function KitchenDisplayPage() {
   })
 
   // Critical items: expiring today or tomorrow
+  const nowMs = now.getTime()
   const criticalExpiring = expiringItems.filter((item) => {
     if (!item.expiry_date) return false
     const daysLeft = Math.ceil(
-      (new Date(item.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      (new Date(item.expiry_date).getTime() - nowMs) / (1000 * 60 * 60 * 24)
     )
     return daysLeft <= 2
   })
@@ -108,7 +109,7 @@ export default async function KitchenDisplayPage() {
               {criticalExpiring.slice(0, 10).map((item) => {
                 const daysLeft = item.expiry_date
                   ? Math.ceil(
-                      (new Date(item.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                      (new Date(item.expiry_date).getTime() - nowMs) / (1000 * 60 * 60 * 24)
                     )
                   : 0
                 return (

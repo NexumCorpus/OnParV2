@@ -21,7 +21,13 @@ const eslintConfig = defineConfig([
       "react-hooks/preserve-manual-memoization": "warn",
       "react-hooks/incompatible-library": "warn",
       "react-hooks/purity": "warn",
+      "react-hooks/immutability": "warn",
       "react-hooks/static-components": "warn",
+      "@typescript-eslint/no-unused-vars": ["warn", {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+        destructuredArrayIgnorePattern: "^_",
+      }],
     },
   },
 ]);

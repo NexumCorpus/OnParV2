@@ -8,7 +8,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import {
   Table,
@@ -75,18 +74,7 @@ export function RecipeDetailDialog({
     setLoading(false)
   }, [recipeId])
 
-  useEffect(() => {
-    if (open && recipeId) {
-      fetchRecipe().then(() => {
-        // Auto-check availability when dialog opens
-        void handleCheckAvailability()
-      })
-    } else {
-      setAvailability(null)
-    }
-  }, [open, recipeId, fetchRecipe]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleCheckAvailability = async () => {
+  const handleCheckAvailability = useCallback(async () => {
     if (!recipeId) return
     setCheckingAvailability(true)
     try {
@@ -99,7 +87,17 @@ export function RecipeDetailDialog({
       // handled by loading state
     }
     setCheckingAvailability(false)
-  }
+  }, [recipeId])
+
+  useEffect(() => {
+    if (open && recipeId) {
+      fetchRecipe().then(() => {
+        void handleCheckAvailability()
+      })
+    } else {
+      setAvailability(null)
+    }
+  }, [open, recipeId, fetchRecipe, handleCheckAvailability])
 
   if (!open) return null
 
