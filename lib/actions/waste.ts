@@ -462,6 +462,47 @@ export async function saveAnalysisSnapshot(data: {
   }
 }
 
+// --- recordBatchWasteEvents ---
+// Logs multiple waste events in sequence, rolling back none on partial failure.
+
+export async function recordBatchWasteEvents(
+  events: RecordWasteInput[]
+): Promise<ActionResult> {
+  if (events.length === 0) {
+    return { success: false, error: 'No waste events to record' }
+  }
+  if (events.length > 50) {
+    return { success: false, error: 'Maximum 50 items per batch' }
+  }
+
+  const results: Array<{ item: string; success: boolean; error?: string; value?: number }> = []
+  let totalValue = 0
+
+  for (const event of events) {
+    const result = await recordWasteEvent(event)
+    if (result.success) {
+      const data = result.data as { estimated_value: number } | undefined
+      const value = data?.estimated_value ?? 0
+      totalValue += value
+      results.push({ item: event.inventory_item_id, success: true, value })
+    } else {
+      results.push({ item: event.inventory_item_id, success: false, error: result.error })
+    }
+  }
+
+  const successCount = results.filter((r) => r.success).length
+  const failCount = results.filter((r) => !r.success).length
+
+  if (failCount === events.length) {
+    return { success: false, error: 'All waste events failed to record' }
+  }
+
+  return {
+    success: true,
+    data: { successCount, failCount, totalValue, results },
+  }
+}
+
 // --- Fetch helpers for waste page ---
 
 export async function getInventoryItemsForWaste(): Promise<ActionResult> {

@@ -1,8 +1,22 @@
+'use client'
+
+import { useState, useRef } from 'react'
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Play } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export function HeroSection() {
+  const [playing, setPlaying] = useState(false)
+  const [videoError, setVideoError] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const handlePlay = () => {
+    if (videoRef.current) {
+      videoRef.current.play().catch(() => setVideoError(true))
+      setPlaying(true)
+    }
+  }
+
   return (
     <section className="relative overflow-hidden pt-24 pb-16 md:pt-32 md:pb-24">
       {/* Background gradient */}
@@ -33,15 +47,13 @@ export function HeroSection() {
                 <Link href="/signup">Get Started Free</Link>
               </Button>
               <Button
-                asChild
                 variant="outline"
                 size="lg"
                 className="min-h-[48px] px-8 text-base"
+                onClick={handlePlay}
               >
-                <Link href="/features">
-                  See Demo
-                  <ArrowRight className="ml-2 size-4" aria-hidden="true" />
-                </Link>
+                See Demo
+                <ArrowRight className="ml-2 size-4" aria-hidden="true" />
               </Button>
             </div>
 
@@ -58,27 +70,41 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Dashboard preview placeholder */}
-          <div className="relative hidden lg:block" aria-hidden="true">
-            <div className="aspect-[4/3] rounded-xl border bg-gradient-to-br from-brand-50 to-brand-100 shadow-2xl dark:from-brand-950/40 dark:to-brand-900/20">
-              <div className="p-6 space-y-4">
-                <div className="flex gap-2">
-                  <div className="h-3 w-3 rounded-full bg-red-400" />
-                  <div className="h-3 w-3 rounded-full bg-yellow-400" />
-                  <div className="h-3 w-3 rounded-full bg-green-400" />
-                </div>
-                <div className="h-6 w-48 rounded bg-brand-200/50 dark:bg-brand-800/30" />
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="h-20 rounded-lg bg-white/60 dark:bg-white/5 shadow-sm" />
-                  <div className="h-20 rounded-lg bg-white/60 dark:bg-white/5 shadow-sm" />
-                  <div className="h-20 rounded-lg bg-white/60 dark:bg-white/5 shadow-sm" />
-                </div>
-                <div className="h-32 rounded-lg bg-white/60 dark:bg-white/5 shadow-sm" />
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="h-24 rounded-lg bg-white/60 dark:bg-white/5 shadow-sm" />
-                  <div className="h-24 rounded-lg bg-white/60 dark:bg-white/5 shadow-sm" />
-                </div>
-              </div>
+          {/* Demo video player */}
+          <div className="relative hidden lg:block">
+            <div className="aspect-[4/3] rounded-xl border shadow-2xl overflow-hidden bg-gradient-to-br from-brand-50 to-brand-100 dark:from-brand-950/40 dark:to-brand-900/20">
+              {/* Video element */}
+              <video
+                ref={videoRef}
+                className="absolute inset-0 w-full h-full object-cover"
+                loop
+                muted
+                playsInline
+                preload="metadata"
+                onError={() => setVideoError(true)}
+              >
+                <source src="/demo.mp4" type="video/mp4" />
+                <source src="/demo.webm" type="video/webm" />
+              </video>
+
+              {/* Play button overlay — shows when not playing or video unavailable */}
+              {(!playing || videoError) && (
+                <button
+                  onClick={handlePlay}
+                  className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-br from-brand-950/80 to-brand-900/60 transition-opacity hover:from-brand-950/70 hover:to-brand-900/50 cursor-pointer"
+                  aria-label="Play demo video"
+                >
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg transition-transform hover:scale-110">
+                    <Play className="h-8 w-8 ml-1" fill="currentColor" />
+                  </div>
+                  <span className="text-white text-lg font-medium">Watch Demo</span>
+                  {videoError && (
+                    <span className="text-white/60 text-sm">
+                      Demo video coming soon
+                    </span>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>

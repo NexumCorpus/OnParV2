@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import {
   getAIInsights,
   refreshAIInsights,
@@ -142,6 +142,23 @@ export function useAIInsights() {
     () => state.insights.filter((i) => i.status === 'completed').length,
     [state.insights]
   )
+
+  // Auto-refresh insights every 10 minutes (only if insights exist)
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    if (state.insights.length === 0) return
+
+    intervalRef.current = setInterval(() => {
+      void fetchInsights()
+    }, 10 * 60 * 1000)
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [fetchInsights, state.insights.length])
 
   return {
     insights: filteredInsights,

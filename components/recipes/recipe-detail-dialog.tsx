@@ -77,10 +77,14 @@ export function RecipeDetailDialog({
 
   useEffect(() => {
     if (open && recipeId) {
-      fetchRecipe()
+      fetchRecipe().then(() => {
+        // Auto-check availability when dialog opens
+        void handleCheckAvailability()
+      })
+    } else {
       setAvailability(null)
     }
-  }, [open, recipeId, fetchRecipe])
+  }, [open, recipeId, fetchRecipe]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCheckAvailability = async () => {
     if (!recipeId) return
@@ -293,7 +297,7 @@ export function RecipeDetailDialog({
                 onClick={handleCheckAvailability}
                 disabled={checkingAvailability}
               >
-                {checkingAvailability ? 'Checking...' : 'Check Availability'}
+                {checkingAvailability ? 'Checking...' : 'Refresh Availability'}
               </Button>
             </div>
           </div>

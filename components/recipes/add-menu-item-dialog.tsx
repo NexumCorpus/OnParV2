@@ -101,6 +101,29 @@ export function AddMenuItemDialog({
 
   const selectedCategory = watch('category')
   const isActive = watch('is_active')
+  const sellingPrice = watch('selling_price')
+
+  // Auto-populate from recipe when selected
+  const selectedRecipe = recipes.find((r) => r.id === selectedRecipeId)
+  const recipeCostPerServing = selectedRecipe?.cost_per_serving ?? 0
+  const suggestedPrice = recipeCostPerServing > 0 ? Math.round(recipeCostPerServing * 3 * 100) / 100 : 0
+  const calculatedMargin = sellingPrice > 0 && recipeCostPerServing > 0
+    ? ((sellingPrice - recipeCostPerServing) / sellingPrice) * 100
+    : 0
+
+  const handleRecipeChange = (recipeId: string) => {
+    setSelectedRecipeId(recipeId)
+    const recipe = recipes.find((r) => r.id === recipeId)
+    if (recipe && !isEditing) {
+      // Auto-fill name and category from recipe
+      if (!watch('name')) setValue('name', recipe.name, { shouldValidate: true })
+      if (!watch('category')) setValue('category', recipe.category, { shouldValidate: true })
+      // Suggest selling price based on 3x cost multiplier (target ~67% margin)
+      if (watch('selling_price') === 0 && recipe.cost_per_serving > 0) {
+        setValue('selling_price', Math.round(recipe.cost_per_serving * 3 * 100) / 100, { shouldValidate: true })
+      }
+    }
+  }
 
   const onSubmit = async (data: MenuItemFormValues) => {
     setLoading(true)
@@ -236,7 +259,7 @@ export function AddMenuItemDialog({
             <select
               id="menu-recipe"
               value={selectedRecipeId}
-              onChange={(e) => setSelectedRecipeId(e.target.value)}
+              onChange={(e) => handleRecipeChange(e.target.value)}
               className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background min-h-[44px]"
             >
               <option value="">None</option>
@@ -247,6 +270,31 @@ export function AddMenuItemDialog({
               ))}
             </select>
           </div>
+
+          {/* Recipe cost info */}
+          {selectedRecipe && recipeCostPerServing > 0 && (
+            <div className="rounded-lg border bg-muted/50 p-3 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Recipe cost/serving:</span>
+                <span className="font-medium">${recipeCostPerServing.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Suggested price (3x cost):</span>
+                <span className="font-medium">${suggestedPrice.toFixed(2)}</span>
+              </div>
+              {sellingPrice > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Profit margin:</span>
+                  <span className={cn(
+                    'font-semibold',
+                    calculatedMargin >= 60 ? 'text-green-600' : calculatedMargin >= 40 ? 'text-yellow-600' : 'text-red-600'
+                  )}>
+                    {calculatedMargin.toFixed(1)}%
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Active toggle */}
           <div className="flex items-center gap-2">

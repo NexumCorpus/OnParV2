@@ -111,7 +111,7 @@ export function LogWasteForm({
         </div>
 
         {/* Quantity + Unit + Value */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Quantity *</Label>
             <div className="flex items-center gap-1">
@@ -119,7 +119,7 @@ export function LogWasteForm({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 w-9 p-0"
+                className="h-12 w-12 p-0 sm:h-9 sm:w-9 text-base sm:text-sm"
                 onClick={() => handleQuantityChange(-5)}
               >
                 -5
@@ -128,7 +128,7 @@ export function LogWasteForm({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 w-9 p-0"
+                className="h-12 w-12 p-0 sm:h-9 sm:w-9 text-base sm:text-sm"
                 onClick={() => handleQuantityChange(-1)}
               >
                 -
@@ -137,7 +137,7 @@ export function LogWasteForm({
                 type="number"
                 value={quantity}
                 onChange={(e) => setQuantity(Math.max(0.01, Number(e.target.value)))}
-                className="h-9 w-16 text-center"
+                className="h-12 sm:h-9 w-full sm:w-16 text-center text-base sm:text-sm"
                 min={0.01}
                 step={0.01}
               />
@@ -145,7 +145,7 @@ export function LogWasteForm({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 w-9 p-0"
+                className="h-12 w-12 p-0 sm:h-9 sm:w-9 text-base sm:text-sm"
                 onClick={() => handleQuantityChange(1)}
               >
                 +
@@ -154,7 +154,7 @@ export function LogWasteForm({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-9 w-9 p-0"
+                className="h-12 w-12 p-0 sm:h-9 sm:w-9 text-base sm:text-sm"
                 onClick={() => handleQuantityChange(5)}
               >
                 +5
@@ -167,7 +167,7 @@ export function LogWasteForm({
             <Input
               value={selectedItem?.unit ?? ''}
               readOnly
-              className="h-9 bg-muted"
+              className="h-12 sm:h-9 bg-muted text-base sm:text-sm"
             />
           </div>
 
@@ -176,7 +176,7 @@ export function LogWasteForm({
             <Input
               value={`$${estimatedValue.toFixed(2)}`}
               readOnly
-              className="h-9 bg-muted"
+              className="h-12 sm:h-9 bg-muted text-base sm:text-sm"
             />
           </div>
         </div>
@@ -191,7 +191,7 @@ export function LogWasteForm({
                 type="button"
                 variant={reason === r.value ? 'default' : 'outline'}
                 size="sm"
-                className="h-11 min-w-[44px]"
+                className="h-11 min-w-[44px] w-full sm:w-auto text-base sm:text-sm"
                 onClick={() => setReason(r.value)}
               >
                 {r.label}
@@ -226,7 +226,7 @@ export function LogWasteForm({
 
         {/* Submit */}
         <Button
-          className="w-full h-12"
+          className="w-full h-14 sm:h-12 text-base"
           onClick={handleSubmit}
           disabled={submitting || !selectedItemId || !reason}
         >
