@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -39,7 +40,7 @@ export function DangerZone({ email }: DangerZoneProps) {
         toast.success('Account deleted successfully')
         router.push('/')
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
     })
   }

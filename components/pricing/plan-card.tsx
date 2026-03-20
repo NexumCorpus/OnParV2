@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { Check, X, Loader2, Star } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -52,7 +53,7 @@ export function PlanCard({
       if ('url' in result) {
         window.location.href = result.url
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
     })
   }

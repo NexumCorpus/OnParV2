@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Minus, Plus } from 'lucide-react'
 import { adjustItemQuantity } from '@/lib/actions/inventory'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { InventoryItem } from '@/types'
 
 interface QuantityAdjustDialogProps {
@@ -48,7 +49,7 @@ export function QuantityAdjustDialog({
     setLoading(false)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       return
     }
 

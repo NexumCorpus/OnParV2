@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { CreditCard, ExternalLink, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -39,7 +40,7 @@ export function BillingInfo({
         setPortalUrl(result.url)
         window.open(result.url, '_blank')
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
     })
   }

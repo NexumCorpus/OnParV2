@@ -52,6 +52,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<SignupValues>({
+    mode: 'onBlur',
     resolver: zodResolver(signupSchema),
     defaultValues: {
       email: '',

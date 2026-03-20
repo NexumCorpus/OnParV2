@@ -41,6 +41,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<LoginValues>({
+    mode: 'onBlur',
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',

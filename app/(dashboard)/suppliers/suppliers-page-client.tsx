@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Search } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SupplierList } from '@/components/suppliers/supplier-list'
@@ -56,8 +56,18 @@ export function SuppliersPageClient({ initialSuppliers }: SuppliersPageClientPro
           placeholder="Search suppliers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-9 min-h-[44px] text-base"
+          className="pl-9 pr-9 min-h-[44px] text-base"
         />
+        {search.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setSearch('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Supplier list */}

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { recordWasteEvent } from '@/lib/actions/waste'
 import type { InventoryItem, WasteReason } from '@/types'
 
@@ -78,7 +79,7 @@ export function LogWasteForm({
         setShowNotes(false)
         onRecorded()
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
     } catch {
       toast.error('Failed to record waste event')

@@ -38,6 +38,7 @@ export default function ForgotPasswordPage() {
   const [emailSent, setEmailSent] = useState(false)
 
   const form = useForm<ForgotPasswordValues>({
+    mode: 'onBlur',
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: { email: '' },
   })

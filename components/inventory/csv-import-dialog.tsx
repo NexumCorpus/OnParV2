@@ -14,6 +14,7 @@ import { parseInventoryCSV, generateCSVTemplate, downloadCSV, type ParseResult }
 import { importFromCSV } from '@/lib/actions/inventory'
 import { CSV_MAX_FILE_SIZE_BYTES } from '@/lib/config'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 
 interface CSVImportDialogProps {
   open: boolean
@@ -71,7 +72,7 @@ export function CSVImportDialog({
       if (result.error === 'PLAN_LIMIT_REACHED') {
         toast.error('Plan limit reached. Please upgrade to import more items.')
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
       return
     }
