@@ -161,9 +161,13 @@ export default async function DashboardPage() {
             <p className="text-sm text-muted-foreground">{restaurantName}</p>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
-          {greeting}, {user.email?.split('@')[0] ?? 'there'}
-        </p>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span>{greeting}, {user.email?.split('@')[0] ?? 'there'}</span>
+          <span className="hidden sm:inline">·</span>
+          <time className="hidden sm:inline" dateTime={new Date().toISOString()}>
+            Updated {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+          </time>
+        </div>
       </header>
 
       {fetchError && <DataErrorAlert />}
