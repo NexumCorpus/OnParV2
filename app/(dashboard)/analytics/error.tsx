@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { InlineError } from '@/components/ui/inline-error'
 
-export default function DashboardError({
+export default function AnalyticsError({
   error,
   reset,
 }: {
@@ -11,13 +11,14 @@ export default function DashboardError({
   reset: () => void
 }) {
   useEffect(() => {
-    console.error('Dashboard error:', error)
+    console.error('Analytics error:', error)
   }, [error])
 
   return (
-    <div className="p-4">
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Analytics</h1>
       <InlineError
-        message="Failed to load data. Some information may be missing."
+        message="Failed to load analytics data."
         onRetry={reset}
       />
     </div>

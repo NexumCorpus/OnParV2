@@ -21,6 +21,13 @@ export const INVENTORY_UNITS = [
 
 export type InventoryUnit = (typeof INVENTORY_UNITS)[number]
 
+// Grouped units for compact dropdown display
+export const UNIT_GROUPS = [
+  { label: 'Weight', units: ['lbs', 'kg', 'oz', 'g'] },
+  { label: 'Volume', units: ['liters', 'gallons'] },
+  { label: 'Count', units: ['pieces', 'bottles', 'cans', 'boxes', 'bags', 'containers', 'heads', 'jars', 'loaves', 'bunches'] },
+] as const
+
 // CSV import limits
 export const CSV_MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024 // 5MB
 export const CSV_MAX_ROWS = 500

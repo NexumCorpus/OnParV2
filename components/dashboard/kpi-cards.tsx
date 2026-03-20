@@ -5,13 +5,8 @@ import {
   AlertTriangle,
   Clock,
   DollarSign,
-  CreditCard,
-  TrendingDown,
-  Lightbulb,
-  Brain,
-  PieChart,
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface DashboardStats {
   totalItems: number
@@ -36,86 +31,48 @@ function formatCurrency(value: number): string {
 export function KpiCards({ stats }: { stats: DashboardStats }) {
   const cards = [
     {
-      title: 'Total Items',
-      value: stats.totalItems.toString(),
-      subtitle: 'items in inventory',
-      icon: Package,
-      iconColor: 'text-brand-600',
-    },
-    {
       title: 'Low Stock',
       value: stats.lowStockCount.toString(),
-      subtitle: 'items need attention',
       icon: AlertTriangle,
-      iconColor: 'text-amber-500',
+      iconColor: stats.lowStockCount > 0 ? 'text-amber-500' : 'text-muted-foreground',
+      urgent: stats.lowStockCount > 0,
     },
     {
       title: 'Expiring Soon',
       value: stats.expiringCount.toString(),
-      subtitle: 'within 7 days',
       icon: Clock,
-      iconColor: 'text-red-500',
+      iconColor: stats.expiringCount > 0 ? 'text-red-500' : 'text-muted-foreground',
+      urgent: stats.expiringCount > 0,
     },
     {
-      title: 'Total Value',
+      title: 'Total Items',
+      value: stats.totalItems.toString(),
+      icon: Package,
+      iconColor: 'text-brand-600',
+      urgent: false,
+    },
+    {
+      title: 'Value',
       value: formatCurrency(stats.totalValue),
-      subtitle: 'inventory value',
       icon: DollarSign,
       iconColor: 'text-brand-600',
-    },
-    {
-      title: 'Monthly Spend',
-      value: formatCurrency(stats.monthlySpend),
-      subtitle: stats.monthlyBudget
-        ? `${stats.budgetUsed.toFixed(0)}% of ${formatCurrency(stats.monthlyBudget)}`
-        : 'no budget set',
-      icon: CreditCard,
-      iconColor: 'text-blue-500',
-    },
-    {
-      title: 'Budget Used',
-      value: stats.monthlyBudget ? `${stats.budgetUsed.toFixed(0)}%` : 'N/A',
-      subtitle: stats.budgetUsed > 100 ? 'over budget' : stats.monthlyBudget ? 'of monthly budget' : 'set a budget in settings',
-      icon: PieChart,
-      iconColor: stats.budgetUsed > 100 ? 'text-red-500' : stats.budgetUsed > 80 ? 'text-amber-500' : 'text-brand-600',
-    },
-    {
-      title: 'Waste Rate',
-      value: `${stats.wasteRate.toFixed(1)}%`,
-      subtitle: 'average waste',
-      icon: TrendingDown,
-      iconColor: stats.wasteRate > 10 ? 'text-red-500' : stats.wasteRate > 5 ? 'text-amber-500' : 'text-brand-600',
-    },
-    {
-      title: 'Potential Savings',
-      value: formatCurrency(stats.potentialSavings),
-      subtitle: 'estimated monthly',
-      icon: Lightbulb,
-      iconColor: 'text-amber-500',
-    },
-    {
-      title: 'AI Insights',
-      value: stats.activeInsights.toString(),
-      subtitle: 'pending insights',
-      icon: Brain,
-      iconColor: 'text-violet-500',
+      urgent: false,
     },
   ]
 
   return (
-    <section aria-label="Key performance indicators">
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <section aria-label="Key metrics">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => {
           const Icon = card.icon
           return (
-            <Card key={card.title}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                <Icon className={`h-5 w-5 ${card.iconColor}`} aria-hidden="true" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{card.value}</div>
-                <p className="text-xs text-muted-foreground">{card.subtitle}</p>
+            <Card key={card.title} className={card.urgent ? 'border-amber-500/40' : ''}>
+              <CardContent className="flex items-center gap-3 p-4">
+                <Icon className={`h-5 w-5 shrink-0 ${card.iconColor}`} aria-hidden="true" />
+                <div className="min-w-0">
+                  <div className="text-2xl font-bold leading-none">{card.value}</div>
+                  <p className="text-xs text-muted-foreground mt-0.5">{card.title}</p>
+                </div>
               </CardContent>
             </Card>
           )

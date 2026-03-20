@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import { INVENTORY_CATEGORIES, INVENTORY_UNITS } from '@/lib/config'
+import { INVENTORY_CATEGORIES, UNIT_GROUPS } from '@/lib/config'
 import { inventoryItemSchema, type InventoryItemFormValues } from '@/lib/utils/validation'
 import { updateItem } from '@/lib/actions/inventory'
 import { toast } from 'sonner'
@@ -84,16 +84,16 @@ export function EditItemDialog({
       return
     }
 
-    toast.success('Item updated successfully')
+    toast.success('Item updated')
     onOpenChange(false)
     onSuccess()
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Inventory Item</DialogTitle>
+          <DialogTitle>Edit Item</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -111,17 +111,17 @@ export function EditItemDialog({
             )}
           </div>
 
-          {/* Category chips */}
-          <div className="space-y-1">
+          {/* Category chips - compact grid */}
+          <div className="space-y-1.5">
             <Label>Category *</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-5 gap-1.5">
               {INVENTORY_CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setValue('category', cat, { shouldValidate: true })}
                   className={cn(
-                    'rounded-full px-3 py-1.5 text-sm font-medium transition-colors min-h-[44px]',
+                    'rounded-lg px-1.5 py-1.5 text-xs font-medium transition-colors min-h-[36px]',
                     selectedCategory === cat
                       ? 'bg-primary text-primary-foreground'
                       : 'border border-border bg-background hover:bg-accent'
@@ -136,33 +136,31 @@ export function EditItemDialog({
             )}
           </div>
 
-          {/* Unit chips */}
-          <div className="space-y-1">
-            <Label>Unit *</Label>
-            <div className="flex flex-wrap gap-2">
-              {INVENTORY_UNITS.map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  onClick={() => setValue('unit', u, { shouldValidate: true })}
-                  className={cn(
-                    'rounded-full px-3 py-1.5 text-sm font-medium transition-colors min-h-[44px]',
-                    selectedUnit === u
-                      ? 'bg-primary text-primary-foreground'
-                      : 'border border-border bg-background hover:bg-accent'
-                  )}
-                >
-                  {u}
-                </button>
+          {/* Unit - grouped select */}
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-unit">Unit *</Label>
+            <select
+              id="edit-unit"
+              value={selectedUnit}
+              onChange={(e) => setValue('unit', e.target.value, { shouldValidate: true })}
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background min-h-[44px]"
+            >
+              <option value="">Select unit...</option>
+              {UNIT_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.units.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </optgroup>
               ))}
-            </div>
+            </select>
             {errors.unit && (
               <p className="text-sm text-destructive">{errors.unit.message}</p>
             )}
           </div>
 
           {/* Quantity and Price */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="edit-quantity">Quantity *</Label>
               <Input
@@ -194,9 +192,9 @@ export function EditItemDialog({
           </div>
 
           {/* Reorder Point and Max Stock */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="edit-reorder_point">Reorder Point *</Label>
+              <Label htmlFor="edit-reorder_point">Reorder Point</Label>
               <Input
                 id="edit-reorder_point"
                 type="number"
@@ -204,9 +202,6 @@ export function EditItemDialog({
                 {...register('reorder_point', { valueAsNumber: true })}
                 className="min-h-[44px] text-base"
               />
-              {errors.reorder_point && (
-                <p className="text-sm text-destructive">{errors.reorder_point.message}</p>
-              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="edit-max_stock_level">Max Stock</Label>
@@ -266,7 +261,7 @@ export function EditItemDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
+              {loading ? 'Saving...' : 'Save'}
             </Button>
           </DialogFooter>
         </form>
