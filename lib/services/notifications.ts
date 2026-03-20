@@ -55,7 +55,7 @@ export async function getNotifications(userId: string): Promise<AppNotification[
 
       // 4. User profile for budget
       supabase
-        .from('profiles')
+        .from('users')
         .select('monthly_budget')
         .eq('id', userId)
         .single(),
