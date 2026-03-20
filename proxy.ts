@@ -4,7 +4,7 @@ import { updateSession } from '@/lib/supabase/middleware'
 
 const PUBLIC_ROUTES = ['/', '/login', '/signup', '/pricing', '/features', '/contact', '/api/health', '/api/webhook']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 
   const response = await updateSession(request)
   const { pathname } = request.nextUrl
