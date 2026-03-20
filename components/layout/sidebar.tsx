@@ -13,6 +13,8 @@ import {
   Settings,
   LogOut,
   ShoppingCart,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -45,9 +47,10 @@ const bottomItems = [
 
 interface SidebarProps {
   collapsed?: boolean
+  onToggle?: () => void
 }
 
-export function Sidebar({ collapsed = false }: SidebarProps) {
+export function Sidebar({ collapsed = false, onToggle }: SidebarProps) {
   const pathname = usePathname()
 
   async function handleSignOut() {
@@ -85,9 +88,38 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white text-sm font-bold" aria-hidden="true">
               O
             </span>
-            {!collapsed && <span>{APP_NAME}</span>}
+            {!collapsed && <span className="overflow-hidden whitespace-nowrap">{APP_NAME}</span>}
           </Link>
+          {onToggle && !collapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-auto h-8 w-8 shrink-0 text-sidebar-muted-foreground hover:text-sidebar-foreground"
+              onClick={onToggle}
+              aria-label="Collapse sidebar"
+            >
+              <ChevronsLeft className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          )}
         </div>
+        {onToggle && collapsed && (
+          <div className="flex justify-center py-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-sidebar-muted-foreground hover:text-sidebar-foreground"
+                  onClick={onToggle}
+                  aria-label="Expand sidebar"
+                >
+                  <ChevronsRight className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand</TooltipContent>
+            </Tooltip>
+          </div>
+        )}
 
         {/* Nav items */}
         <ScrollArea className="flex-1 px-2 py-4">
@@ -111,7 +143,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                     aria-current={active ? 'page' : undefined}
                   >
                     <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                    {!collapsed && <span>{item.label}</span>}
+                    {!collapsed && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
                   </Link>
                 )
 
@@ -158,7 +190,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
                     aria-current={active ? 'page' : undefined}
                   >
                     <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                    {!collapsed && <span>{item.label}</span>}
+                    {!collapsed && <span className="overflow-hidden whitespace-nowrap">{item.label}</span>}
                   </Link>
                 )
 

@@ -122,6 +122,14 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
+            <div className="flex justify-end">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-brand-600 hover:text-brand-700 underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <Button
               type="submit"
               className="w-full min-h-[44px] bg-brand-600 hover:bg-brand-700 text-white"

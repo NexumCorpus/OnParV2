@@ -224,24 +224,19 @@ export function OnboardingFlow({
             <div className="mt-8 grid gap-4 sm:grid-cols-3">
               <button
                 type="button"
-                onClick={() => {
-                  toast.info('You can add items from the Inventory page after setup.')
-                  setStep(3)
-                }}
+                onClick={() => setStep(3)}
                 className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center transition-shadow hover:shadow-md min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <div className="flex size-12 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/30">
                   <Plus className="size-6 text-brand-600" aria-hidden="true" />
                 </div>
-                <span className="text-sm font-medium">Add Item Manually</span>
+                <span className="text-sm font-medium">I&apos;ll add items manually</span>
+                <span className="text-xs text-muted-foreground">after setup</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => {
-                  toast.info('You can import CSV from the Inventory page after setup.')
-                  setStep(3)
-                }}
+                onClick={() => setStep(3)}
                 className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center transition-shadow hover:shadow-md min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <div className="flex size-12 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/30">
@@ -250,7 +245,8 @@ export function OnboardingFlow({
                     aria-hidden="true"
                   />
                 </div>
-                <span className="text-sm font-medium">Import CSV</span>
+                <span className="text-sm font-medium">I&apos;ll import a CSV</span>
+                <span className="text-xs text-muted-foreground">after setup</span>
               </button>
 
               <button
