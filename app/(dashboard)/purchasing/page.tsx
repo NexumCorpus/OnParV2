@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Plus, ShoppingCart, CheckCircle, Clock, AlertCircle, FileText } from 'lucide-react'
+import { Plus, ShoppingCart, CheckCircle, Clock, AlertCircle, FileText, type LucideIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +11,7 @@ export const metadata = {
   title: 'Purchase Orders - OnPar',
 }
 
-const statusConfig: Record<string, { icon: any; variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
+const statusConfig: Record<string, { icon: LucideIcon; variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
   draft: { icon: Clock, variant: "secondary", label: "Draft" },
   sent: { icon: ShoppingCart, variant: "default", label: "Sent" },
   partially_received: { icon: AlertCircle, variant: "outline", label: "Partial" },
