@@ -13,6 +13,7 @@ import { InventoryAnalytics } from '@/components/analytics/inventory-analytics'
 import { WasteAnalytics } from '@/components/analytics/waste-analytics'
 import { CostAnalytics } from '@/components/analytics/cost-analytics'
 import { PerformanceAnalytics } from '@/components/analytics/performance-analytics'
+import { ForecastAnalytics } from '@/components/analytics/forecast-analytics'
 import type { InventoryItem, WasteAnalysisSnapshot, WasteEvent, Recipe } from '@/types'
 
 interface AnalyticsPageClientProps {
@@ -93,6 +94,7 @@ export function AnalyticsPageClient({
           <TabsTrigger value="waste">Waste</TabsTrigger>
           <TabsTrigger value="cost">Cost</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
+          <TabsTrigger value="forecast">Forecast</TabsTrigger>
         </TabsList>
 
         <TabsContent value="inventory" className="mt-6">
@@ -129,6 +131,13 @@ export function AnalyticsPageClient({
             snapshots={snapshots}
             wasteEvents={wasteEvents}
             dateRangeStart={dateRangeStart}
+          />
+        </TabsContent>
+
+        <TabsContent value="forecast" className="mt-6">
+          <ForecastAnalytics
+            inventoryItems={inventoryItems}
+            wasteEvents={wasteEvents}
           />
         </TabsContent>
       </Tabs>

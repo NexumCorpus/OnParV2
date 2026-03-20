@@ -160,6 +160,7 @@ export default async function DashboardPage() {
             <RecentAlerts
               lowStockItems={lowStockItems}
               expiringItems={expiringItems}
+              hasSupplierLinks={lowStockItems.some((i) => i.supplier_id)}
             />
           )}
 

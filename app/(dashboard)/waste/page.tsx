@@ -9,6 +9,7 @@ import { useWasteAnalysis } from '@/hooks/use-waste-analysis'
 import { getInventoryItemsForWaste } from '@/lib/actions/waste'
 import { WasteOverview } from '@/components/waste/waste-overview'
 import { LogWasteForm } from '@/components/waste/log-waste-form'
+import { BatchWasteForm } from '@/components/waste/batch-waste-form'
 import { WasteEventsList } from '@/components/waste/waste-events-list'
 import { WasteAlerts } from '@/components/waste/waste-alerts'
 import { WasteBenchmarksTable } from '@/components/waste/waste-benchmarks'
@@ -132,11 +133,17 @@ export default function WastePage() {
         </TabsContent>
 
         <TabsContent value="log" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-2">
-            <LogWasteForm
-              inventoryItems={inventoryItems}
-              onRecorded={handleRecorded}
-            />
+          <div className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-2">
+              <LogWasteForm
+                inventoryItems={inventoryItems}
+                onRecorded={handleRecorded}
+              />
+              <BatchWasteForm
+                inventoryItems={inventoryItems}
+                onRecorded={handleRecorded}
+              />
+            </div>
             <WasteEventsList
               wasteEvents={analysis.wasteEvents}
               inventoryItems={inventoryItems}
