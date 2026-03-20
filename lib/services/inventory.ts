@@ -30,10 +30,7 @@ export async function getInventoryItems(
     query = query.ilike('name', `%${filters.search}%`)
   }
 
-  if (filters?.lowStockOnly) {
-    // quantity < reorder_point: use raw filter
-    query = query.filter('quantity', 'lt', 'reorder_point' as unknown as number)
-  }
+  // lowStockOnly is handled post-query (PostgREST can't compare columns)
 
   if (filters?.expiringOnly) {
     const now = new Date()
@@ -55,7 +52,11 @@ export async function getInventoryItems(
     throw new Error('Failed to fetch inventory items')
   }
 
-  return (data ?? []) as InventoryItem[]
+  let items = (data ?? []) as InventoryItem[]
+  if (filters?.lowStockOnly) {
+    items = items.filter(item => item.quantity < item.reorder_point)
+  }
+  return items
 }
 
 export async function getInventoryItem(id: string): Promise<InventoryItem | null> {
@@ -142,20 +143,20 @@ export async function deleteInventoryItem(id: string): Promise<void> {
 
 export async function getLowStockItems(userId: string): Promise<InventoryItem[]> {
   const supabase = await createClient()
-  // Use a raw filter to compare quantity < reorder_point column
+  // PostgREST doesn't support column-to-column comparison via .filter(),
+  // so fetch active items and compare quantity < reorder_point in JS.
   const { data, error } = await supabase
     .from('inventory_items')
     .select('*')
     .eq('user_id', userId)
     .is('deleted_at', null)
-    .filter('quantity', 'lt', 'reorder_point' as unknown as number)
 
   if (error) {
     logger.error({ err: error, userId, action: 'getLowStockItems' }, 'Failed to fetch low stock items')
     throw new Error('Failed to fetch low stock items')
   }
 
-  return (data ?? []) as InventoryItem[]
+  return ((data ?? []) as InventoryItem[]).filter(item => item.quantity < item.reorder_point)
 }
 
 export async function getExpiringItems(

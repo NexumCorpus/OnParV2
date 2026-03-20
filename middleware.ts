@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
   // Onboarding redirect — check if authenticated user has completed onboarding
   if (user && !pathname.startsWith('/onboarding') && !pathname.startsWith('/api')) {
     const { data: userData } = await supabase
-      .from('users').select('settings').eq('id', user.id).single()
+      .from('users').select('settings').eq('id', user.id).maybeSingle()
     if (userData && !(userData.settings as Record<string, unknown>)?.onboarding_completed) {
       return NextResponse.redirect(new URL('/onboarding', request.url))
     }
@@ -59,7 +59,7 @@ export async function middleware(request: NextRequest) {
   // If user completed onboarding but visits /onboarding, redirect to dashboard
   if (user && pathname.startsWith('/onboarding')) {
     const { data: userData } = await supabase
-      .from('users').select('settings').eq('id', user.id).single()
+      .from('users').select('settings').eq('id', user.id).maybeSingle()
     if ((userData?.settings as Record<string, unknown>)?.onboarding_completed) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }

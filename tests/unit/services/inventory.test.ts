@@ -139,20 +139,23 @@ describe('Inventory Service', () => {
 
   describe('getLowStockItems', () => {
     it('returns items where quantity < reorder_point', async () => {
-      const lowStockData = [
+      const allItems = [
         { id: '1', name: 'Cheese', quantity: 2, reorder_point: 10, deleted_at: null },
         { id: '2', name: 'Milk', quantity: 1, reorder_point: 5, deleted_at: null },
+        { id: '3', name: 'Butter', quantity: 20, reorder_point: 5, deleted_at: null },
       ]
 
-      mockFilter.mockResolvedValueOnce({ data: lowStockData, error: null })
+      mockIs.mockResolvedValueOnce({ data: allItems, error: null })
 
       const items = await getLowStockItems('user-1')
       expect(items).toHaveLength(2)
+      expect(items[0].name).toBe('Cheese')
+      expect(items[1].name).toBe('Milk')
       expect(mockFrom).toHaveBeenCalledWith('inventory_items')
     })
 
     it('returns empty array when no low stock items', async () => {
-      mockFilter.mockResolvedValueOnce({ data: [], error: null })
+      mockIs.mockResolvedValueOnce({ data: [{ id: '1', quantity: 20, reorder_point: 5 }], error: null })
 
       const items = await getLowStockItems('user-1')
       expect(items).toHaveLength(0)
@@ -414,8 +417,8 @@ describe('Inventory Service', () => {
 
   describe('calculateEstimatedSavings', () => {
     it('calculates savings from low stock and expiring items', async () => {
-      // getLowStockItems call
-      mockFilter.mockResolvedValueOnce({
+      // getLowStockItems call (fetches all items, filters in JS)
+      mockIs.mockResolvedValueOnce({
         data: [{ id: '1', quantity: 2, reorder_point: 10, price_per_unit: 5.0 }],
         error: null,
       })

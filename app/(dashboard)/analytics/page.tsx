@@ -54,7 +54,7 @@ export default async function AnalyticsPage() {
       .from('users')
       .select('monthly_budget')
       .eq('id', userId)
-      .single(),
+      .maybeSingle(),
   ])
 
   const snapshots = (snapshotsResult.data ?? []) as WasteAnalysisSnapshot[]

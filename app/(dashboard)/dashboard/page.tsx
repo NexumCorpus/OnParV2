@@ -62,7 +62,7 @@ export default async function DashboardPage() {
       .from('users')
       .select('monthly_budget, restaurant_name')
       .eq('id', userId)
-      .single(),
+      .maybeSingle(),
   ])
 
   const latestSnapshot = (snapshotResult.data?.[0] ?? null) as WasteAnalysisSnapshot | null
