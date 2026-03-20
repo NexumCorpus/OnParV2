@@ -3,13 +3,13 @@
 import { Sidebar } from '@/components/layout/sidebar'
 import { Topbar } from '@/components/layout/topbar'
 import { OfflineBanner } from '@/components/layout/offline-banner'
-import type { AppNotification } from '@/lib/services/notifications'
+import type { SerializedNotification } from '@/lib/services/notifications'
 
 interface DashboardShellProps {
   children: React.ReactNode
   userEmail: string
   avatarUrl: string | null
-  notifications?: AppNotification[]
+  notifications?: SerializedNotification[]
 }
 
 export function DashboardShell({ children, userEmail, avatarUrl, notifications = [] }: DashboardShellProps) {

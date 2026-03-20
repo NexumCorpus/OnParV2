@@ -11,6 +11,9 @@ export interface AppNotification {
   createdAt: Date
 }
 
+/** Serialized version safe to pass from Server → Client Components */
+export type SerializedNotification = Omit<AppNotification, 'createdAt'> & { createdAt: string }
+
 function generateId(type: string, itemId: string): string {
   // Deterministic ID for dedup
   return `${type}-${itemId}`
