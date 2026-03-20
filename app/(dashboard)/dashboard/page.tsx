@@ -43,57 +43,56 @@ export default async function DashboardPage() {
   let restaurantName: string | null = null
   let fetchError = false
 
-  try {
-    const [
-      countResult,
-      lowResult,
-      expResult,
-      valueResult,
-      savingsResult,
-      snapshotResult,
-      insightsResult,
-      itemsResult,
-      profileResult,
-    ] = await Promise.all([
-      getCount(userId),
-      getLowStockItems(userId),
-      getExpiringItems(userId),
-      getTotalInventoryValue(userId),
-      calculateEstimatedSavings(userId),
-      supabase
-        .from('waste_analysis_snapshots')
-        .select('*')
-        .eq('user_id', userId)
-        .order('analysis_date', { ascending: false })
-        .limit(1),
-      supabase
-        .from('ai_insights')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', userId)
-        .eq('status', 'pending'),
-      getInventoryItems(userId),
-      supabase
-        .from('users')
-        .select('monthly_budget, restaurant_name')
-        .eq('id', userId)
-        .maybeSingle(),
-    ])
+  const results = await Promise.allSettled([
+    getCount(userId),
+    getLowStockItems(userId),
+    getExpiringItems(userId),
+    getTotalInventoryValue(userId),
+    calculateEstimatedSavings(userId),
+    supabase
+      .from('waste_analysis_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .order('analysis_date', { ascending: false })
+      .limit(1),
+    supabase
+      .from('ai_insights')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'pending'),
+    getInventoryItems(userId),
+    supabase
+      .from('users')
+      .select('monthly_budget, restaurant_name')
+      .eq('id', userId)
+      .maybeSingle(),
+  ])
 
-    totalItems = countResult
-    lowStockItems = lowResult
-    expiringItems = expResult
-    totalValue = valueResult
-    savings = savingsResult
-    latestSnapshot = (snapshotResult.data?.[0] ?? null) as WasteAnalysisSnapshot | null
-    activeInsights = insightsResult.count ?? 0
-    inventoryItems = itemsResult
-    const profile = profileResult.data as { monthly_budget: number | null; restaurant_name: string | null } | null
-    monthlyBudget = profile?.monthly_budget ?? null
-    restaurantName = profile?.restaurant_name ?? null
-  } catch (error) {
-    console.error('[DashboardPage] Data fetch failed:', error)
-    fetchError = true
+  const labels = ['getCount', 'getLowStock', 'getExpiring', 'getValue', 'getSavings', 'snapshots', 'insights', 'getItems', 'profile']
+  for (let i = 0; i < results.length; i++) {
+    if (results[i].status === 'rejected') {
+      console.error(`[DashboardPage] ${labels[i]} failed:`, (results[i] as PromiseRejectedResult).reason)
+      fetchError = true
+    }
   }
+
+  const val = <T,>(i: number, fallback: T): T =>
+    results[i].status === 'fulfilled' ? (results[i] as PromiseFulfilledResult<T>).value : fallback
+
+  totalItems = val(0, 0)
+  lowStockItems = val(1, [])
+  expiringItems = val(2, [])
+  totalValue = val(3, 0)
+  savings = val(4, { lowStockSavings: 0, expirySavings: 0, totalSavings: 0 })
+  const snapshotResult = val(5, { data: null })
+  latestSnapshot = ((snapshotResult as { data: WasteAnalysisSnapshot[] | null }).data?.[0] ?? null) as WasteAnalysisSnapshot | null
+  const insightsResult = val(6, { count: 0 })
+  activeInsights = (insightsResult as { count: number | null }).count ?? 0
+  inventoryItems = val(7, [])
+  const profileResult = val(8, { data: null })
+  const profile = (profileResult as { data: { monthly_budget: number | null; restaurant_name: string | null } | null }).data
+  monthlyBudget = profile?.monthly_budget ?? null
+  restaurantName = profile?.restaurant_name ?? null
 
   const monthlySpend = latestSnapshot?.monthly_spend ?? 0
 
