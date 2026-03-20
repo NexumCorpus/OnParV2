@@ -166,16 +166,14 @@ export default async function DashboardPage() {
       {/* Empty state when zero items */}
       {totalItems === 0 ? (
         <>
-          {/* KPI cards still show zeroes */}
-          <KpiCards stats={stats} />
-
+          {/* Welcome CTA first — visible immediately on mobile */}
           <div className="rounded-lg border bg-card p-8 text-center">
             <h2 className="text-xl font-semibold mb-2">Welcome to OnPar!</h2>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Add your first inventory items to see your dashboard come alive with
               real-time KPIs, charts, and AI insights.
             </p>
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button asChild>
                 <Link href="/inventory/add">
                   <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -190,6 +188,9 @@ export default async function DashboardPage() {
               </Button>
             </div>
           </div>
+
+          {/* KPI cards below the welcome CTA */}
+          <KpiCards stats={stats} />
 
           {/* Quick actions still render */}
           <div className="grid gap-4 lg:grid-cols-3">
