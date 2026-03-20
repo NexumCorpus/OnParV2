@@ -22,7 +22,9 @@ const nextConfig: NextConfig = {
 }
 
 export default withSentryConfig(nextConfig, {
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  widenClientFileUpload: true,
+  tunnelRoute: '/monitoring',
   silent: !process.env.CI,
   disableLogger: true,
-  tunnelRoute: '/monitoring',
 })
