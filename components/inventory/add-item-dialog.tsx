@@ -14,12 +14,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
-import { INVENTORY_CATEGORIES, INVENTORY_UNITS } from '@/lib/config'
+import { INVENTORY_CATEGORIES, UNIT_GROUPS } from '@/lib/config'
 import { inventoryItemSchema, type InventoryItemFormValues } from '@/lib/utils/validation'
 import { createItem, lookupBarcode } from '@/lib/actions/inventory'
 import type { Product } from '@/types'
 import { toast } from 'sonner'
 import type { Supplier } from '@/types'
+import { ChevronDown } from 'lucide-react'
 
 interface AddItemDialogProps {
   open: boolean
@@ -37,6 +38,7 @@ export function AddItemDialog({
   const [loading, setLoading] = useState(false)
   const [barcodeSearch, setBarcodeSearch] = useState('')
   const [barcodeLoading, setBarcodeLoading] = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   const {
     register,
@@ -114,24 +116,25 @@ export function AddItemDialog({
     toast.success('Item added successfully')
     reset()
     setBarcodeSearch('')
+    setShowMore(false)
     onOpenChange(false)
     onSuccess()
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add Inventory Item</DialogTitle>
+          <DialogTitle>Add Item</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Barcode search */}
           <div className="space-y-1">
-            <Label>Search by barcode</Label>
+            <Label>Barcode lookup</Label>
             <div className="flex gap-2">
               <Input
-                placeholder="Enter barcode..."
+                placeholder="Scan or enter barcode..."
                 value={barcodeSearch}
                 onChange={(e) => setBarcodeSearch(e.target.value)}
                 className="min-h-[44px] text-base"
@@ -143,7 +146,7 @@ export function AddItemDialog({
                 disabled={barcodeLoading}
                 className="min-h-[44px]"
               >
-                {barcodeLoading ? 'Looking up...' : 'Lookup'}
+                {barcodeLoading ? '...' : 'Lookup'}
               </Button>
             </div>
           </div>
@@ -162,17 +165,17 @@ export function AddItemDialog({
             )}
           </div>
 
-          {/* Category chips */}
-          <div className="space-y-1">
+          {/* Category chips - compact grid */}
+          <div className="space-y-1.5">
             <Label>Category *</Label>
-            <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-5 gap-1.5">
               {INVENTORY_CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   type="button"
                   onClick={() => setValue('category', cat, { shouldValidate: true })}
                   className={cn(
-                    'rounded-full px-3 py-1.5 text-sm font-medium transition-colors min-h-[44px]',
+                    'rounded-lg px-1.5 py-1.5 text-xs font-medium transition-colors min-h-[36px]',
                     selectedCategory === cat
                       ? 'bg-primary text-primary-foreground'
                       : 'border border-border bg-background hover:bg-accent'
@@ -187,33 +190,31 @@ export function AddItemDialog({
             )}
           </div>
 
-          {/* Unit chips */}
-          <div className="space-y-1">
-            <Label>Unit *</Label>
-            <div className="flex flex-wrap gap-2">
-              {INVENTORY_UNITS.map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  onClick={() => setValue('unit', u, { shouldValidate: true })}
-                  className={cn(
-                    'rounded-full px-3 py-1.5 text-sm font-medium transition-colors min-h-[44px]',
-                    selectedUnit === u
-                      ? 'bg-primary text-primary-foreground'
-                      : 'border border-border bg-background hover:bg-accent'
-                  )}
-                >
-                  {u}
-                </button>
+          {/* Unit - grouped select */}
+          <div className="space-y-1.5">
+            <Label htmlFor="dialog-unit">Unit *</Label>
+            <select
+              id="dialog-unit"
+              value={selectedUnit}
+              onChange={(e) => setValue('unit', e.target.value, { shouldValidate: true })}
+              className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background min-h-[44px]"
+            >
+              <option value="">Select unit...</option>
+              {UNIT_GROUPS.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.units.map((u) => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </optgroup>
               ))}
-            </div>
+            </select>
             {errors.unit && (
               <p className="text-sm text-destructive">{errors.unit.message}</p>
             )}
           </div>
 
           {/* Quantity and Price */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="quantity">Quantity *</Label>
               <Input
@@ -244,66 +245,74 @@ export function AddItemDialog({
             </div>
           </div>
 
-          {/* Reorder Point and Max Stock */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <Label htmlFor="reorder_point">Reorder Point *</Label>
-              <Input
-                id="reorder_point"
-                type="number"
-                min={0}
-                {...register('reorder_point', { valueAsNumber: true })}
-                className="min-h-[44px] text-base"
-              />
-              {errors.reorder_point && (
-                <p className="text-sm text-destructive">{errors.reorder_point.message}</p>
+          {/* Collapsible optional fields */}
+          <button
+            type="button"
+            onClick={() => setShowMore(!showMore)}
+            className="flex w-full items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
+          >
+            <ChevronDown className={cn('h-4 w-4 transition-transform', showMore && 'rotate-180')} />
+            {showMore ? 'Hide' : 'More'} options
+          </button>
+
+          {showMore && (
+            <div className="space-y-3 border-l-2 border-border pl-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="reorder_point">Reorder Point</Label>
+                  <Input
+                    id="reorder_point"
+                    type="number"
+                    min={0}
+                    {...register('reorder_point', { valueAsNumber: true })}
+                    className="min-h-[44px] text-base"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="max_stock_level">Max Stock</Label>
+                  <Input
+                    id="max_stock_level"
+                    type="number"
+                    min={0}
+                    {...register('max_stock_level', {
+                      setValueAs: (v: string) => (v === '' ? null : Number(v)),
+                    })}
+                    className="min-h-[44px] text-base"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="expiry_date">Expiry Date</Label>
+                <Input
+                  id="expiry_date"
+                  type="date"
+                  {...register('expiry_date', {
+                    setValueAs: (v: string) => (v === '' ? null : v),
+                  })}
+                  className="min-h-[44px] text-base"
+                />
+              </div>
+
+              {suppliers.length > 0 && (
+                <div className="space-y-1">
+                  <Label htmlFor="supplier_id">Supplier</Label>
+                  <select
+                    id="supplier_id"
+                    {...register('supplier_id', {
+                      setValueAs: (v: string) => (v === '' ? null : v),
+                    })}
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background min-h-[44px]"
+                  >
+                    <option value="">No supplier</option>
+                    {suppliers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               )}
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="max_stock_level">Max Stock</Label>
-              <Input
-                id="max_stock_level"
-                type="number"
-                min={0}
-                {...register('max_stock_level', {
-                  setValueAs: (v: string) => (v === '' ? null : Number(v)),
-                })}
-                className="min-h-[44px] text-base"
-              />
-            </div>
-          </div>
-
-          {/* Expiry Date */}
-          <div className="space-y-1">
-            <Label htmlFor="expiry_date">Expiry Date</Label>
-            <Input
-              id="expiry_date"
-              type="date"
-              {...register('expiry_date', {
-                setValueAs: (v: string) => (v === '' ? null : v),
-              })}
-              className="min-h-[44px] text-base"
-            />
-          </div>
-
-          {/* Supplier */}
-          {suppliers.length > 0 && (
-            <div className="space-y-1">
-              <Label htmlFor="supplier_id">Supplier</Label>
-              <select
-                id="supplier_id"
-                {...register('supplier_id', {
-                  setValueAs: (v: string) => (v === '' ? null : v),
-                })}
-                className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background min-h-[44px]"
-              >
-                <option value="">No supplier</option>
-                {suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
             </div>
           )}
 
@@ -317,7 +326,7 @@ export function AddItemDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Item'}
+              {loading ? 'Saving...' : 'Save'}
             </Button>
           </DialogFooter>
         </form>

@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Upload } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import {
   getCount,
@@ -12,7 +12,6 @@ import {
 } from '@/lib/services/inventory'
 import { Button } from '@/components/ui/button'
 import { KpiCards } from '@/components/dashboard/kpi-cards'
-import { QuickActions } from '@/components/dashboard/quick-actions'
 import { RecentAlerts } from '@/components/dashboard/recent-alerts'
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts'
 import type { WasteAnalysisSnapshot } from '@/types'
@@ -69,7 +68,6 @@ export default async function DashboardPage() {
   const monthlySpend = latestSnapshot?.monthly_spend ?? 0
   const profile = profileResult.data as { monthly_budget: number | null; restaurant_name: string | null } | null
   const monthlyBudget = profile?.monthly_budget ?? null
-  const restaurantName = profile?.restaurant_name ?? null
 
   const stats = {
     totalItems,
@@ -85,7 +83,6 @@ export default async function DashboardPage() {
   }
 
   // Prepare chart data
-  // Inventory by category (Pie chart)
   const categoryValueMap = new Map<string, number>()
   for (const item of inventoryItems) {
     const value = item.quantity * item.price_per_unit
@@ -122,73 +119,55 @@ export default async function DashboardPage() {
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Dashboard</h1>
-          {restaurantName && (
-            <p className="text-sm text-muted-foreground">{restaurantName}</p>
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {greeting}, {user.email?.split('@')[0] ?? 'there'}
-        </p>
+    <div className="space-y-4">
+      {/* Compact header */}
+      <header className="flex items-center justify-between">
+        <h1 className="text-lg font-bold">
+          {greeting}, {user.email?.split('@')[0] ?? 'Chef'}
+        </h1>
+        <Button size="sm" asChild>
+          <Link href="/inventory/add">
+            <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            Add Item
+          </Link>
+        </Button>
       </header>
 
-      {/* Empty state when zero items */}
+      {/* Empty state */}
       {totalItems === 0 ? (
         <>
-          {/* KPI cards still show zeroes */}
           <KpiCards stats={stats} />
-
-          <div className="rounded-lg border bg-card p-8 text-center">
-            <h2 className="text-xl font-semibold mb-2">Welcome to OnPar!</h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Add your first inventory items to see your dashboard come alive with
-              real-time KPIs, charts, and AI insights.
+          <div className="rounded-lg border bg-card p-6 text-center">
+            <h2 className="text-lg font-semibold mb-1">Welcome to OnPar!</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Add your first inventory items to get started.
             </p>
-            <div className="flex items-center justify-center gap-3">
-              <Button asChild>
-                <Link href="/inventory/add">
-                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Add Your First Item
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/inventory">
-                  <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
-                  Import CSV
-                </Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Quick actions still render */}
-          <div className="grid gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-2" />
-            <QuickActions />
+            <Button asChild>
+              <Link href="/inventory/add">
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                Add Your First Item
+              </Link>
+            </Button>
           </div>
         </>
       ) : (
         <>
-          {/* KPI Cards */}
+          {/* KPI Cards - 4 essential metrics */}
           <KpiCards stats={stats} />
+
+          {/* Alerts first - most actionable for chef in walk-in */}
+          {(lowStockItems.length > 0 || expiringItems.length > 0) && (
+            <RecentAlerts
+              lowStockItems={lowStockItems}
+              expiringItems={expiringItems}
+            />
+          )}
 
           {/* Charts */}
           <DashboardCharts
             categoryPieData={categoryPieData}
             wasteTrendData={wasteTrendData}
           />
-
-          {/* Quick Actions + Recent Alerts */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <QuickActions />
-            <RecentAlerts
-              lowStockItems={lowStockItems}
-              expiringItems={expiringItems}
-            />
-          </div>
         </>
       )}
     </div>
