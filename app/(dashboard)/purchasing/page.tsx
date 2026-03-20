@@ -25,8 +25,13 @@ interface POWithDetails extends PurchaseOrder {
 }
 
 export default async function PurchaseOrdersPage() {
-  const response = await getPurchaseOrders()
-  const purchaseOrders = response.success ? (response.data as POWithDetails[]) : []
+  let purchaseOrders: POWithDetails[] = []
+  try {
+    const response = await getPurchaseOrders()
+    purchaseOrders = response.success ? (response.data as POWithDetails[]) ?? [] : []
+  } catch (error) {
+    console.error('[PurchaseOrdersPage] Data fetch failed:', error)
+  }
 
   return (
     <div className="space-y-6">

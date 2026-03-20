@@ -18,7 +18,12 @@ export default function DashboardError({
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-12">
       <h2 className="text-xl font-semibold">Something went wrong</h2>
-      <p className="text-muted-foreground">{error.message}</p>
+      <p className="text-muted-foreground">
+        {error.message || 'An unexpected error occurred. Please try again.'}
+      </p>
+      {error.digest && (
+        <p className="text-xs text-muted-foreground/60">Error ID: {error.digest}</p>
+      )}
       <Button onClick={reset}>Try again</Button>
     </div>
   )

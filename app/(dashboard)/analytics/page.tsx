@@ -21,46 +21,62 @@ export default async function AnalyticsPage() {
 
   const userId = user.id
 
-  // Fetch all data in parallel
-  const [
-    inventoryItems,
-    lowStockItems,
-    expiringItems,
-    totalValue,
-    snapshotsResult,
-    wasteEventsResult,
-    recipesResult,
-    profileResult,
-  ] = await Promise.all([
-    getInventoryItems(userId),
-    getLowStockItems(userId),
-    getExpiringItems(userId),
-    getTotalInventoryValue(userId),
-    supabase
-      .from('waste_analysis_snapshots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('analysis_date', { ascending: false }),
-    supabase
-      .from('waste_events')
-      .select('*')
-      .eq('user_id', userId)
-      .order('recorded_at', { ascending: false }),
-    supabase
-      .from('recipes')
-      .select('*')
-      .eq('user_id', userId),
-    supabase
-      .from('users')
-      .select('monthly_budget')
-      .eq('id', userId)
-      .maybeSingle(),
-  ])
+  let inventoryItems: InventoryItem[] = []
+  let lowStockItems: InventoryItem[] = []
+  let expiringItems: InventoryItem[] = []
+  let totalValue = 0
+  let snapshots: WasteAnalysisSnapshot[] = []
+  let wasteEvents: WasteEvent[] = []
+  let recipes: Recipe[] = []
+  let monthlyBudget: number | null = null
 
-  const snapshots = (snapshotsResult.data ?? []) as WasteAnalysisSnapshot[]
-  const wasteEvents = (wasteEventsResult.data ?? []) as WasteEvent[]
-  const recipes = (recipesResult.data ?? []) as Recipe[]
-  const monthlyBudget = (profileResult.data as { monthly_budget: number | null } | null)?.monthly_budget ?? null
+  try {
+    const [
+      itemsResult,
+      lowResult,
+      expResult,
+      valueResult,
+      snapshotsResult,
+      wasteEventsResult,
+      recipesResult,
+      profileResult,
+    ] = await Promise.all([
+      getInventoryItems(userId),
+      getLowStockItems(userId),
+      getExpiringItems(userId),
+      getTotalInventoryValue(userId),
+      supabase
+        .from('waste_analysis_snapshots')
+        .select('*')
+        .eq('user_id', userId)
+        .order('analysis_date', { ascending: false }),
+      supabase
+        .from('waste_events')
+        .select('*')
+        .eq('user_id', userId)
+        .order('recorded_at', { ascending: false }),
+      supabase
+        .from('recipes')
+        .select('*')
+        .eq('user_id', userId),
+      supabase
+        .from('users')
+        .select('monthly_budget')
+        .eq('id', userId)
+        .maybeSingle(),
+    ])
+
+    inventoryItems = itemsResult
+    lowStockItems = lowResult
+    expiringItems = expResult
+    totalValue = valueResult
+    snapshots = (snapshotsResult.data ?? []) as WasteAnalysisSnapshot[]
+    wasteEvents = (wasteEventsResult.data ?? []) as WasteEvent[]
+    recipes = (recipesResult.data ?? []) as Recipe[]
+    monthlyBudget = (profileResult.data as { monthly_budget: number | null } | null)?.monthly_budget ?? null
+  } catch (error) {
+    console.error('[AnalyticsPage] Data fetch failed:', error)
+  }
 
   return (
     <AnalyticsPageClient

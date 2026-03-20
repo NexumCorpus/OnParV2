@@ -15,7 +15,7 @@ import { KpiCards } from '@/components/dashboard/kpi-cards'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import { RecentAlerts } from '@/components/dashboard/recent-alerts'
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts'
-import type { WasteAnalysisSnapshot } from '@/types'
+import type { InventoryItem, WasteAnalysisSnapshot } from '@/types'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -29,47 +29,70 @@ export default async function DashboardPage() {
 
   const userId = user.id
 
-  // Fetch ALL dashboard data in PARALLEL for performance
-  const [
-    totalItems,
-    lowStockItems,
-    expiringItems,
-    totalValue,
-    savings,
-    snapshotResult,
-    insightsResult,
-    inventoryItems,
-    profileResult,
-  ] = await Promise.all([
-    getCount(userId),
-    getLowStockItems(userId),
-    getExpiringItems(userId),
-    getTotalInventoryValue(userId),
-    calculateEstimatedSavings(userId),
-    supabase
-      .from('waste_analysis_snapshots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('analysis_date', { ascending: false })
-      .limit(1),
-    supabase
-      .from('ai_insights')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'pending'),
-    getInventoryItems(userId),
-    supabase
-      .from('users')
-      .select('monthly_budget, restaurant_name')
-      .eq('id', userId)
-      .maybeSingle(),
-  ])
+  // Defaults — page always renders even if data fetch fails
+  let totalItems = 0
+  let lowStockItems: InventoryItem[] = []
+  let expiringItems: InventoryItem[] = []
+  let totalValue = 0
+  let savings = { lowStockSavings: 0, expirySavings: 0, totalSavings: 0 }
+  let latestSnapshot: WasteAnalysisSnapshot | null = null
+  let activeInsights = 0
+  let inventoryItems: InventoryItem[] = []
+  let monthlyBudget: number | null = null
+  let restaurantName: string | null = null
 
-  const latestSnapshot = (snapshotResult.data?.[0] ?? null) as WasteAnalysisSnapshot | null
+  try {
+    const [
+      countResult,
+      lowResult,
+      expResult,
+      valueResult,
+      savingsResult,
+      snapshotResult,
+      insightsResult,
+      itemsResult,
+      profileResult,
+    ] = await Promise.all([
+      getCount(userId),
+      getLowStockItems(userId),
+      getExpiringItems(userId),
+      getTotalInventoryValue(userId),
+      calculateEstimatedSavings(userId),
+      supabase
+        .from('waste_analysis_snapshots')
+        .select('*')
+        .eq('user_id', userId)
+        .order('analysis_date', { ascending: false })
+        .limit(1),
+      supabase
+        .from('ai_insights')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('status', 'pending'),
+      getInventoryItems(userId),
+      supabase
+        .from('users')
+        .select('monthly_budget, restaurant_name')
+        .eq('id', userId)
+        .maybeSingle(),
+    ])
+
+    totalItems = countResult
+    lowStockItems = lowResult
+    expiringItems = expResult
+    totalValue = valueResult
+    savings = savingsResult
+    latestSnapshot = (snapshotResult.data?.[0] ?? null) as WasteAnalysisSnapshot | null
+    activeInsights = insightsResult.count ?? 0
+    inventoryItems = itemsResult
+    const profile = profileResult.data as { monthly_budget: number | null; restaurant_name: string | null } | null
+    monthlyBudget = profile?.monthly_budget ?? null
+    restaurantName = profile?.restaurant_name ?? null
+  } catch (error) {
+    console.error('[DashboardPage] Data fetch failed:', error)
+  }
+
   const monthlySpend = latestSnapshot?.monthly_spend ?? 0
-  const profile = profileResult.data as { monthly_budget: number | null; restaurant_name: string | null } | null
-  const monthlyBudget = profile?.monthly_budget ?? null
-  const restaurantName = profile?.restaurant_name ?? null
 
   const stats = {
     totalItems,
@@ -80,7 +103,7 @@ export default async function DashboardPage() {
     budgetUsed: monthlyBudget ? (monthlySpend / monthlyBudget) * 100 : 0,
     wasteRate: latestSnapshot?.average_waste_percentage ?? 0,
     potentialSavings: savings.totalSavings,
-    activeInsights: insightsResult.count ?? 0,
+    activeInsights,
     monthlyBudget,
   }
 
@@ -99,22 +122,26 @@ export default async function DashboardPage() {
     .map(([name, value]) => ({ name, value: Math.round(value) }))
 
   // Waste trend data from snapshots (last 6)
-  const { data: recentSnapshotsRaw } = await supabase
-    .from('waste_analysis_snapshots')
-    .select('*')
-    .eq('user_id', userId)
-    .order('analysis_date', { ascending: true })
-    .limit(6)
+  let wasteTrendData: Array<{ label: string; value: number; benchmark: number }> = []
+  try {
+    const { data: recentSnapshotsRaw } = await supabase
+      .from('waste_analysis_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .order('analysis_date', { ascending: true })
+      .limit(6)
 
-  const recentSnapshots = (recentSnapshotsRaw ?? []) as WasteAnalysisSnapshot[]
-  const wasteTrendData = recentSnapshots.map((s) => ({
-    label: new Date(s.analysis_date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }),
-    value: Number(s.average_waste_percentage.toFixed(1)),
-    benchmark: 5,
-  }))
+    wasteTrendData = ((recentSnapshotsRaw ?? []) as WasteAnalysisSnapshot[]).map((s) => ({
+      label: new Date(s.analysis_date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      value: Number((s.average_waste_percentage ?? 0).toFixed(1)),
+      benchmark: 5,
+    }))
+  } catch (error) {
+    console.error('[DashboardPage] Waste trend fetch failed:', error)
+  }
 
   // Greeting
   const hour = new Date().getHours()

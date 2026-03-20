@@ -28,7 +28,13 @@ export default async function PurchaseOrderDetailPage({ params }: { params: Prom
   const resolvedParams = await params
   const { id } = resolvedParams
 
-  const response = await getPurchaseOrderDetails(id)
+  let response: { success: boolean; data?: unknown; error?: string }
+  try {
+    response = await getPurchaseOrderDetails(id)
+  } catch (error) {
+    console.error('[PurchaseOrderDetailPage] Data fetch failed:', error)
+    notFound()
+  }
   if (!response.success || !response.data) {
     notFound()
   }
