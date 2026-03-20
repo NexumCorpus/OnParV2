@@ -11,6 +11,9 @@ export interface AppNotification {
   createdAt: Date
 }
 
+/** Serialized version safe to pass from Server → Client Components */
+export type SerializedNotification = Omit<AppNotification, 'createdAt'> & { createdAt: string }
+
 function generateId(type: string, itemId: string): string {
   // Deterministic ID for dedup
   return `${type}-${itemId}`
@@ -55,7 +58,7 @@ export async function getNotifications(userId: string): Promise<AppNotification[
 
       // 4. User profile for budget
       supabase
-        .from('profiles')
+        .from('users')
         .select('monthly_budget')
         .eq('id', userId)
         .single(),

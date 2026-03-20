@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { getNotifications } from '@/lib/services/notifications'
+import { getNotifications, type SerializedNotification } from '@/lib/services/notifications'
 import { DashboardShell } from './dashboard-shell'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -11,13 +11,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/login')
   }
 
-  const notifications = await getNotifications(user.id)
+  let serializedNotifications: SerializedNotification[] = []
 
-  // Serialize Date objects for client component
-  const serializedNotifications = notifications.map((n) => ({
-    ...n,
-    createdAt: n.createdAt,
-  }))
+  try {
+    const notifications = await getNotifications(user.id)
+    serializedNotifications = notifications.map((n) => ({
+      ...n,
+      createdAt: n.createdAt.toISOString(),
+    }))
+  } catch {
+    // Notifications are non-critical — render dashboard without them
+  }
 
   return (
     <DashboardShell

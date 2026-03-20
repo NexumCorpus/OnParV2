@@ -13,6 +13,7 @@ import {
   Truck,
   Settings,
   LogOut,
+  ShoppingCart,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { createClient } from '@/lib/supabase/client'
@@ -31,6 +32,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Inventory', href: '/inventory', icon: Package },
+  { label: 'Purchasing', href: '/purchasing', icon: ShoppingCart },
   { label: 'Recipes', href: '/recipes', icon: ChefHat },
   { label: 'Waste', href: '/waste', icon: TrendingDown },
   { label: 'Insights', href: '/insights', icon: Lightbulb },

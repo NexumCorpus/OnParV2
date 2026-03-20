@@ -5,6 +5,7 @@ import type { InventoryItem, MenuItem, WasteEvent } from '@/types'
 function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem {
   return {
     id: 'item-1',
+    org_id: 'org-1',
     user_id: 'user-1',
     supplier_id: null,
     name: 'Rice',
@@ -25,6 +26,7 @@ function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem {
 function makeMenuItem(overrides: Partial<MenuItem> = {}): MenuItem {
   return {
     id: 'menu-1',
+    org_id: 'org-1',
     user_id: 'user-1',
     recipe_id: null,
     name: 'Margherita Pizza',
@@ -42,6 +44,7 @@ function makeMenuItem(overrides: Partial<MenuItem> = {}): MenuItem {
 function makeWasteEvent(overrides: Partial<WasteEvent> = {}): WasteEvent {
   return {
     id: 'waste-1',
+    org_id: 'org-1',
     user_id: 'user-1',
     inventory_item_id: 'item-1',
     quantity: 5,

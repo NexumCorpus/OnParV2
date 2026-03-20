@@ -88,16 +88,15 @@ export function OnboardingFlow({
 
   async function handleComplete() {
     setIsLoading(true)
-    try {
-      await completeOnboarding()
-      // completeOnboarding calls redirect('/dashboard') on success
-    } catch {
-      // redirect() throws a NEXT_REDIRECT error — this is expected
-      // If we reach here with a real error, the redirect didn't fire
-      router.push('/dashboard')
-    } finally {
-      setIsLoading(false)
+    const result = await completeOnboarding()
+    // If completeOnboarding succeeds, it calls redirect('/dashboard') server-side.
+    // We only reach here if the redirect didn't fire (e.g. update failed).
+    if (result && !result.success) {
+      toast.error(result.error || 'Failed to complete onboarding.')
     }
+    // Fallback navigation in case redirect didn't trigger
+    router.push('/dashboard')
+    setIsLoading(false)
   }
 
   return (
@@ -226,7 +225,8 @@ export function OnboardingFlow({
               <button
                 type="button"
                 onClick={() => {
-                  router.push('/inventory')
+                  toast.info('You can add items from the Inventory page after setup.')
+                  setStep(3)
                 }}
                 className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center transition-shadow hover:shadow-md min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
@@ -239,7 +239,8 @@ export function OnboardingFlow({
               <button
                 type="button"
                 onClick={() => {
-                  router.push('/inventory')
+                  toast.info('You can import CSV from the Inventory page after setup.')
+                  setStep(3)
                 }}
                 className="flex flex-col items-center gap-3 rounded-xl border bg-card p-6 text-center transition-shadow hover:shadow-md min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >

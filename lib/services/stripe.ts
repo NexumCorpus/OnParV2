@@ -3,7 +3,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { PLANS } from '@/lib/config'
 import type { PlanKey } from '@/lib/config'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
+const stripeKey = process.env.STRIPE_SECRET_KEY
+const stripe = stripeKey ? new Stripe(stripeKey) : null
 
 /** Create a Stripe Checkout session for a subscription */
 export async function createCheckoutSession(params: {
@@ -12,6 +13,8 @@ export async function createCheckoutSession(params: {
   successUrl: string
   cancelUrl: string
 }): Promise<{ url: string }> {
+  if (!stripe) throw new Error('Billing is not configured')
+
   const supabase = createAdminClient()
   const { data: userData } = await supabase
     .from('users')
@@ -47,6 +50,8 @@ export async function createPortalSession(params: {
   customerId: string
   returnUrl: string
 }): Promise<{ url: string }> {
+  if (!stripe) throw new Error('Billing is not configured')
+
   const session = await stripe.billingPortal.sessions.create({
     customer: params.customerId,
     return_url: params.returnUrl,
@@ -64,6 +69,17 @@ export async function getSubscriptionStatus(userId: string): Promise<{
   cancelAtPeriodEnd: boolean
   customerId: string | null
 }> {
+  if (!stripe) {
+    return {
+      isSubscribed: false,
+      plan: 'free',
+      status: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+      customerId: null,
+    }
+  }
+
   const supabase = createAdminClient()
 
   // Look up stripe customer
@@ -122,6 +138,8 @@ export async function getSubscriptionStatus(userId: string): Promise<{
 
 /** Link a Supabase user to a Stripe customer, creating the customer if needed */
 export async function getOrCreateStripeCustomer(userId: string, email: string): Promise<string> {
+  if (!stripe) throw new Error('Billing is not configured')
+
   const supabase = createAdminClient()
 
   // Check for existing record
@@ -136,7 +154,7 @@ export async function getOrCreateStripeCustomer(userId: string, email: string): 
   }
 
   // Create Stripe customer
-  const customer = await stripe.customers.create({
+  const customer = await stripe!.customers.create({
     email,
     metadata: { userId },
   })

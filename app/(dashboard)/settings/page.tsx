@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getSubscriptionStatus } from '@/lib/services/stripe'
+import { getTeamMembers } from '@/lib/actions/team'
 import { SettingsTabs } from './settings-tabs'
 import type { UserSettings } from '@/types'
 import type { PlanKey } from '@/lib/config'
@@ -29,9 +30,10 @@ export default async function SettingsPage() {
   }
 
   // Fetch user profile and subscription status in parallel
-  const [{ data: profile }, subscriptionStatus] = await Promise.all([
+  const [{ data: profile }, subscriptionStatus, teamResponse] = await Promise.all([
     supabase.from('users').select('*').eq('id', user.id).single(),
     getSubscriptionStatus(user.id),
+    getTeamMembers(),
   ])
 
   const settings: UserSettings = {
@@ -61,6 +63,7 @@ export default async function SettingsPage() {
         }
         cancelAtPeriodEnd={subscriptionStatus.cancelAtPeriodEnd}
         customerId={subscriptionStatus.customerId}
+        teamData={teamResponse.success ? (teamResponse.data as { orgName: string; currentUserRole: string; members: { userId: string, email: string, role: string, joinedAt: string }[] }) : null}
       />
     </div>
   )

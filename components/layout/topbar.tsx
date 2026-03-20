@@ -41,15 +41,15 @@ import {
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { MobileNav } from './mobile-nav'
-import type { AppNotification } from '@/lib/services/notifications'
+import type { SerializedNotification } from '@/lib/services/notifications'
 
 interface TopbarProps {
   userEmail?: string
   avatarUrl?: string | null
-  notifications?: AppNotification[]
+  notifications?: SerializedNotification[]
 }
 
-const NOTIFICATION_ICONS: Record<AppNotification['type'], typeof AlertTriangle> = {
+const NOTIFICATION_ICONS: Record<SerializedNotification['type'], typeof AlertTriangle> = {
   low_stock: AlertTriangle,
   expiring_soon: Clock,
   waste_alert: TrendingDown,
@@ -57,7 +57,7 @@ const NOTIFICATION_ICONS: Record<AppNotification['type'], typeof AlertTriangle> 
   insight_available: Lightbulb,
 }
 
-const SEVERITY_COLORS: Record<AppNotification['severity'], string> = {
+const SEVERITY_COLORS: Record<SerializedNotification['severity'], string> = {
   critical: 'text-red-500',
   warning: 'text-amber-500',
   info: 'text-blue-500',

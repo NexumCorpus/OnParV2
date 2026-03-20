@@ -36,8 +36,14 @@ export function PlanCard({
   const displayPrice = isAnnual ? price.annual : price.monthly
   const isFree = price.monthly === 0
 
+  const stripeConfigured = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+
   function handleSubscribe() {
     if (!priceId) return
+    if (!stripeConfigured) {
+      toast.info('Billing is coming soon!')
+      return
+    }
 
     const selectedPriceId = isAnnual ? priceId.annual : priceId.monthly
 
@@ -119,9 +125,11 @@ export function PlanCard({
             className="w-full"
             variant={isPopular ? 'default' : 'outline'}
             onClick={handleSubscribe}
-            disabled={isPending}
+            disabled={isPending || !stripeConfigured}
           >
-            {isPending ? (
+            {!stripeConfigured ? (
+              'Coming Soon'
+            ) : isPending ? (
               <>
                 <Loader2 className="size-4 animate-spin" />
                 Processing...

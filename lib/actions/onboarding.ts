@@ -1,6 +1,5 @@
 'use server'
 
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/types'
 
@@ -65,5 +64,5 @@ export async function completeOnboarding(): Promise<ActionResult> {
 
   if (error) return { success: false, error: error.message }
 
-  redirect('/dashboard')
+  return { success: true }
 }

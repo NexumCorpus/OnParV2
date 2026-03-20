@@ -59,7 +59,7 @@ export default async function DashboardPage() {
       .eq('status', 'pending'),
     getInventoryItems(userId),
     supabase
-      .from('profiles')
+      .from('users')
       .select('monthly_budget, restaurant_name')
       .eq('id', userId)
       .single(),

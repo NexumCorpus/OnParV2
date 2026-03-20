@@ -387,10 +387,10 @@ export async function deleteAccount(
 
     // Cancel Stripe subscription if exists
     const status = await getSubscriptionStatus(user.id)
-    if (status.customerId) {
+    if (status.customerId && process.env.STRIPE_SECRET_KEY) {
       try {
         const Stripe = (await import('stripe')).default
-        const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY ?? '')
+        const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY)
 
         // Cancel all subscriptions
         const subscriptions = await stripeClient.subscriptions.list({

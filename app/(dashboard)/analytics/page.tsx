@@ -51,7 +51,7 @@ export default async function AnalyticsPage() {
       .select('*')
       .eq('user_id', userId),
     supabase
-      .from('profiles')
+      .from('users')
       .select('monthly_budget')
       .eq('id', userId)
       .single(),
