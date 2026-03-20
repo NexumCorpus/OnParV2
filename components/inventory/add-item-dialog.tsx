@@ -19,6 +19,7 @@ import { inventoryItemSchema, type InventoryItemFormValues } from '@/lib/utils/v
 import { createItem, lookupBarcode } from '@/lib/actions/inventory'
 import type { Product } from '@/types'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { Supplier } from '@/types'
 import { ChevronDown } from 'lucide-react'
 
@@ -48,6 +49,7 @@ export function AddItemDialog({
     watch,
     reset,
   } = useForm<InventoryItemFormValues>({
+    mode: 'onBlur',
     resolver: zodResolver(inventoryItemSchema),
     defaultValues: {
       name: '',
@@ -108,7 +110,7 @@ export function AddItemDialog({
       if (result.error === 'PLAN_LIMIT_REACHED') {
         toast.error('You have reached your plan limit. Please upgrade to add more items.')
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
       return
     }

@@ -23,6 +23,7 @@ import { deleteRecipe } from '@/lib/actions/recipes'
 import { RECIPE_CATEGORIES, SEARCH_DEBOUNCE_MS } from '@/lib/config'
 import { Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { Recipe, MenuItem, InventoryItem } from '@/types'
 
 interface RecipesPageClientProps {
@@ -95,7 +96,7 @@ export function RecipesPageClient({
       toast.success('Recipe deleted')
       setDeleteTarget(null)
     } else {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
     }
   }
 

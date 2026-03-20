@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { APP_NAME } from '@/lib/config'
+import { PasswordStrengthMeter } from '@/components/auth/password-strength-meter'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -52,6 +53,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<SignupValues>({
+    mode: 'onBlur',
     resolver: zodResolver(signupSchema),
     defaultValues: {
       email: '',
@@ -139,6 +141,7 @@ export default function SignupPage() {
                       {...field}
                     />
                   </FormControl>
+                  <PasswordStrengthMeter password={form.watch('password')} />
                   <FormMessage />
                 </FormItem>
               )}

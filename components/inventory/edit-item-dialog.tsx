@@ -18,6 +18,7 @@ import { INVENTORY_CATEGORIES, UNIT_GROUPS } from '@/lib/config'
 import { inventoryItemSchema, type InventoryItemFormValues } from '@/lib/utils/validation'
 import { updateItem } from '@/lib/actions/inventory'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { InventoryItem, Supplier } from '@/types'
 
 interface EditItemDialogProps {
@@ -44,6 +45,7 @@ export function EditItemDialog({
     setValue,
     watch,
   } = useForm<InventoryItemFormValues>({
+    mode: 'onBlur',
     resolver: zodResolver(inventoryItemSchema),
     defaultValues: {
       name: item.name,
@@ -80,7 +82,7 @@ export function EditItemDialog({
     setLoading(false)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       return
     }
 

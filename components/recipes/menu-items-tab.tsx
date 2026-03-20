@@ -19,6 +19,7 @@ import {
 import { deleteMenuItem, toggleMenuItemActive } from '@/lib/actions/menu'
 import { Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { SEARCH_DEBOUNCE_MS } from '@/lib/config'
 import type { MenuItem, Recipe } from '@/types'
 
@@ -82,7 +83,7 @@ export function MenuItemsTab({
       )
       toast.success(`${item.name} ${item.is_active ? 'deactivated' : 'activated'}`)
     } else {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
     }
   }
 
@@ -94,7 +95,7 @@ export function MenuItemsTab({
       toast.success('Menu item deleted')
       setDeleteTarget(null)
     } else {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
     }
   }
 

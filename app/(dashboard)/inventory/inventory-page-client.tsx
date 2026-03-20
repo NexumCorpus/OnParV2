@@ -15,8 +15,20 @@ import { DeleteConfirmDialog } from '@/components/inventory/delete-confirm-dialo
 import { QuantityAdjustDialog } from '@/components/inventory/quantity-adjust-dialog'
 import { CSVImportDialog } from '@/components/inventory/csv-import-dialog'
 import { deleteItem, bulkDeleteItems } from '@/lib/actions/inventory'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { exportInventoryToCSV, downloadCSV } from '@/lib/utils/csv'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
+import { DataErrorAlert } from '@/components/ui/data-error-alert'
 import type { InventoryItem, Supplier } from '@/types'
 
 type StatusFilter = 'all' | 'low_stock' | 'expiring'
@@ -27,6 +39,7 @@ interface InventoryPageClientProps {
   lowStockCount: number
   expiringCount: number
   suppliers: Supplier[]
+  fetchError?: boolean
 }
 
 export function InventoryPageClient({
@@ -34,6 +47,7 @@ export function InventoryPageClient({
   lowStockCount,
   expiringCount,
   suppliers,
+  fetchError = false,
 }: InventoryPageClientProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -54,6 +68,7 @@ export function InventoryPageClient({
   const [adjustTarget, setAdjustTarget] = useState<InventoryItem | null>(null)
   const [csvImportOpen, setCsvImportOpen] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   // Filter and sort items client-side
   const filteredItems = items.filter((item) => {
@@ -130,7 +145,7 @@ export function InventoryPageClient({
     setDeleteLoading(false)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       return
     }
 
@@ -145,7 +160,7 @@ export function InventoryPageClient({
     const result = await bulkDeleteItems(ids)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       return
     }
 
@@ -176,6 +191,8 @@ export function InventoryPageClient({
 
   return (
     <div className="space-y-4 pb-20 md:pb-4">
+      {fetchError && <DataErrorAlert />}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -222,7 +239,7 @@ export function InventoryPageClient({
           <Button
             variant="destructive"
             size="sm"
-            onClick={handleBulkDelete}
+            onClick={() => setBulkDeleteOpen(true)}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete Selected
@@ -352,6 +369,30 @@ export function InventoryPageClient({
         onOpenChange={setCsvImportOpen}
         onSuccess={refreshData}
       />
+
+      {/* Bulk delete confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete {selectedIds.size} items?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the selected items. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setBulkDeleteOpen(false)
+                handleBulkDelete()
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

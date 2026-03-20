@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Upload } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import {
   getCount,
@@ -14,7 +14,9 @@ import { Button } from '@/components/ui/button'
 import { KpiCards } from '@/components/dashboard/kpi-cards'
 import { RecentAlerts } from '@/components/dashboard/recent-alerts'
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts'
-import type { WasteAnalysisSnapshot } from '@/types'
+import { QuickActions } from '@/components/dashboard/quick-actions'
+import { DataErrorAlert } from '@/components/ui/data-error-alert'
+import type { InventoryItem, WasteAnalysisSnapshot } from '@/types'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -28,46 +30,72 @@ export default async function DashboardPage() {
 
   const userId = user.id
 
-  // Fetch ALL dashboard data in PARALLEL for performance
-  const [
-    totalItems,
-    lowStockItems,
-    expiringItems,
-    totalValue,
-    savings,
-    snapshotResult,
-    insightsResult,
-    inventoryItems,
-    profileResult,
-  ] = await Promise.all([
-    getCount(userId),
-    getLowStockItems(userId),
-    getExpiringItems(userId),
-    getTotalInventoryValue(userId),
-    calculateEstimatedSavings(userId),
-    supabase
-      .from('waste_analysis_snapshots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('analysis_date', { ascending: false })
-      .limit(1),
-    supabase
-      .from('ai_insights')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'pending'),
-    getInventoryItems(userId),
-    supabase
-      .from('users')
-      .select('monthly_budget, restaurant_name')
-      .eq('id', userId)
-      .maybeSingle(),
-  ])
+  // Defaults — page always renders even if data fetch fails
+  let totalItems = 0
+  let lowStockItems: InventoryItem[] = []
+  let expiringItems: InventoryItem[] = []
+  let totalValue = 0
+  let savings = { lowStockSavings: 0, expirySavings: 0, totalSavings: 0 }
+  let latestSnapshot: WasteAnalysisSnapshot | null = null
+  let activeInsights = 0
+  let inventoryItems: InventoryItem[] = []
+  let monthlyBudget: number | null = null
+  let restaurantName: string | null = null
+  let fetchError = false
 
-  const latestSnapshot = (snapshotResult.data?.[0] ?? null) as WasteAnalysisSnapshot | null
+  try {
+    const [
+      countResult,
+      lowResult,
+      expResult,
+      valueResult,
+      savingsResult,
+      snapshotResult,
+      insightsResult,
+      itemsResult,
+      profileResult,
+    ] = await Promise.all([
+      getCount(userId),
+      getLowStockItems(userId),
+      getExpiringItems(userId),
+      getTotalInventoryValue(userId),
+      calculateEstimatedSavings(userId),
+      supabase
+        .from('waste_analysis_snapshots')
+        .select('*')
+        .eq('user_id', userId)
+        .order('analysis_date', { ascending: false })
+        .limit(1),
+      supabase
+        .from('ai_insights')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .eq('status', 'pending'),
+      getInventoryItems(userId),
+      supabase
+        .from('users')
+        .select('monthly_budget, restaurant_name')
+        .eq('id', userId)
+        .maybeSingle(),
+    ])
+
+    totalItems = countResult
+    lowStockItems = lowResult
+    expiringItems = expResult
+    totalValue = valueResult
+    savings = savingsResult
+    latestSnapshot = (snapshotResult.data?.[0] ?? null) as WasteAnalysisSnapshot | null
+    activeInsights = insightsResult.count ?? 0
+    inventoryItems = itemsResult
+    const profile = profileResult.data as { monthly_budget: number | null; restaurant_name: string | null } | null
+    monthlyBudget = profile?.monthly_budget ?? null
+    restaurantName = profile?.restaurant_name ?? null
+  } catch (error) {
+    console.error('[DashboardPage] Data fetch failed:', error)
+    fetchError = true
+  }
+
   const monthlySpend = latestSnapshot?.monthly_spend ?? 0
-  const profile = profileResult.data as { monthly_budget: number | null; restaurant_name: string | null } | null
-  const monthlyBudget = profile?.monthly_budget ?? null
 
   const stats = {
     totalItems,
@@ -78,7 +106,7 @@ export default async function DashboardPage() {
     budgetUsed: monthlyBudget ? (monthlySpend / monthlyBudget) * 100 : 0,
     wasteRate: latestSnapshot?.average_waste_percentage ?? 0,
     potentialSavings: savings.totalSavings,
-    activeInsights: insightsResult.count ?? 0,
+    activeInsights,
     monthlyBudget,
   }
 
@@ -96,22 +124,26 @@ export default async function DashboardPage() {
     .map(([name, value]) => ({ name, value: Math.round(value) }))
 
   // Waste trend data from snapshots (last 6)
-  const { data: recentSnapshotsRaw } = await supabase
-    .from('waste_analysis_snapshots')
-    .select('*')
-    .eq('user_id', userId)
-    .order('analysis_date', { ascending: true })
-    .limit(6)
+  let wasteTrendData: Array<{ label: string; value: number; benchmark: number }> = []
+  try {
+    const { data: recentSnapshotsRaw } = await supabase
+      .from('waste_analysis_snapshots')
+      .select('*')
+      .eq('user_id', userId)
+      .order('analysis_date', { ascending: true })
+      .limit(6)
 
-  const recentSnapshots = (recentSnapshotsRaw ?? []) as WasteAnalysisSnapshot[]
-  const wasteTrendData = recentSnapshots.map((s) => ({
-    label: new Date(s.analysis_date).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }),
-    value: Number(s.average_waste_percentage.toFixed(1)),
-    benchmark: 5,
-  }))
+    wasteTrendData = ((recentSnapshotsRaw ?? []) as WasteAnalysisSnapshot[]).map((s) => ({
+      label: new Date(s.analysis_date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
+      value: Number((s.average_waste_percentage ?? 0).toFixed(1)),
+      benchmark: 5,
+    }))
+  } catch (error) {
+    console.error('[DashboardPage] Waste trend fetch failed:', error)
+  }
 
   // Greeting
   const hour = new Date().getHours()
@@ -119,35 +151,59 @@ export default async function DashboardPage() {
     hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <div className="space-y-4">
-      {/* Compact header */}
-      <header className="flex items-center justify-between">
-        <h1 className="text-lg font-bold">
-          {greeting}, {user.email?.split('@')[0] ?? 'Chef'}
-        </h1>
-        <Button size="sm" asChild>
-          <Link href="/inventory/add">
-            <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-            Add Item
-          </Link>
-        </Button>
+    <div className="space-y-6">
+      {/* Page header */}
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          {restaurantName && (
+            <p className="text-sm text-muted-foreground">{restaurantName}</p>
+          )}
+        </div>
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <span>{greeting}, {user.email?.split('@')[0] ?? 'there'}</span>
+          <span className="hidden sm:inline">·</span>
+          <time className="hidden sm:inline" dateTime={new Date().toISOString()}>
+            Updated {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+          </time>
+        </div>
       </header>
 
-      {/* Empty state */}
+      {fetchError && <DataErrorAlert />}
+
+      {/* Empty state when zero items */}
       {totalItems === 0 ? (
         <>
-          <KpiCards stats={stats} />
-          <div className="rounded-lg border bg-card p-6 text-center">
-            <h2 className="text-lg font-semibold mb-1">Welcome to OnPar!</h2>
-            <p className="text-sm text-muted-foreground mb-4">
-              Add your first inventory items to get started.
+          {/* Welcome CTA first -- visible immediately on mobile */}
+          <div className="rounded-lg border bg-card p-8 text-center">
+            <h2 className="text-xl font-semibold mb-2">Welcome to OnPar!</h2>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Add your first inventory items to see your dashboard come alive with
+              real-time KPIs, charts, and AI insights.
             </p>
-            <Button asChild>
-              <Link href="/inventory/add">
-                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                Add Your First Item
-              </Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <Button asChild>
+                <Link href="/inventory/add">
+                  <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Add Your First Item
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/inventory">
+                  <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Import CSV
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* KPI cards below the welcome CTA */}
+          <KpiCards stats={stats} />
+
+          {/* Quick actions still render */}
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="lg:col-span-2" />
+            <QuickActions />
           </div>
         </>
       ) : (
