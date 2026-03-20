@@ -169,7 +169,7 @@ export function Topbar({ userEmail, avatarUrl, notifications = [] }: TopbarProps
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
+            <PopoverContent className="w-[calc(100vw-2rem)] sm:w-80 p-0" align="end">
               <div className="border-b px-4 py-3">
                 <h3 className="text-sm font-semibold">Notifications</h3>
                 {visibleNotifications.length > 0 && (
@@ -239,7 +239,7 @@ export function Topbar({ userEmail, avatarUrl, notifications = [] }: TopbarProps
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56" align="end">
+            <DropdownMenuContent className="w-[calc(100vw-2rem)] sm:w-56" align="end">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">Account</p>

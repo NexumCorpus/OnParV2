@@ -104,7 +104,7 @@ export function KpiCards({ stats }: { stats: DashboardStats }) {
 
   return (
     <section aria-label="Key performance indicators">
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {cards.map((card) => {
           const Icon = card.icon
           return (
@@ -114,7 +114,7 @@ export function KpiCards({ stats }: { stats: DashboardStats }) {
                 <Icon className={`h-5 w-5 ${card.iconColor}`} aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{card.value}</div>
+                <div className="text-xl min-[400px]:text-2xl font-bold">{card.value}</div>
                 <p className="text-xs text-muted-foreground">{card.subtitle}</p>
               </CardContent>
             </Card>
