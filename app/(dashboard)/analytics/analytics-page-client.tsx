@@ -13,7 +13,10 @@ import { InventoryAnalytics } from '@/components/analytics/inventory-analytics'
 import { WasteAnalytics } from '@/components/analytics/waste-analytics'
 import { CostAnalytics } from '@/components/analytics/cost-analytics'
 import { PerformanceAnalytics } from '@/components/analytics/performance-analytics'
+import { DataErrorAlert } from '@/components/ui/data-error-alert'
 import type { InventoryItem, WasteAnalysisSnapshot, WasteEvent, Recipe } from '@/types'
+import Link from 'next/link'
+import { BarChart3 } from 'lucide-react'
 
 interface AnalyticsPageClientProps {
   inventoryItems: InventoryItem[]
@@ -24,6 +27,7 @@ interface AnalyticsPageClientProps {
   wasteEvents: WasteEvent[]
   recipes: Recipe[]
   monthlyBudget: number | null
+  fetchError?: boolean
 }
 
 export function AnalyticsPageClient({
@@ -35,6 +39,7 @@ export function AnalyticsPageClient({
   wasteEvents,
   recipes,
   monthlyBudget,
+  fetchError = false,
 }: AnalyticsPageClientProps) {
   const [dateRange, setDateRange] = useState<DateRangeOption>('30d')
   const dateRangeStart = getDateRangeStart(dateRange)
@@ -72,8 +77,12 @@ export function AnalyticsPageClient({
     URL.revokeObjectURL(url)
   }, [snapshots, wasteEvents, dateRangeStart, inventoryItems, lowStockItems, expiringItems, totalInventoryValue, monthlyBudget, dateRange])
 
+  const isEmpty = inventoryItems.length === 0 && wasteEvents.length === 0 && snapshots.length === 0
+
   return (
     <div className="space-y-6">
+      {fetchError && <DataErrorAlert />}
+
       {/* Header */}
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Analytics</h1>
@@ -85,6 +94,20 @@ export function AnalyticsPageClient({
           </Button>
         </div>
       </header>
+
+      {/* Empty state */}
+      {isEmpty && !fetchError && (
+        <div className="flex flex-col items-center justify-center p-8 text-center border rounded-lg border-dashed">
+          <BarChart3 className="h-10 w-10 text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium">No analytics data yet</h3>
+          <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+            Add inventory items and log waste to see analytics charts and insights here.
+          </p>
+          <Link href="/inventory/add" className="mt-4">
+            <Button>Add Inventory Items</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs defaultValue="inventory">

@@ -15,6 +15,7 @@ import { KpiCards } from '@/components/dashboard/kpi-cards'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 import { RecentAlerts } from '@/components/dashboard/recent-alerts'
 import { DashboardCharts } from '@/components/dashboard/dashboard-charts'
+import { DataErrorAlert } from '@/components/ui/data-error-alert'
 import type { InventoryItem, WasteAnalysisSnapshot } from '@/types'
 
 export default async function DashboardPage() {
@@ -40,6 +41,7 @@ export default async function DashboardPage() {
   let inventoryItems: InventoryItem[] = []
   let monthlyBudget: number | null = null
   let restaurantName: string | null = null
+  let fetchError = false
 
   try {
     const [
@@ -90,6 +92,7 @@ export default async function DashboardPage() {
     restaurantName = profile?.restaurant_name ?? null
   } catch (error) {
     console.error('[DashboardPage] Data fetch failed:', error)
+    fetchError = true
   }
 
   const monthlySpend = latestSnapshot?.monthly_spend ?? 0
@@ -162,6 +165,8 @@ export default async function DashboardPage() {
           {greeting}, {user.email?.split('@')[0] ?? 'there'}
         </p>
       </header>
+
+      {fetchError && <DataErrorAlert />}
 
       {/* Empty state when zero items */}
       {totalItems === 0 ? (

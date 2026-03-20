@@ -17,6 +17,7 @@ import { CSVImportDialog } from '@/components/inventory/csv-import-dialog'
 import { deleteItem, bulkDeleteItems } from '@/lib/actions/inventory'
 import { exportInventoryToCSV, downloadCSV } from '@/lib/utils/csv'
 import { toast } from 'sonner'
+import { DataErrorAlert } from '@/components/ui/data-error-alert'
 import type { InventoryItem, Supplier } from '@/types'
 
 type StatusFilter = 'all' | 'low_stock' | 'expiring'
@@ -27,6 +28,7 @@ interface InventoryPageClientProps {
   lowStockCount: number
   expiringCount: number
   suppliers: Supplier[]
+  fetchError?: boolean
 }
 
 export function InventoryPageClient({
@@ -34,6 +36,7 @@ export function InventoryPageClient({
   lowStockCount,
   expiringCount,
   suppliers,
+  fetchError = false,
 }: InventoryPageClientProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -176,6 +179,8 @@ export function InventoryPageClient({
 
   return (
     <div className="space-y-4 pb-20 md:pb-4">
+      {fetchError && <DataErrorAlert />}
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

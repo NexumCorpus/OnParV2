@@ -21,6 +21,7 @@ export default async function InventoryPage() {
   let lowStockItems: InventoryItem[] = []
   let expiringItems: InventoryItem[] = []
   let suppliers: Supplier[] = []
+  let fetchError = false
 
   try {
     ;[items, lowStockItems, expiringItems, suppliers] = await Promise.all([
@@ -31,6 +32,7 @@ export default async function InventoryPage() {
     ])
   } catch (error) {
     console.error('[InventoryPage] Data fetch failed:', error)
+    fetchError = true
   }
 
   return (
@@ -39,6 +41,7 @@ export default async function InventoryPage() {
       lowStockCount={lowStockItems.length}
       expiringCount={expiringItems.length}
       suppliers={suppliers}
+      fetchError={fetchError}
     />
   )
 }

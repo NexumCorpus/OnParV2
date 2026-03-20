@@ -29,6 +29,7 @@ export default async function AnalyticsPage() {
   let wasteEvents: WasteEvent[] = []
   let recipes: Recipe[] = []
   let monthlyBudget: number | null = null
+  let fetchError = false
 
   try {
     const [
@@ -76,6 +77,7 @@ export default async function AnalyticsPage() {
     monthlyBudget = (profileResult.data as { monthly_budget: number | null } | null)?.monthly_budget ?? null
   } catch (error) {
     console.error('[AnalyticsPage] Data fetch failed:', error)
+    fetchError = true
   }
 
   return (
@@ -88,6 +90,7 @@ export default async function AnalyticsPage() {
       wasteEvents={wasteEvents}
       recipes={recipes}
       monthlyBudget={monthlyBudget}
+      fetchError={fetchError}
     />
   )
 }
