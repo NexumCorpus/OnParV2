@@ -1,12 +1,10 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { updateSession } from '@/lib/supabase/middleware'
-import { logger } from '@/lib/utils/logger'
 
 const PUBLIC_ROUTES = ['/', '/login', '/signup', '/pricing', '/features', '/contact', '/api/health', '/api/webhook']
 
 export async function middleware(request: NextRequest) {
-  logger.info({ path: request.nextUrl.pathname, method: request.method }, 'request')
 
   const response = await updateSession(request)
   const { pathname } = request.nextUrl
