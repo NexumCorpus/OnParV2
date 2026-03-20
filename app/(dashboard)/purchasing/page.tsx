@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { formatCurrency } from '@/lib/utils/formatting'
 import { getPurchaseOrders } from '@/lib/actions/purchasing'
+import { PurchaseOrderCard } from '@/components/purchasing/purchase-order-card'
 import type { PurchaseOrder } from '@/types'
 
 export const metadata = {
@@ -25,8 +26,13 @@ interface POWithDetails extends PurchaseOrder {
 }
 
 export default async function PurchaseOrdersPage() {
-  const response = await getPurchaseOrders()
-  const purchaseOrders = response.success ? (response.data as POWithDetails[]) : []
+  let purchaseOrders: POWithDetails[] = []
+  try {
+    const response = await getPurchaseOrders()
+    purchaseOrders = response.success ? (response.data as POWithDetails[]) ?? [] : []
+  } catch (error) {
+    console.error('[PurchaseOrdersPage] Data fetch failed:', error)
+  }
 
   return (
     <div className="space-y-6">
@@ -63,7 +69,9 @@ export default async function PurchaseOrdersPage() {
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
@@ -109,6 +117,22 @@ export default async function PurchaseOrdersPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile card view */}
+            <div className="md:hidden space-y-3">
+              {purchaseOrders.map((po) => (
+                <PurchaseOrderCard
+                  key={po.id}
+                  id={po.id}
+                  createdAt={po.created_at}
+                  supplierName={po.suppliers?.name ?? 'Unknown Supplier'}
+                  totalAmount={po.total_amount}
+                  status={po.status}
+                  statusConfig={statusConfig}
+                />
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>

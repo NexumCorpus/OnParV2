@@ -21,6 +21,7 @@ import { addIngredient } from '@/lib/actions/recipes'
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting'
 import { IngredientPicker, type IngredientRow } from './ingredient-picker'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { InventoryItem } from '@/types'
 
 const DIFFICULTY_LEVELS = ['easy', 'medium', 'hard'] as const
@@ -49,6 +50,7 @@ export function AddRecipeDialog({
     watch,
     reset,
   } = useForm<RecipeFormValues>({
+    mode: 'onBlur',
     resolver: zodResolver(recipeSchema),
     defaultValues: {
       name: '',
@@ -104,7 +106,7 @@ export function AddRecipeDialog({
     const result = await createRecipe(formData)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       setLoading(false)
       return
     }

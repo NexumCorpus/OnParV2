@@ -21,6 +21,7 @@ import {
   updateSupplier,
 } from '@/lib/actions/suppliers'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { Supplier } from '@/types'
 
 interface AddSupplierDialogProps {
@@ -48,6 +49,7 @@ export function AddSupplierDialog({
     setValue,
     watch,
   } = useForm<SupplierFormValues>({
+    mode: 'onBlur',
     resolver: zodResolver(supplierSchema),
     defaultValues: {
       name: supplier?.name ?? '',
@@ -80,7 +82,7 @@ export function AddSupplierDialog({
     setLoading(false)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       return
     }
 

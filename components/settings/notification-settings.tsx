@@ -2,6 +2,7 @@
 
 import { useTransition } from 'react'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,7 +25,7 @@ export function NotificationSettings({ settings }: NotificationSettingsProps) {
       if (result.success) {
         toast.success('Notification settings saved')
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
     })
   }

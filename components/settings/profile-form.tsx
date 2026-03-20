@@ -2,6 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { Camera, Download, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +36,7 @@ export function ProfileForm({
       if (result.success) {
         toast.success('Profile updated successfully')
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
     })
   }
@@ -66,7 +67,7 @@ export function ProfileForm({
           setAvatarUrl(data.avatarUrl)
           toast.success('Avatar updated')
         } else if (!result.success) {
-          toast.error(result.error)
+          toast.error(getUserFriendlyError(result.error))
         }
       })
       .catch(() => {
@@ -86,7 +87,7 @@ export function ProfileForm({
           window.open(data.downloadUrl, '_blank')
           toast.success('Data export ready for download')
         } else if (!result.success) {
-          toast.error(result.error)
+          toast.error(getUserFriendlyError(result.error))
         }
       })
       .catch(() => {

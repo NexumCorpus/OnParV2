@@ -14,6 +14,7 @@ import { UNIT_GROUPS } from '@/lib/config'
 import { inventoryItemSchema, type InventoryItemFormValues } from '@/lib/utils/validation'
 import { createItem } from '@/lib/actions/inventory'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 
 export default function AddInventoryItemPage() {
   const router = useRouter()
@@ -27,6 +28,7 @@ export default function AddInventoryItemPage() {
     setValue,
     watch,
   } = useForm<InventoryItemFormValues>({
+    mode: 'onBlur',
     resolver: zodResolver(inventoryItemSchema),
     defaultValues: {
       name: '',
@@ -66,7 +68,7 @@ export default function AddInventoryItemPage() {
       if (result.error === 'PLAN_LIMIT_REACHED') {
         toast.error('Plan limit reached. Upgrade to add more items.')
       } else {
-        toast.error(result.error)
+        toast.error(getUserFriendlyError(result.error))
       }
       return
     }

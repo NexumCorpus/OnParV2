@@ -30,11 +30,22 @@ export default async function SettingsPage() {
   }
 
   // Fetch user profile and subscription status in parallel
-  const [{ data: profile }, subscriptionStatus, teamResponse] = await Promise.all([
-    supabase.from('users').select('*').eq('id', user.id).maybeSingle(),
-    getSubscriptionStatus(user.id),
-    getTeamMembers(),
-  ])
+  let profile: Record<string, unknown> | null = null
+  let subscriptionStatus: { isSubscribed?: boolean; plan: string | null; status: string | null; currentPeriodEnd: Date | null; cancelAtPeriodEnd: boolean; customerId: string | null } = { plan: 'free', status: 'not_started', currentPeriodEnd: null, cancelAtPeriodEnd: false, customerId: null }
+  let teamResponse: { success: boolean; data?: unknown } = { success: false }
+
+  try {
+    const [profileResult, subResult, teamResult] = await Promise.all([
+      supabase.from('users').select('*').eq('id', user.id).maybeSingle(),
+      getSubscriptionStatus(user.id),
+      getTeamMembers(),
+    ])
+    profile = profileResult.data as Record<string, unknown> | null
+    subscriptionStatus = subResult
+    teamResponse = teamResult
+  } catch (error) {
+    console.error('[SettingsPage] Data fetch failed:', error)
+  }
 
   const settings: UserSettings = {
     ...defaultSettings,

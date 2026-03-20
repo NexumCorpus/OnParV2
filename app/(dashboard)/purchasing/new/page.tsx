@@ -32,15 +32,20 @@ export default async function NewPurchaseOrderPage(props: PageProps) {
   const searchParams = await props.searchParams
   const supplierId = searchParams.supplier
 
-  const suppliersResponse = await getSuppliersForDropdown()
-  const suppliers: SupplierItem[] = suppliersResponse.success ? (suppliersResponse.data as SupplierItem[]) : []
-
+  let suppliers: SupplierItem[] = []
   let lowStockItems: LowStockItem[] = []
-  if (supplierId) {
-    const itemsResponse = await getLowStockItemsForSupplier(supplierId)
-    if (itemsResponse.success) {
-      lowStockItems = itemsResponse.data as LowStockItem[]
+  try {
+    const suppliersResponse = await getSuppliersForDropdown()
+    suppliers = suppliersResponse.success ? (suppliersResponse.data as SupplierItem[]) ?? [] : []
+
+    if (supplierId) {
+      const itemsResponse = await getLowStockItemsForSupplier(supplierId)
+      if (itemsResponse.success) {
+        lowStockItems = (itemsResponse.data as LowStockItem[]) ?? []
+      }
     }
+  } catch (error) {
+    console.error('[NewPurchaseOrderPage] Data fetch failed:', error)
   }
 
   return (

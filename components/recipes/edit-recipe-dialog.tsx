@@ -20,6 +20,7 @@ import { updateRecipe, addIngredient, removeIngredient } from '@/lib/actions/rec
 import { formatCurrency, formatPercentage } from '@/lib/utils/formatting'
 import { IngredientPicker, type IngredientRow } from './ingredient-picker'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { Recipe, InventoryItem, RecipeIngredient } from '@/types'
 
 const DIFFICULTY_LEVELS = ['easy', 'medium', 'hard'] as const
@@ -55,6 +56,7 @@ export function EditRecipeDialog({
     watch,
     reset,
   } = useForm<RecipeFormValues>({
+    mode: 'onBlur',
     resolver: zodResolver(recipeSchema),
   })
 
@@ -139,7 +141,7 @@ export function EditRecipeDialog({
     const result = await updateRecipe(recipe.id, formData)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       setLoading(false)
       return
     }

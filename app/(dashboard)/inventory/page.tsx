@@ -6,6 +6,7 @@ import {
   getExpiringItems,
 } from '@/lib/services/inventory'
 import { getSuppliers } from '@/lib/services/suppliers'
+import type { InventoryItem, Supplier } from '@/types'
 import { InventoryPageClient } from './inventory-page-client'
 
 export default async function InventoryPage() {
@@ -16,12 +17,23 @@ export default async function InventoryPage() {
     redirect('/login')
   }
 
-  const [items, lowStockItems, expiringItems, suppliers] = await Promise.all([
-    getInventoryItems(user.id),
-    getLowStockItems(user.id),
-    getExpiringItems(user.id),
-    getSuppliers(user.id),
-  ])
+  let items: InventoryItem[] = []
+  let lowStockItems: InventoryItem[] = []
+  let expiringItems: InventoryItem[] = []
+  let suppliers: Supplier[] = []
+  let fetchError = false
+
+  try {
+    ;[items, lowStockItems, expiringItems, suppliers] = await Promise.all([
+      getInventoryItems(user.id),
+      getLowStockItems(user.id),
+      getExpiringItems(user.id),
+      getSuppliers(user.id),
+    ])
+  } catch (error) {
+    console.error('[InventoryPage] Data fetch failed:', error)
+    fetchError = true
+  }
 
   return (
     <InventoryPageClient
@@ -29,6 +41,7 @@ export default async function InventoryPage() {
       lowStockCount={lowStockItems.length}
       expiringCount={expiringItems.length}
       suppliers={suppliers}
+      fetchError={fetchError}
     />
   )
 }

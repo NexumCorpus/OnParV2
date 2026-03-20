@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { InlineError } from '@/components/ui/inline-error'
+import { Button } from '@/components/ui/button'
 
 export default function DashboardError({
   error,
@@ -15,11 +15,15 @@ export default function DashboardError({
   }, [error])
 
   return (
-    <div className="p-4">
-      <InlineError
-        message="Failed to load data. Some information may be missing."
-        onRetry={reset}
-      />
+    <div className="flex flex-col items-center justify-center gap-4 p-12">
+      <h2 className="text-xl font-semibold">Something went wrong</h2>
+      <p className="text-muted-foreground">
+        {error.message || 'An unexpected error occurred. Please try again.'}
+      </p>
+      {error.digest && (
+        <p className="text-xs text-muted-foreground/60">Error ID: {error.digest}</p>
+      )}
+      <Button onClick={reset}>Try again</Button>
     </div>
   )
 }

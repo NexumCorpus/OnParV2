@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import { inviteTeamMember } from '@/lib/actions/team'
 
 interface TeamMember {
@@ -34,7 +35,7 @@ export function TeamSettings({ orgName, currentUserRole, members }: TeamSettings
     setIsLoading(false)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       return
     }
 

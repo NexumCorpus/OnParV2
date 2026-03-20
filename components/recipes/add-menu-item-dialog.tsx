@@ -22,6 +22,7 @@ import {
   updateMenuItem as updateMenuItemAction,
 } from '@/lib/actions/menu'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { MenuItem, Recipe } from '@/types'
 
 interface AddMenuItemDialogProps {
@@ -54,6 +55,7 @@ export function AddMenuItemDialog({
     watch,
     reset,
   } = useForm<MenuItemFormValues>({
+    mode: 'onBlur',
     resolver: zodResolver(menuItemSchema),
     defaultValues: editItem
       ? {
@@ -148,7 +150,7 @@ export function AddMenuItemDialog({
       : await createMenuItem(formData)
 
     if (!result.success) {
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       setLoading(false)
       return
     }

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { QUANTITY_STEPPER_DEBOUNCE_MS } from '@/lib/config'
 import { adjustItemQuantity } from '@/lib/actions/inventory'
 import { toast } from 'sonner'
+import { getUserFriendlyError } from '@/lib/utils/error-messages'
 import type { InventoryItem } from '@/types'
 
 interface QuantityStepperProps {
@@ -43,7 +44,7 @@ export function QuantityStepper({
         onItemDeleted(itemIdRef.current)
         return
       }
-      toast.error(result.error)
+      toast.error(getUserFriendlyError(result.error))
       // Revert optimistic display
       setDisplayQty((prev) => prev - delta)
       return
