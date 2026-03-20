@@ -39,12 +39,7 @@ export function WasteAnalytics({
   for (const event of filteredEvents) {
     const date = new Date(event.recorded_at)
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    const label = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
     monthlyWasteMap.set(key, (monthlyWasteMap.get(key) ?? 0) + event.estimated_value)
-    // Store label in separate tracking
-    if (!monthlyWasteMap.has(`label:${key}`)) {
-      monthlyWasteMap.set(`label:${key}`, 0)
-    }
   }
 
   const monthlyWasteData = Array.from(monthlyWasteMap.entries())

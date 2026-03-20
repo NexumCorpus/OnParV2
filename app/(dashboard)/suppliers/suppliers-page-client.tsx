@@ -7,8 +7,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SupplierList } from '@/components/suppliers/supplier-list'
 import { AddSupplierDialog } from '@/components/suppliers/add-supplier-dialog'
-import { deleteSupplier } from '@/lib/actions/suppliers'
-import { toast } from 'sonner'
 import type { Supplier } from '@/types'
 
 interface SuppliersPageClientProps {
@@ -18,7 +16,7 @@ interface SuppliersPageClientProps {
 export function SuppliersPageClient({ initialSuppliers }: SuppliersPageClientProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
-  const [suppliers, setSuppliers] = useState(initialSuppliers)
+  const [suppliers] = useState(initialSuppliers)
   const [search, setSearch] = useState('')
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null)

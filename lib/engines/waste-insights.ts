@@ -219,7 +219,7 @@ export function generateReport(data: {
   predictions: WastePrediction[]
   avgWasteRate: number
 }): Omit<WasteInsightReport, 'userId'> {
-  const { wastePatterns, benchmarks, predictions, avgWasteRate } = data
+  const { wastePatterns, benchmarks, avgWasteRate } = data
 
   const totalWasteValue = wastePatterns.reduce((sum, p) => sum + p.totalWasteValue, 0)
   const highRiskItems = wastePatterns.filter(

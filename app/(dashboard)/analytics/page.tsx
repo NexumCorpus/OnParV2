@@ -6,7 +6,7 @@ import {
   getTotalInventoryValue,
   getInventoryItems,
 } from '@/lib/services/inventory'
-import type { InventoryItem, WasteAnalysisSnapshot, WasteEvent, Recipe } from '@/types'
+import type { WasteAnalysisSnapshot, WasteEvent, Recipe } from '@/types'
 import { AnalyticsPageClient } from './analytics-page-client'
 
 export default async function AnalyticsPage() {

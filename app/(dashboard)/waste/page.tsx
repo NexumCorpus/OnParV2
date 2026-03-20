@@ -22,26 +22,29 @@ export default function WastePage() {
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
   const [initialLoaded, setInitialLoaded] = useState(false)
 
-  const loadData = useCallback(async () => {
-    const [, , invResult] = await Promise.all([
-      analysis.fetchAnalysis(),
-      analysis.fetchWasteEvents(),
-      getInventoryItemsForWaste(),
-    ])
-    if (invResult.success && invResult.data) {
-      setInventoryItems(invResult.data as InventoryItem[])
-    }
-    setInitialLoaded(true)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   useEffect(() => {
+    let cancelled = false
+    async function loadData() {
+      const [, , invResult] = await Promise.all([
+        analysis.fetchAnalysis(),
+        analysis.fetchWasteEvents(),
+        getInventoryItemsForWaste(),
+      ])
+      if (!cancelled && invResult.success && invResult.data) {
+        setInventoryItems(invResult.data as InventoryItem[])
+      }
+      if (!cancelled) setInitialLoaded(true)
+    }
     void loadData()
-  }, [loadData])
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleRecorded = useCallback(() => {
     void analysis.fetchAnalysis()
     void analysis.fetchWasteEvents()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Empty state
   if (initialLoaded && analysis.wasteEvents.length === 0 && !analysis.loading) {

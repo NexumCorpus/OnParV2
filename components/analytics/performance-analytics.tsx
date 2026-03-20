@@ -151,7 +151,6 @@ export function PerformanceAnalytics({
     if (previous === 0) return { changeValue: 0, changeLabel: 'N/A' }
     const diff = current - previous
     const pct = ((diff / previous) * 100).toFixed(1)
-    const arrow = diff > 0 ? (isInverse ? 'down-' : 'up-') : (isInverse ? 'up-' : 'down-')
     const direction = diff > 0 ? '\u2191' : '\u2193'
     const changeValue = isInverse ? -diff : diff
     return {

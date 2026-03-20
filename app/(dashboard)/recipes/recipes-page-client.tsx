@@ -23,7 +23,6 @@ import { deleteRecipe } from '@/lib/actions/recipes'
 import { RECIPE_CATEGORIES, SEARCH_DEBOUNCE_MS } from '@/lib/config'
 import { Plus, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
 import type { Recipe, MenuItem, InventoryItem } from '@/types'
 
 interface RecipesPageClientProps {

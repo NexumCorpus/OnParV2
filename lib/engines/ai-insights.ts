@@ -34,8 +34,7 @@ function getImpactFromSavings(savings: number): AIInsight['impact'] {
 
 // INSIGHT 1: High-waste menu items
 function generateHighWasteMenuInsights(
-  menuItems: MenuItem[],
-  wasteEvents: WasteEvent[]
+  menuItems: MenuItem[]
 ): GeneratedInsight[] {
   if (menuItems.length === 0) return []
 
@@ -326,7 +325,7 @@ export function generateInsights(data: {
   const { inventoryItems, menuItems, wasteEvents, monthlyBudget, currentMonth } = data
 
   const insights: GeneratedInsight[] = [
-    ...generateHighWasteMenuInsights(menuItems, wasteEvents),
+    ...generateHighWasteMenuInsights(menuItems),
     ...generateInventoryOptimizationInsights(inventoryItems),
     ...generateMenuPerformanceInsights(menuItems),
     ...generateBudgetInsights(inventoryItems, monthlyBudget),
