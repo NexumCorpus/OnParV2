@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs'
 
 const nextConfig: NextConfig = {
   // DO NOT set ignoreDuringBuilds for eslint or typescript
@@ -20,4 +21,8 @@ const nextConfig: NextConfig = {
   ],
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  silent: !process.env.CI,
+  disableLogger: true,
+  tunnelRoute: '/monitoring',
+})
