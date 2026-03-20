@@ -65,8 +65,11 @@ export default function LoginPage() {
 
       toast.success('Signed in successfully')
       router.push('/dashboard')
-    } catch {
-      toast.error('An unexpected error occurred. Please try again.')
+      router.refresh()
+    } catch (err) {
+      console.error('Login error:', err)
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred'
+      toast.error(message)
     } finally {
       setIsLoading(false)
     }
