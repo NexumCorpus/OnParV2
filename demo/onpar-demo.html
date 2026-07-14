@@ -253,6 +253,29 @@
   @keyframes pop { from { transform: translateY(8px); opacity: 0; } }
 
   .footer-pitch { margin-top: 28px; text-align: center; color: var(--muted); font-size: 12.5px; }
+
+  /* ---------- roi ---------- */
+  .roi-field { margin-bottom: 14px; }
+  .roi-field label { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-2); font-weight: 600; margin-bottom: 6px; }
+  .roi-field label output { color: var(--ink); font-variant-numeric: tabular-nums; }
+  .roi-field input[type="range"] { width: 100%; accent-color: var(--brand); }
+  .roi-field input[type="number"] {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); color: var(--ink); font: inherit; font-variant-numeric: tabular-nums;
+  }
+  .roi-row { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; font-size: 13.5px; border-bottom: 1px solid var(--grid); }
+  .roi-row:last-of-type { border-bottom: none; }
+  .roi-row .v { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+  .roi-hero { text-align: center; padding: 16px 10px 6px; }
+  .roi-hero .n { font-size: 40px; font-weight: 800; letter-spacing: -.03em; color: var(--brand-ink); }
+  .roi-hero .c { color: var(--muted); font-size: 12.5px; }
+  .k-special { background: #33270f; border: 1px solid #7a5a1d; color: #ffce7a; border-radius: 10px;
+    padding: 10px 16px; margin-bottom: 18px; font-size: 16px; font-weight: 600; }
+
+  @media (max-width: 560px) {
+    .rest-name { display: none; }
+    .top-row { padding: 8px 10px; }
+  }
 </style>
 
 <div class="demo-ribbon">Interactive demo &middot; sample data for a fictional restaurant &middot; every number below updates live as you click</div>
@@ -269,6 +292,7 @@
     <div class="top-actions">
       <button class="ghost-btn" id="pitchBtn" aria-pressed="false" title="Show talking points for each screen">Pitch notes</button>
       <button class="ghost-btn" id="themeBtn" title="Toggle light/dark">Theme</button>
+      <button class="ghost-btn" id="resetBtn" title="Restore original demo data">↺ Reset</button>
     </div>
   </div>
   <nav class="tabs" role="tablist" id="tabs"></nav>
@@ -417,12 +441,55 @@
     <div class="grid" id="insightList" style="gap:10px"></div>
   </section>
 
+  <!-- ============ ROI ============ -->
+  <section id="view-roi" role="tabpanel" hidden>
+    <div class="pitch-note"><b>Close here.</b> Ask their monthly food spend and type it in while they watch. The defaults are deliberately conservative &mdash; even at half these assumptions, Starter pays for itself in the first week. Then: &ldquo;Want me to set up your free trial right now?&rdquo;</div>
+    <h2>What OnPar is worth to <em>your</em> restaurant</h2>
+    <p class="sub">Put in your real numbers &mdash; the math updates live. Assumptions are on the conservative end on purpose.</p>
+    <div class="grid two-col">
+      <div class="card">
+        <h3>Your restaurant</h3>
+        <div class="roi-field">
+          <label for="roiSpend">Monthly food &amp; beverage purchases</label>
+          <input type="number" id="roiSpend" value="32000" min="1000" step="1000">
+        </div>
+        <div class="roi-field">
+          <label for="roiWaste">Current waste rate <output id="roiWasteOut">7%</output></label>
+          <input type="range" id="roiWaste" min="2" max="15" step="0.5" value="7">
+          <div class="kpi-sub">Industry average is 4&ndash;10% of purchases. Most independents who aren't measuring sit near 7%.</div>
+        </div>
+        <div class="roi-field">
+          <label for="roiHrs">Hours/week spent counting &amp; ordering <output id="roiHrsOut">5 hrs</output></label>
+          <input type="range" id="roiHrs" min="0" max="14" step="0.5" value="5">
+        </div>
+        <div class="roi-field">
+          <label for="roiWage">Who does it &mdash; hourly cost</label>
+          <input type="number" id="roiWage" value="18" min="8" step="1">
+        </div>
+      </div>
+      <div class="card">
+        <h3>The math</h3>
+        <div id="roiRows"></div>
+        <div class="roi-hero">
+          <div class="n" id="roiTotal"></div>
+          <div class="c">estimated back in your pocket, per year</div>
+        </div>
+        <div class="roi-row" style="border-top:1px solid var(--grid)">
+          <span>OnPar Starter, billed monthly</span><span class="v">$348 / yr</span>
+        </div>
+        <div class="roi-row"><span>Payback</span><span class="v" id="roiPayback" style="color:var(--brand-ink)"></span></div>
+      </div>
+    </div>
+    <p class="kpi-sub" style="margin-top:12px">Assumes OnPar helps you recover 25% of current waste (users measuring waste typically cut it 30&ndash;50%) and halves time spent on counts &amp; ordering. Estimates, not guarantees &mdash; that's why the first 14 days are free.</p>
+  </section>
+
   <!-- ============ KITCHEN ============ -->
   <section id="view-kitchen" role="tabpanel" hidden>
     <div class="pitch-note"><b>For the line.</b> Mount a $120 tablet by the pass &mdash; this screen auto-refreshes every 60 seconds. The kitchen sees what to use first and what's nearly out before service, not after the 86.</div>
     <h2>Kitchen display</h2>
     <p class="sub">Glanceable, always-on, made for a wall-mounted tablet. (Deliberately dark &mdash; it lives in a dim kitchen.)</p>
     <div class="kitchen">
+      <div class="k-special" id="kSpecial" style="display:none"></div>
       <div class="k-top">
         <div>
           <h3>Harvest &amp; Rye &middot; Line status</h3>
@@ -439,6 +506,10 @@
           <h3 style="margin-bottom:10px">⚠️ Low &mdash; watch the 86 board</h3>
           <div id="kLow"></div>
         </div>
+      </div>
+      <div style="margin-top:22px">
+        <h3 style="margin-bottom:10px">🚫 86 risk tonight &mdash; dishes</h3>
+        <div id="k86"></div>
       </div>
       <div class="k-note">Auto-refreshes every 60s &middot; live from tonight's counts</div>
     </div>
@@ -507,18 +578,26 @@ let monthWaste = 412; // $ this month before today's logging
 const monthPurchases = 12140;
 const monthlyBudget = 12000, budgetSpent = 8420;
 
+let kitchenSpecial = null;
 let insights = [
-  { tone:'', icon:'📉', title:'Order 20% less romaine on Fridays', impact:'Save ~$34/mo',
+  { tone:'', icon:'📉', title:'Order 20% less romaine on Fridays', impact:'Save ~$34/mo', fx:'romaine',
     body:'4-week sell-through shows Friday deliveries consistently outlast demand — 2.1 heads spoil per week on average.', done:false },
-  { tone:'crit', icon:'⏱', title:'8 lbs of salmon expires in 2 days', impact:'Rescue ~$92',
-    body:'Run a salmon special tonight and tomorrow. At current pace, 8 lbs won’t move before expiry.', done:false },
-  { tone:'warn', icon:'💲', title:'Chicken breast up 9% at Valley Meats', impact:'Save ~$28/mo',
-    body:'Valley Meats is $3.85/lb vs a 90-day average of $3.53. Ocean Catch quotes $3.62 for the same spec.', done:false },
-  { tone:'warn', icon:'🍽', title:'Steak Frites margin is 55% — menu average is 71%', impact:'+$4/plate',
-    body:'NY Strip price increases pushed plate cost to $15.29. Reprice to $38, or move to an 8 oz cut.', done:false },
-  { tone:'', icon:'📦', title:'Butter par level looks high', impact:'Free up ~$45',
+  { tone:'crit', icon:'⏱', title:'8 lbs of salmon expires in 2 days', impact:'Rescue ~$92', fx:'salmon',
+    body:'Run a salmon special tonight and tomorrow. At current pace, 8 lbs won’t move before expiry. Applying posts it to the kitchen display.', done:false },
+  { tone:'warn', icon:'💲', title:'Chicken breast up 9% at Valley Meats', impact:'Save ~$28/mo', fx:'chicken',
+    body:'Valley Meats is $3.85/lb vs a 90-day average of $3.53. Ocean Catch quotes $3.62 for the same spec. Applying switches the supplier — watch Chicken Alfredo’s margin on the Recipes tab.', done:false },
+  { tone:'warn', icon:'🍽', title:'Steak Frites margin is 55% — menu average is 71%', impact:'+$4/plate', fx:'steak',
+    body:'NY Strip price increases pushed plate cost to $15.29. Reprice to $38 and move to the 12 oz cut. Applying does both — watch the margin bar fix itself on the Recipes tab.', done:false },
+  { tone:'', icon:'📦', title:'Butter par level looks high', impact:'Free up ~$45', fx:'butter',
     body:'On-hand covers 9 days at current usage. Dropping par from 8 to 5 lbs frees cash without risk.', done:false },
 ];
+const INSIGHT_FX = {
+  romaine: () => { items.find(i => i.id === 2).par = 5; return 'Romaine par updated 6 → 5 heads — order suggestions adjusted'; },
+  salmon:  () => { kitchenSpecial = '⭐ TONIGHT: Pan-Seared Salmon special — move 8 lbs by tomorrow'; return 'Salmon special posted to the kitchen display'; },
+  chicken: () => { const it = items.find(i => i.id === 9); it.price = 3.62; it.sup = 'oc'; return 'Switched chicken to Ocean Catch at $3.62/lb — recipe margins updated'; },
+  steak:   () => { const r = recipes.find(x => x.name === 'Steak Frites'); r.price = 38; r.ings.find(g => g[0] === 11)[1] = 0.75; return 'Steak Frites: $38 + 12 oz cut — margin back above target'; },
+  butter:  () => { items.find(i => i.id === 16).par = 5; return 'Butter par updated 8 → 5 lbs'; },
+};
 
 let pos = [
   { id:'PO-1042', sup:'Ocean Catch Seafood', status:'Sent', when:'Yesterday', lines:[['Gulf Shrimp 16/20','16 lbs',156.00],['Atlantic Salmon','2.65 lbs',30.50]], total:186.50 },
@@ -544,7 +623,7 @@ function toast(msg) {
 /* ================= tabs ================= */
 const TABS = [
   ['dashboard','Dashboard'], ['inventory','Inventory'], ['waste','Waste'],
-  ['purchasing','Purchasing'], ['recipes','Recipes'], ['insights','Insights ✨'], ['kitchen','Kitchen display'],
+  ['purchasing','Purchasing'], ['recipes','Recipes'], ['insights','Insights ✨'], ['roi','ROI'], ['kitchen','Kitchen display'],
 ];
 let activeTab = 'dashboard';
 function renderTabs() {
@@ -829,7 +908,12 @@ function renderInsights() {
 }
 document.addEventListener('click', (e) => {
   const a = e.target.closest('[data-apply]'), d = e.target.closest('[data-dismiss]');
-  if (a) { insights[+a.dataset.apply].done = true; toast('Applied — OnPar adjusts the order suggestion automatically'); renderAll(); }
+  if (a) {
+    const ins = insights[+a.dataset.apply];
+    ins.done = true;
+    const msg = INSIGHT_FX[ins.fx] ? INSIGHT_FX[ins.fx]() : 'Applied';
+    toast(msg); renderAll();
+  }
   if (d) { insights.splice(+d.dataset.dismiss, 1); toast('Dismissed'); renderAll(); }
 });
 
@@ -847,16 +931,57 @@ function renderKitchen() {
     .map(i => `<div class="k-item k-warn"><span>${esc(i.name)}</span>
       <span class="k-meta">${+i.qty.toFixed(1)} ${esc(i.unit)} left</span></div>`).join('')
     || '<div class="k-note">Fully stocked 🎉</div>';
+  const atRisk = recipes.map(r => ({
+    name: r.name,
+    servings: Math.min(...r.ings.map(([id, q]) => Math.floor(items.find(i => i.id === id).qty / q))),
+  })).filter(r => r.servings <= 15).sort((a, b) => a.servings - b.servings);
+  $('#k86').innerHTML = atRisk.map(r =>
+    `<div class="k-item ${r.servings <= 5 ? 'k-crit' : 'k-warn'}"><span>${esc(r.name)}</span>
+      <span class="k-meta">${r.servings === 0 ? '86’D NOW' : '~' + r.servings + ' servings left'}</span></div>`).join('')
+    || '<div class="k-note">Every dish covered for tonight 🎉</div>';
+  const sp = $('#kSpecial');
+  sp.style.display = kitchenSpecial ? '' : 'none';
+  sp.textContent = kitchenSpecial || '';
 }
 setInterval(() => { if (activeTab === 'kitchen') renderKitchen(); }, 30000);
+
+/* ================= roi ================= */
+function renderRoi() {
+  const spend = Math.max(0, +$('#roiSpend').value || 0);
+  const waste = +$('#roiWaste').value;
+  const hrs = +$('#roiHrs').value;
+  const wage = Math.max(0, +$('#roiWage').value || 0);
+  $('#roiWasteOut').textContent = waste + '%';
+  $('#roiHrsOut').textContent = hrs + ' hrs';
+  const wasted = spend * waste / 100;
+  const recovered = wasted * 0.25;
+  const laborNow = hrs * wage * 52 / 12;
+  const laborSaved = laborNow / 2;
+  const monthly = recovered + laborSaved;
+  const annual = monthly * 12;
+  const paybackDays = annual > 348 ? Math.max(1, Math.ceil(348 / (annual / 365))) : null;
+  $('#roiRows').innerHTML = `
+    <div class="roi-row"><span>Food currently wasted / month</span><span class="v" style="color:var(--crit)">${fmt$(Math.round(wasted))}</span></div>
+    <div class="roi-row"><span>Recovered with OnPar (25% of waste)</span><span class="v">${fmt$(Math.round(recovered))} / mo</span></div>
+    <div class="roi-row"><span>Counting &amp; ordering labor today</span><span class="v">${fmt$(Math.round(laborNow))} / mo</span></div>
+    <div class="roi-row"><span>Labor saved (counts in half the time)</span><span class="v">${fmt$(Math.round(laborSaved))} / mo</span></div>`;
+  $('#roiTotal').textContent = fmt$(Math.round(annual));
+  $('#roiPayback').textContent = paybackDays
+    ? `pays for itself in ~${paybackDays} day${paybackDays === 1 ? '' : 's'} · ${Math.round(annual / 348)}× return`
+    : 'adjust the numbers above';
+}
+['roiSpend', 'roiWaste', 'roiHrs', 'roiWage'].forEach(id => {
+  document.addEventListener('input', (e) => { if (e.target.id === id) renderRoi(); });
+});
 
 /* ================= shell ================= */
 function renderAll() {
   renderTabs();
   TABS.forEach(([id]) => { $('#view-' + id).hidden = id !== activeTab; });
   renderDashboard(); renderInventory(); renderWaste();
-  renderPurchasing(); renderRecipes(); renderInsights(); renderKitchen();
+  renderPurchasing(); renderRecipes(); renderInsights(); renderRoi(); renderKitchen();
 }
+$('#resetBtn').addEventListener('click', () => location.reload());
 $('#pitchBtn').addEventListener('click', () => {
   const on = document.body.classList.toggle('pitch');
   $('#pitchBtn').setAttribute('aria-pressed', on);
