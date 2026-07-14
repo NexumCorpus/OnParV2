@@ -1,0 +1,874 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+<title>OnPar — Live Product Demo</title>
+<style>
+  :root {
+    --bg: #f6f8f6;
+    --card: #ffffff;
+    --ink: #17211b;
+    --ink-2: #55645b;
+    --muted: #87938b;
+    --line: #e2e8e3;
+    --grid: #eaeeea;
+    --brand: #16a34a; --mark: #16a34a;
+    --brand-strong: #15803d;
+    --brand-ink: #116434;
+    --brand-soft: #e8f6ee;
+    --warn: #b45309;
+    --warn-soft: #fdf1dc;
+    --crit: #cc2f2f;
+    --crit-soft: #fdeaea;
+    --shadow: 0 1px 2px rgba(23,33,27,.05), 0 4px 14px rgba(23,33,27,.05);
+    --radius: 10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1411; --card: #17211a; --ink: #e8efe9; --ink-2: #a7b4aa;
+      --muted: #778379; --line: #263028; --grid: #212b23;
+      --brand: #2fbf66; --mark: #22ab5b; --brand-strong: #4ccf7e; --brand-ink: #7fdda2;
+      --brand-soft: #14301f; --warn: #e8a33d; --warn-soft: #33270f;
+      --crit: #ef6161; --crit-soft: #3a1717;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1411; --card: #17211a; --ink: #e8efe9; --ink-2: #a7b4aa;
+    --muted: #778379; --line: #263028; --grid: #212b23;
+    --brand: #2fbf66; --mark: #22ab5b; --brand-strong: #4ccf7e; --brand-ink: #7fdda2;
+    --brand-soft: #14301f; --warn: #e8a33d; --warn-soft: #33270f;
+    --crit: #ef6161; --crit-soft: #3a1717;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+  }
+  :root[data-theme="light"] {
+    --bg: #f6f8f6; --card: #ffffff; --ink: #17211b; --ink-2: #55645b;
+    --muted: #87938b; --line: #e2e8e3; --grid: #eaeeea;
+    --brand: #16a34a; --mark: #16a34a; --brand-strong: #15803d; --brand-ink: #116434;
+    --brand-soft: #e8f6ee; --warn: #b45309; --warn-soft: #fdf1dc;
+    --crit: #cc2f2f; --crit-soft: #fdeaea;
+    --shadow: 0 1px 2px rgba(23,33,27,.05), 0 4px 14px rgba(23,33,27,.05);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+  button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+
+  /* ---------- header ---------- */
+  .top {
+    position: sticky; top: 0; z-index: 40; background: var(--card);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-row {
+    max-width: 1100px; margin: 0 auto; padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; }
+  .logo svg { flex: none; }
+  .rest-name {
+    font-size: 13px; color: var(--ink-2); padding: 3px 10px;
+    border: 1px solid var(--line); border-radius: 999px; white-space: nowrap;
+  }
+  .top-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+  .ghost-btn {
+    background: none; border: 1px solid var(--line); color: var(--ink-2);
+    border-radius: 8px; padding: 5px 11px; font-size: 13px;
+  }
+  .ghost-btn:hover { border-color: var(--brand); color: var(--brand-ink); }
+  .ghost-btn[aria-pressed="true"] { background: var(--warn-soft); border-color: var(--warn); color: var(--warn); font-weight: 600; }
+
+  .tabs {
+    max-width: 1100px; margin: 0 auto; padding: 0 8px;
+    display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    background: none; border: none; border-bottom: 2px solid transparent;
+    padding: 9px 13px; color: var(--ink-2); font-size: 14px; white-space: nowrap;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-selected="true"] { color: var(--brand-ink); border-bottom-color: var(--brand); font-weight: 600; }
+
+  .demo-ribbon {
+    background: var(--brand-soft); color: var(--brand-ink); font-size: 12.5px;
+    text-align: center; padding: 5px 14px;
+  }
+
+  /* ---------- layout ---------- */
+  main { max-width: 1100px; margin: 0 auto; padding: 18px 16px 64px; }
+  section[hidden] { display: none; }
+  .pitch-note {
+    display: none; border: 1px solid var(--warn); background: var(--warn-soft);
+    color: var(--ink); border-radius: var(--radius); padding: 10px 14px;
+    margin-bottom: 16px; font-size: 13.5px;
+  }
+  .pitch-note b { color: var(--warn); }
+  body.pitch .pitch-note { display: block; }
+
+  h2 { font-size: 20px; margin: 0 0 4px; letter-spacing: -.01em; text-wrap: balance; }
+  .sub { color: var(--ink-2); font-size: 13.5px; margin: 0 0 16px; }
+  .grid { display: grid; gap: 14px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .two-col { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 760px) { .two-col { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow);
+  }
+  .card h3 { margin: 0 0 10px; font-size: 14px; color: var(--ink-2); font-weight: 600; }
+  .kpi-val { font-size: 26px; font-weight: 700; letter-spacing: -.02em; }
+  .kpi-sub { font-size: 12.5px; color: var(--muted); }
+  .kpi-flag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; margin-top: 4px; }
+  .kpi-flag.warn { color: var(--warn); }
+  .kpi-flag.crit { color: var(--crit); }
+  .kpi-flag.good { color: var(--brand-ink); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 600; padding: 2px 9px; white-space: nowrap;
+  }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.crit { background: var(--crit-soft); color: var(--crit); }
+  .badge.good { background: var(--brand-soft); color: var(--brand-ink); }
+  .badge.neutral { background: var(--bg); color: var(--ink-2); border: 1px solid var(--line); }
+
+  .btn {
+    background: var(--brand); border: none; color: #fff; font-weight: 600;
+    border-radius: 8px; padding: 8px 16px; font-size: 14px;
+  }
+  :root[data-theme="dark"] .btn { color: #06130b; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn { color: #06130b; } }
+  .btn:hover { background: var(--brand-strong); }
+  .btn.small { padding: 5px 12px; font-size: 13px; }
+  .btn.outline { background: none; border: 1px solid var(--line); color: var(--ink-2); font-weight: 500; }
+  .btn.outline:hover { border-color: var(--brand); color: var(--brand-ink); background: none; }
+
+  /* ---------- tables ---------- */
+  .tbl-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th { text-align: left; color: var(--muted); font-weight: 600; font-size: 11.5px;
+       text-transform: uppercase; letter-spacing: .05em; padding: 8px 10px;
+       border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover td { background: color-mix(in srgb, var(--brand-soft) 40%, transparent); }
+
+  .stepper { display: inline-flex; align-items: center; gap: 6px; }
+  .stepper button {
+    width: 26px; height: 26px; border-radius: 7px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); font-weight: 700; line-height: 1;
+  }
+  .stepper button:hover { border-color: var(--brand); color: var(--brand-ink); }
+  .stepper .qty { min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* ---------- forms ---------- */
+  .frm { display: grid; gap: 10px; grid-template-columns: 1.4fr .6fr 1fr auto; align-items: end; }
+  @media (max-width: 760px) { .frm { grid-template-columns: 1fr 1fr; } }
+  .frm label { font-size: 12px; color: var(--ink-2); font-weight: 600; display: block; margin-bottom: 4px; }
+  .frm select, .frm input {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px;
+    background: var(--card); color: var(--ink); font: inherit; font-size: 14px;
+  }
+
+  /* ---------- lists ---------- */
+  .alert-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--grid); font-size: 13.5px; }
+  .alert-row:last-child { border-bottom: none; }
+  .alert-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .alert-row .when { margin-left: auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
+
+  .insight { border-left: 3px solid var(--brand); padding: 12px 14px; background: var(--card);
+             border-radius: 8px; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .insight.warn { border-left-color: var(--warn); }
+  .insight.crit { border-left-color: var(--crit); }
+  .insight h4 { margin: 0 0 4px; font-size: 14.5px; }
+  .insight p { margin: 0 0 10px; font-size: 13.5px; color: var(--ink-2); }
+  .insight .impact { font-weight: 700; color: var(--brand-ink); }
+  .insight.done { opacity: .5; }
+
+  /* ---------- recipes ---------- */
+  .recipe-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  .r-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .r-head .price { font-weight: 700; font-size: 17px; }
+  .margin-bar { height: 6px; border-radius: 3px; background: var(--grid); margin: 8px 0 4px; overflow: hidden; }
+  .margin-bar i { display: block; height: 100%; border-radius: 3px; background: var(--brand); }
+  .margin-bar i.low { background: var(--warn); }
+  .ing { font-size: 12.5px; color: var(--ink-2); display: flex; justify-content: space-between; padding: 2px 0; }
+  .ing .c { font-variant-numeric: tabular-nums; }
+
+  /* ---------- purchasing ---------- */
+  .po { display: flex; flex-direction: column; gap: 8px; }
+  .po-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .po-head .total { margin-left: auto; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ---------- kitchen ---------- */
+  .kitchen {
+    background: #0c120e; color: #eef5ef; border-radius: 14px; padding: 26px;
+    border: 1px solid #1d2a20;
+  }
+  .kitchen .k-top { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .kitchen h3 { color: #8fa398; margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; }
+  .kitchen .clock { font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .k-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 700px) { .k-cols { grid-template-columns: 1fr; } }
+  .k-item { display: flex; justify-content: space-between; gap: 10px; padding: 11px 0; border-bottom: 1px solid #1d2a20; font-size: 19px; font-weight: 600; }
+  .k-item .k-meta { color: #8fa398; font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .k-item.k-crit .k-meta { color: #ff8a8a; }
+  .k-item.k-warn .k-meta { color: #ffce7a; }
+  .k-note { color: #5d6f64; font-size: 12.5px; margin-top: 16px; }
+
+  /* ---------- charts ---------- */
+  .chart-wrap { position: relative; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; }
+  #tip {
+    position: fixed; z-index: 90; pointer-events: none; background: var(--ink);
+    color: var(--bg); font-size: 12.5px; border-radius: 7px; padding: 6px 10px;
+    box-shadow: var(--shadow); display: none; max-width: 240px;
+  }
+  #tip b { font-variant-numeric: tabular-nums; }
+  .bench { display: flex; flex-direction: column; gap: 6px; }
+  .bench-track { position: relative; height: 14px; border-radius: 7px;
+    background: linear-gradient(90deg, var(--brand-soft), var(--warn-soft) 55%, var(--crit-soft)); }
+  .bench-mark { position: absolute; top: -5px; width: 4px; height: 24px; border-radius: 2px; background: var(--brand-strong); }
+  .bench-scale { display: flex; justify-content: space-between; color: var(--muted); font-size: 11.5px; }
+
+  /* ---------- toast ---------- */
+  #toasts { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 100;
+            display: flex; flex-direction: column; gap: 8px; align-items: center; }
+  .toast { background: var(--ink); color: var(--bg); padding: 9px 18px; border-radius: 999px;
+           font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow); animation: pop .18s ease-out; }
+  @keyframes pop { from { transform: translateY(8px); opacity: 0; } }
+
+  .footer-pitch { margin-top: 28px; text-align: center; color: var(--muted); font-size: 12.5px; }
+</style>
+
+<div class="demo-ribbon">Interactive demo &middot; sample data for a fictional restaurant &middot; every number below updates live as you click</div>
+
+<header class="top">
+  <div class="top-row">
+    <span class="logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <path d="M4 3v7a2.5 2.5 0 0 0 5 0V3M6.5 3v18"/><path d="M15 3c-1.5 1.8-2 4.5-2 7 0 2 .8 3 2.5 3S18 12 18 10c0-2.5-.5-5.2-2-7zM16.5 13v8"/>
+      </svg>
+      OnPar
+    </span>
+    <span class="rest-name">Harvest &amp; Rye &middot; Bar + Kitchen</span>
+    <div class="top-actions">
+      <button class="ghost-btn" id="pitchBtn" aria-pressed="false" title="Show talking points for each screen">Pitch notes</button>
+      <button class="ghost-btn" id="themeBtn" title="Toggle light/dark">Theme</button>
+    </div>
+  </div>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+</header>
+
+<main>
+  <!-- ============ DASHBOARD ============ -->
+  <section id="view-dashboard" role="tabpanel">
+    <div class="pitch-note"><b>Open here.</b> Ask: &ldquo;How are you tracking inventory today &mdash; clipboard and a spreadsheet?&rdquo; Then point at the savings tile: OnPar pays for itself if it rescues <i>one</i> case of protein a month.</div>
+    <h2>Good afternoon 👋</h2>
+    <p class="sub">Here's what needs your attention at Harvest &amp; Rye today.</p>
+    <div class="grid kpis" id="kpiRow"></div>
+    <div style="height:14px"></div>
+    <div class="grid two-col">
+      <div class="card">
+        <h3>Food budget &mdash; July</h3>
+        <div class="kpi-val" id="budgetVal"></div>
+        <div class="margin-bar" style="height:8px;margin-top:10px"><i id="budgetBar" style="width:0%"></i></div>
+        <div class="kpi-sub" id="budgetSub"></div>
+      </div>
+      <div class="card">
+        <h3>Estimated savings this month</h3>
+        <div class="kpi-val" style="color:var(--brand-ink)" id="savingsVal"></div>
+        <div class="kpi-sub">From catching low stock early, rescuing expiring items, and waste reduction.</div>
+      </div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="grid two-col">
+      <div class="card">
+        <h3>Waste cost &mdash; last 21 days</h3>
+        <div class="chart-wrap" id="wasteTrend"></div>
+      </div>
+      <div class="card">
+        <h3>Inventory value by category</h3>
+        <div class="chart-wrap" id="catBars"></div>
+      </div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="card">
+      <h3>Recent alerts</h3>
+      <div id="alertList"></div>
+    </div>
+  </section>
+
+  <!-- ============ INVENTORY ============ -->
+  <section id="view-inventory" role="tabpanel" hidden>
+    <div class="pitch-note"><b>The daily driver.</b> Counts happen on a phone in the walk-in &mdash; tap the steppers and watch Low Stock update everywhere, live. Par levels mean the system knows when to reorder before you run out mid-service. CSV import gets an existing spreadsheet in within minutes.</div>
+    <h2>Inventory</h2>
+    <p class="sub" id="invSub"></p>
+    <div class="card">
+      <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap">
+        <input id="invSearch" placeholder="Search items&hellip;" style="flex:1; min-width:160px; padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font:inherit">
+        <select id="invFilter" style="padding:8px 12px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font:inherit">
+          <option value="">All categories</option>
+        </select>
+        <button class="btn small outline" onclick="toast('In the full app this imports your existing sheet — 500 rows in one go')">Import CSV</button>
+        <button class="btn small" onclick="toast('Add-item form opens here in the full app (with barcode lookup)')">+ Add item</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Item</th><th>Category</th><th>On hand</th><th class="num">Par</th><th class="num">$/unit</th><th>Status</th></tr></thead>
+          <tbody id="invBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WASTE ============ -->
+  <section id="view-waste" role="tabpanel" hidden>
+    <div class="pitch-note"><b>The money slide.</b> Restaurants throw away 4&ndash;10% of what they buy. Log waste in ten seconds at the bin &mdash; then it shows up in dollars, by ingredient, by reason. Try logging one below and watch the numbers move.</div>
+    <h2>Waste tracking</h2>
+    <p class="sub">Every entry becomes a dollar figure your P&amp;L can see.</p>
+    <div class="grid kpis" id="wasteKpis"></div>
+    <div style="height:14px"></div>
+    <div class="card">
+      <h3>Log waste</h3>
+      <div class="frm">
+        <div><label for="wItem">Item</label><select id="wItem"></select></div>
+        <div><label for="wQty">Qty</label><input id="wQty" type="number" min="0.1" step="0.1" value="1"></div>
+        <div><label for="wReason">Reason</label>
+          <select id="wReason">
+            <option>Spoiled</option><option>Over-prepped</option><option>Plate waste</option><option>Trim waste</option><option>Dropped / damaged</option>
+          </select>
+        </div>
+        <div><button class="btn" id="wLog">Log it</button></div>
+      </div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="grid two-col">
+      <div class="card">
+        <h3>vs. industry benchmark</h3>
+        <div class="bench">
+          <div style="font-size:13.5px" id="benchLabel"></div>
+          <div class="bench-track"><div class="bench-mark" id="benchMark"></div></div>
+          <div class="bench-scale"><span>0%</span><span>4% &mdash; best in class</span><span>10%+ &mdash; industry high</span></div>
+        </div>
+        <div style="height:16px"></div>
+        <h3>Top waste this month</h3>
+        <div class="tbl-wrap"><table>
+          <thead><tr><th>Item</th><th>Main reason</th><th class="num">Cost</th></tr></thead>
+          <tbody id="topWaste"></tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <h3>Recent entries</h3>
+        <div id="wasteEvents"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PURCHASING ============ -->
+  <section id="view-purchasing" role="tabpanel" hidden>
+    <div class="pitch-note"><b>One tap to reorder.</b> OnPar already knows what's below par. Hit &ldquo;Generate purchase orders&rdquo; &mdash; it drafts POs grouped by supplier with suggested quantities. No more Sunday-night texting five sales reps.</div>
+    <h2>Purchasing</h2>
+    <p class="sub" id="poSub"></p>
+    <div class="card">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0">Suggested reorder</h3>
+          <div class="kpi-sub" id="suggestSub"></div>
+        </div>
+        <button class="btn" id="genPo" style="margin-left:auto">Generate purchase orders</button>
+      </div>
+      <div class="tbl-wrap" style="margin-top:10px"><table>
+        <thead><tr><th>Item</th><th>Supplier</th><th class="num">On hand</th><th class="num">Par</th><th class="num">Suggested</th><th class="num">Est. cost</th></tr></thead>
+        <tbody id="suggestBody"></tbody>
+      </table></div>
+    </div>
+    <div style="height:14px"></div>
+    <div class="grid" id="poList"></div>
+  </section>
+
+  <!-- ============ RECIPES ============ -->
+  <section id="view-recipes" role="tabpanel" hidden>
+    <div class="pitch-note"><b>Plate costs, live.</b> Every recipe is costed from today's ingredient prices &mdash; margins update when a supplier raises prices. Point out Steak Frites running under the 65% target, and the &ldquo;servings left&rdquo; count driven by real stock.</div>
+    <h2>Recipes &amp; plate costs</h2>
+    <p class="sub">Margins computed from current ingredient prices and live stock.</p>
+    <div class="grid recipe-grid" id="recipeGrid"></div>
+  </section>
+
+  <!-- ============ INSIGHTS ============ -->
+  <section id="view-insights" role="tabpanel" hidden>
+    <div class="pitch-note"><b>The brain.</b> Forecasting from sell-through, supplier price watch, expiry rescue, par tuning. Each card is a concrete action with a dollar figure attached &mdash; hit Apply on one.</div>
+    <h2>Insights</h2>
+    <p class="sub" id="insightSub"></p>
+    <div class="grid" id="insightList" style="gap:10px"></div>
+  </section>
+
+  <!-- ============ KITCHEN ============ -->
+  <section id="view-kitchen" role="tabpanel" hidden>
+    <div class="pitch-note"><b>For the line.</b> Mount a $120 tablet by the pass &mdash; this screen auto-refreshes every 60 seconds. The kitchen sees what to use first and what's nearly out before service, not after the 86.</div>
+    <h2>Kitchen display</h2>
+    <p class="sub">Glanceable, always-on, made for a wall-mounted tablet. (Deliberately dark &mdash; it lives in a dim kitchen.)</p>
+    <div class="kitchen">
+      <div class="k-top">
+        <div>
+          <h3>Harvest &amp; Rye &middot; Line status</h3>
+          <div style="color:#8fa398; font-size:13px" id="kDate"></div>
+        </div>
+        <div class="clock" id="kClock"></div>
+      </div>
+      <div class="k-cols">
+        <div>
+          <h3 style="margin-bottom:10px">⏱ Use first</h3>
+          <div id="kUseFirst"></div>
+        </div>
+        <div>
+          <h3 style="margin-bottom:10px">⚠️ Low &mdash; watch the 86 board</h3>
+          <div id="kLow"></div>
+        </div>
+      </div>
+      <div class="k-note">Auto-refreshes every 60s &middot; live from tonight's counts</div>
+    </div>
+  </section>
+
+  <div class="footer-pitch">
+    OnPar &middot; Free up to 50 items &middot; Starter $29/mo &middot; Professional $79/mo &middot; 14-day free trial, no card required
+  </div>
+</main>
+
+<div id="tip" role="presentation"></div>
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* ================= data ================= */
+const suppliers = {
+  ff: 'Fresh Farms Direct', oc: 'Ocean Catch Seafood', vm: 'Valley Meats Co',
+  ab: 'Artisan Bakery Supply', bd: 'Bella Dairy'
+};
+// qty = on hand, par = reorder point, max = target stock, exp = days until expiry (null = shelf-stable)
+let items = [
+  { id:1,  name:'Roma Tomatoes',      cat:'Produce', qty:8,  unit:'lbs',     par:10, max:40,  price:2.20,  sup:'ff', exp:3 },
+  { id:2,  name:'Romaine Lettuce',    cat:'Produce', qty:4,  unit:'heads',   par:6,  max:24,  price:1.80,  sup:'ff', exp:2 },
+  { id:3,  name:'Yellow Onions',      cat:'Produce', qty:32, unit:'lbs',     par:15, max:60,  price:0.90,  sup:'ff', exp:14 },
+  { id:4,  name:'Garlic',             cat:'Produce', qty:6,  unit:'lbs',     par:4,  max:12,  price:3.60,  sup:'ff', exp:21 },
+  { id:5,  name:'Russet Potatoes',    cat:'Produce', qty:45, unit:'lbs',     par:25, max:80,  price:0.70,  sup:'ff', exp:20 },
+  { id:6,  name:'Fresh Basil',        cat:'Produce', qty:2,  unit:'bunches', par:3,  max:10,  price:2.50,  sup:'ff', exp:2 },
+  { id:7,  name:'Atlantic Salmon',    cat:'Seafood', qty:12, unit:'lbs',     par:10, max:30,  price:11.50, sup:'oc', exp:2 },
+  { id:8,  name:'Gulf Shrimp 16/20',  cat:'Seafood', qty:9,  unit:'lbs',     par:8,  max:25,  price:9.75,  sup:'oc', exp:30 },
+  { id:9,  name:'Chicken Breast',     cat:'Meat',    qty:18, unit:'lbs',     par:20, max:50,  price:3.85,  sup:'vm', exp:4 },
+  { id:10, name:'Ground Beef 80/20',  cat:'Meat',    qty:22, unit:'lbs',     par:15, max:45,  price:4.60,  sup:'vm', exp:3 },
+  { id:11, name:'NY Strip Steak',     cat:'Meat',    qty:14, unit:'lbs',     par:8,  max:24,  price:13.90, sup:'vm', exp:5 },
+  { id:12, name:'Whole Milk',         cat:'Dairy',   qty:6,  unit:'gallons', par:5,  max:16,  price:3.40,  sup:'bd', exp:5 },
+  { id:13, name:'Heavy Cream',        cat:'Dairy',   qty:3,  unit:'liters',  par:4,  max:12,  price:4.10,  sup:'bd', exp:6 },
+  { id:14, name:'Mozzarella',         cat:'Dairy',   qty:11, unit:'lbs',     par:8,  max:20,  price:4.95,  sup:'bd', exp:9 },
+  { id:15, name:'Cheddar',            cat:'Dairy',   qty:9,  unit:'lbs',     par:6,  max:18,  price:4.40,  sup:'bd', exp:14 },
+  { id:16, name:'Butter',             cat:'Dairy',   qty:12, unit:'lbs',     par:8,  max:24,  price:3.75,  sup:'bd', exp:30 },
+  { id:17, name:'Large Eggs',         cat:'Dairy',   qty:18, unit:'dozen',   par:10, max:30,  price:2.90,  sup:'bd', exp:12 },
+  { id:18, name:'AP Flour',           cat:'Pantry',  qty:70, unit:'lbs',     par:40, max:120, price:0.55,  sup:'ab', exp:null },
+  { id:19, name:'Olive Oil',          cat:'Pantry',  qty:9,  unit:'liters',  par:6,  max:18,  price:8.90,  sup:'ab', exp:null },
+  { id:20, name:'Jasmine Rice',       cat:'Pantry',  qty:38, unit:'lbs',     par:20, max:80,  price:1.10,  sup:'ab', exp:null },
+  { id:21, name:'Sourdough Loaves',   cat:'Bakery',  qty:8,  unit:'loaves',  par:10, max:30,  price:2.80,  sup:'ab', exp:1 },
+  { id:22, name:'Burger Buns',        cat:'Bakery',  qty:40, unit:'pieces',  par:36, max:120, price:0.45,  sup:'ab', exp:2 },
+];
+
+const recipes = [
+  { name:'Pan-Seared Salmon', cat:'Main', price:28, ings:[[7,.5],[6,.1],[16,.1],[5,.75]] },
+  { name:'Classic Smash Burger', cat:'Main', price:16, ings:[[10,.33],[22,1],[15,.15],[2,.1],[1,.2]] },
+  { name:'Chicken Alfredo', cat:'Pasta', price:19, ings:[[9,.5],[13,.2],[18,.15],[16,.1],[4,.05]] },
+  { name:'Margherita Pizza', cat:'Pizza', price:15, ings:[[18,.5],[14,.3],[1,.4],[6,.2],[19,.05]] },
+  { name:'Shrimp Fried Rice', cat:'Main', price:17, ings:[[8,.4],[20,.5],[17,.17],[3,.2]] },
+  { name:'Steak Frites', cat:'Main', price:34, ings:[[11,1],[5,1],[16,.1]] },
+];
+
+// 20 days of history ($ wasted/day); today (index 20) starts low and grows as you log
+let wasteTrend = [14,22,9,31,18,12,26,15,8,19,34,11,16,24,9,13,21,17,12,15,6];
+let wasteEvents = [
+  { item:'Romaine Lettuce', qty:2, unit:'heads', reason:'Spoiled', cost:3.60, when:'Yesterday, 9:12 PM' },
+  { item:'Atlantic Salmon', qty:0.8, unit:'lbs', reason:'Trim waste', cost:9.20, when:'Yesterday, 5:40 PM' },
+  { item:'Whole Milk', qty:0.5, unit:'gallons', reason:'Spoiled', cost:1.70, when:'Yesterday, 10:05 AM' },
+  { item:'Chicken Alfredo', qty:2, unit:'plates', reason:'Over-prepped', cost:9.40, when:'Tue, 10:44 PM' },
+  { item:'Roma Tomatoes', qty:3, unit:'lbs', reason:'Spoiled', cost:6.60, when:'Tue, 8:15 AM' },
+];
+let monthWaste = 412; // $ this month before today's logging
+const monthPurchases = 12140;
+const monthlyBudget = 12000, budgetSpent = 8420;
+
+let insights = [
+  { tone:'', icon:'📉', title:'Order 20% less romaine on Fridays', impact:'Save ~$34/mo',
+    body:'4-week sell-through shows Friday deliveries consistently outlast demand — 2.1 heads spoil per week on average.', done:false },
+  { tone:'crit', icon:'⏱', title:'8 lbs of salmon expires in 2 days', impact:'Rescue ~$92',
+    body:'Run a salmon special tonight and tomorrow. At current pace, 8 lbs won’t move before expiry.', done:false },
+  { tone:'warn', icon:'💲', title:'Chicken breast up 9% at Valley Meats', impact:'Save ~$28/mo',
+    body:'Valley Meats is $3.85/lb vs a 90-day average of $3.53. Ocean Catch quotes $3.62 for the same spec.', done:false },
+  { tone:'warn', icon:'🍽', title:'Steak Frites margin is 55% — menu average is 71%', impact:'+$4/plate',
+    body:'NY Strip price increases pushed plate cost to $15.29. Reprice to $38, or move to an 8 oz cut.', done:false },
+  { tone:'', icon:'📦', title:'Butter par level looks high', impact:'Free up ~$45',
+    body:'On-hand covers 9 days at current usage. Dropping par from 8 to 5 lbs frees cash without risk.', done:false },
+];
+
+let pos = [
+  { id:'PO-1042', sup:'Ocean Catch Seafood', status:'Sent', when:'Yesterday', lines:[['Gulf Shrimp 16/20','16 lbs',156.00],['Atlantic Salmon','2.65 lbs',30.50]], total:186.50 },
+  { id:'PO-1041', sup:'Valley Meats Co', status:'Received', when:'Last week', lines:[['Chicken Breast','40 lbs',154.00],['Ground Beef 80/20','30 lbs',138.00],['NY Strip Steak','10 lbs',139.00]], total:431.00 },
+];
+let poCounter = 1043;
+
+/* ================= helpers ================= */
+const $ = (s) => document.querySelector(s);
+const fmt$ = (n) => '$' + n.toLocaleString('en-US', { maximumFractionDigits: n >= 1000 ? 0 : 2, minimumFractionDigits: n >= 1000 ? 0 : 2 });
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lowItems = () => items.filter(i => i.qty <= i.par);
+const expItems = () => items.filter(i => i.exp !== null && i.exp <= 3 && i.qty > 0);
+const totalValue = () => items.reduce((s, i) => s + i.qty * i.price, 0);
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  $('#toasts').appendChild(t);
+  setTimeout(() => t.remove(), 2600);
+}
+
+/* ================= tabs ================= */
+const TABS = [
+  ['dashboard','Dashboard'], ['inventory','Inventory'], ['waste','Waste'],
+  ['purchasing','Purchasing'], ['recipes','Recipes'], ['insights','Insights ✨'], ['kitchen','Kitchen display'],
+];
+let activeTab = 'dashboard';
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map(([id, label]) =>
+    `<button class="tab" role="tab" aria-selected="${id === activeTab}" data-tab="${id}">${label}</button>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const tb = e.target.closest('[data-tab]');
+  if (tb) { activeTab = tb.dataset.tab; renderAll(); window.scrollTo({ top: 0 }); }
+});
+
+/* ================= dashboard ================= */
+function renderDashboard() {
+  const low = lowItems().length, exp = expItems().length;
+  $('#kpiRow').innerHTML = `
+    <div class="card"><h3>Low stock</h3><div class="kpi-val">${low}</div>
+      <div class="kpi-flag ${low ? 'warn' : 'good'}">${low ? '⚠ below par — reorder' : '✓ all above par'}</div></div>
+    <div class="card"><h3>Expiring soon</h3><div class="kpi-val">${exp}</div>
+      <div class="kpi-flag ${exp ? 'crit' : 'good'}">${exp ? '⏱ within 3 days' : '✓ nothing at risk'}</div></div>
+    <div class="card"><h3>Total items</h3><div class="kpi-val">${items.length}</div>
+      <div class="kpi-sub">across ${new Set(items.map(i => i.cat)).size} categories</div></div>
+    <div class="card"><h3>Inventory value</h3><div class="kpi-val">${fmt$(totalValue())}</div>
+      <div class="kpi-sub">on hand right now</div></div>`;
+
+  $('#budgetVal').textContent = fmt$(budgetSpent);
+  const pct = Math.round(budgetSpent / monthlyBudget * 100);
+  $('#budgetBar').style.width = pct + '%';
+  $('#budgetBar').className = pct > 90 ? 'low' : '';
+  $('#budgetSub').textContent = `${pct}% of ${fmt$(monthlyBudget)} budget · day 14 of 31 — on pace`;
+  $('#savingsVal').textContent = fmt$(486);
+
+  const alerts = [
+    ...expItems().map(i => ({ dot: 'var(--crit)', text: `${i.name} expires in ${i.exp} day${i.exp === 1 ? '' : 's'} — ${i.qty} ${i.unit} on hand`, when: 'today' })),
+    ...lowItems().map(i => ({ dot: 'var(--warn)', text: `${i.name} below par (${i.qty} / ${i.par} ${i.unit})`, when: 'today' })),
+  ].slice(0, 7);
+  $('#alertList').innerHTML = alerts.map(a =>
+    `<div class="alert-row"><span class="alert-dot" style="background:${a.dot}"></span>${esc(a.text)}<span class="when">${a.when}</span></div>`).join('');
+
+  drawWasteTrend(); drawCatBars();
+}
+
+/* ---- charts (inline SVG, hover layer) ---- */
+const tip = () => $('#tip');
+function showTip(html, x, y) {
+  const t = tip(); t.innerHTML = html; t.style.display = 'block';
+  const w = t.offsetWidth;
+  t.style.left = Math.min(Math.max(8, x - w / 2), window.innerWidth - w - 8) + 'px';
+  t.style.top = (y - t.offsetHeight - 12) + 'px';
+}
+function hideTip() { tip().style.display = 'none'; }
+
+function drawWasteTrend() {
+  const W = 460, H = 190, P = { l: 34, r: 10, t: 12, b: 22 };
+  const data = wasteTrend;
+  const max = Math.max(...data, 40) * 1.15;
+  const x = (i) => P.l + i * (W - P.l - P.r) / (data.length - 1);
+  const y = (v) => H - P.b - v / max * (H - P.t - P.b);
+  const line = data.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('');
+  const area = `${line} L${x(data.length - 1).toFixed(1)},${H - P.b} L${P.l},${H - P.b} Z`;
+  const gridVals = [0, Math.round(max / 2 / 5) * 5, Math.round(max / 5) * 5];
+  const labels = data.map((_, i) => { const d = new Date(Date.now() - (data.length - 1 - i) * 864e5); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); });
+  const last = data.length - 1;
+  $('#wasteTrend').innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" aria-label="Daily waste cost, last 21 days">
+    ${gridVals.map(v => `<line x1="${P.l}" x2="${W - P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)" stroke-width="1"/>
+      <text x="${P.l - 6}" y="${y(v) + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-variant-numeric="tabular-nums">$${v}</text>`).join('')}
+    <path d="${area}" fill="var(--mark)" opacity=".12"/>
+    <path d="${line}" fill="none" stroke="var(--mark)" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="${x(last)}" cy="${y(data[last])}" r="4" fill="var(--mark)" stroke="var(--card)" stroke-width="2"/>
+    <line id="wtCross" x1="0" x2="0" y1="${P.t}" y2="${H - P.b}" stroke="var(--muted)" stroke-width="1" stroke-dasharray="3 3" opacity="0"/>
+    <circle id="wtDot" r="4" fill="var(--mark)" stroke="var(--card)" stroke-width="2" opacity="0"/>
+    <text x="${P.l}" y="${H - 6}" font-size="10" fill="var(--muted)">${labels[0]}</text>
+    <text x="${W - P.r}" y="${H - 6}" font-size="10" fill="var(--muted)" text-anchor="end">today</text>
+    <rect x="${P.l}" y="${P.t}" width="${W - P.l - P.r}" height="${H - P.t - P.b}" fill="transparent" id="wtHit"/>
+  </svg>`;
+  const svg = $('#wasteTrend svg'), hit = $('#wtHit'), cross = $('#wtCross'), dot = $('#wtDot');
+  hit.addEventListener('pointermove', (e) => {
+    const r = svg.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width * W;
+    const i = Math.round((px - P.l) / ((W - P.l - P.r) / (data.length - 1)));
+    const ci = Math.max(0, Math.min(data.length - 1, i));
+    cross.setAttribute('x1', x(ci)); cross.setAttribute('x2', x(ci)); cross.setAttribute('opacity', '1');
+    dot.setAttribute('cx', x(ci)); dot.setAttribute('cy', y(data[ci])); dot.setAttribute('opacity', '1');
+    showTip(`${labels[ci]}${ci === last ? ' (today)' : ''} · waste <b>${fmt$(data[ci])}</b>`, e.clientX, e.clientY);
+  });
+  hit.addEventListener('pointerleave', () => { cross.setAttribute('opacity', '0'); dot.setAttribute('opacity', '0'); hideTip(); });
+}
+
+function drawCatBars() {
+  const byCat = {};
+  items.forEach(i => { byCat[i.cat] = (byCat[i.cat] || 0) + i.qty * i.price; });
+  const rows = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+  const W = 460, rowH = 26, P = { l: 78, r: 52, t: 6 };
+  const H = P.t + rows.length * rowH + 6;
+  const max = rows[0][1];
+  $('#catBars').innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" aria-label="Inventory value by category">
+    ${rows.map(([cat, v], i) => {
+      const bw = Math.max(4, (v / max) * (W - P.l - P.r));
+      const yy = P.t + i * rowH;
+      return `<text x="${P.l - 8}" y="${yy + 16}" text-anchor="end" font-size="11.5" fill="var(--ink-2)">${esc(cat)}</text>
+        <path d="M${P.l},${yy + 5} h${bw - 4} a4,4 0 0 1 4,4 v2 a4,4 0 0 1 -4,4 h-${bw - 4} Z" fill="var(--mark)" opacity=".85" class="cat-bar" data-cat="${esc(cat)}" data-v="${v.toFixed(2)}"/>
+        <text x="${P.l + bw + 6}" y="${yy + 16}" font-size="11" fill="var(--ink-2)" font-variant-numeric="tabular-nums">${fmt$(v)}</text>`;
+    }).join('')}
+    <line x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${H - 4}" stroke="var(--line)" stroke-width="1"/>
+  </svg>`;
+  document.querySelectorAll('.cat-bar').forEach(b => {
+    b.addEventListener('pointermove', (e) => showTip(`${b.dataset.cat}: <b>${fmt$(+b.dataset.v)}</b> on hand`, e.clientX, e.clientY));
+    b.addEventListener('pointerleave', hideTip);
+  });
+}
+
+/* ================= inventory ================= */
+let invQuery = '', invCat = '';
+function renderInventory() {
+  const cats = [...new Set(items.map(i => i.cat))];
+  const sel = $('#invFilter');
+  if (sel.options.length === 1) cats.forEach(c => sel.add(new Option(c, c)));
+  const low = lowItems().length;
+  $('#invSub').textContent = `${items.length} items · ${fmt$(totalValue())} on hand · ${low} below par`;
+  const rows = items.filter(i =>
+    (!invQuery || i.name.toLowerCase().includes(invQuery)) && (!invCat || i.cat === invCat));
+  $('#invBody').innerHTML = rows.map(i => {
+    const isLow = i.qty <= i.par;
+    const isExp = i.exp !== null && i.exp <= 3;
+    let status = '<span class="badge good">✓ OK</span>';
+    if (isLow && isExp) status = '<span class="badge crit">⏱ Low + expiring</span>';
+    else if (isLow) status = '<span class="badge warn">⚠ Low stock</span>';
+    else if (isExp) status = `<span class="badge crit">⏱ ${i.exp}d left</span>`;
+    return `<tr>
+      <td><b>${esc(i.name)}</b></td>
+      <td><span class="badge neutral">${esc(i.cat)}</span></td>
+      <td><span class="stepper">
+        <button aria-label="decrease ${esc(i.name)}" data-step="-1" data-id="${i.id}">−</button>
+        <span class="qty">${+i.qty.toFixed(1)} ${esc(i.unit)}</span>
+        <button aria-label="increase ${esc(i.name)}" data-step="1" data-id="${i.id}">+</button>
+      </span></td>
+      <td class="num">${i.par}</td>
+      <td class="num">${fmt$(i.price)}</td>
+      <td>${status}</td></tr>`;
+  }).join('');
+}
+document.addEventListener('click', (e) => {
+  const st = e.target.closest('[data-step]');
+  if (!st) return;
+  const it = items.find(i => i.id === +st.dataset.id);
+  const before = it.qty <= it.par;
+  it.qty = Math.max(0, +(it.qty + (+st.dataset.step)).toFixed(1));
+  const after = it.qty <= it.par;
+  if (!before && after) toast(`${it.name} just dropped below par — added to reorder list`);
+  renderAll();
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'invSearch') { invQuery = e.target.value.toLowerCase(); renderInventory(); }
+  if (e.target.id === 'invFilter') { invCat = e.target.value; renderInventory(); }
+});
+
+/* ================= waste ================= */
+function renderWaste() {
+  const todays = wasteTrend[wasteTrend.length - 1];
+  const total = monthWaste + todays;
+  const rate = total / monthPurchases * 100;
+  $('#wasteKpis').innerHTML = `
+    <div class="card"><h3>Waste this month</h3><div class="kpi-val">${fmt$(total)}</div><div class="kpi-sub">of ${fmt$(monthPurchases)} purchased</div></div>
+    <div class="card"><h3>Waste rate</h3><div class="kpi-val">${rate.toFixed(1)}%</div>
+      <div class="kpi-flag ${rate < 4 ? 'good' : 'warn'}">${rate < 4 ? '✓ beating industry best (4%)' : '⚠ industry avg is 4–10%'}</div></div>
+    <div class="card"><h3>Today</h3><div class="kpi-val">${fmt$(todays)}</div><div class="kpi-sub">logged so far — try adding one below</div></div>
+    <div class="card"><h3>Top reason</h3><div class="kpi-val" style="font-size:19px">Spoilage</div><div class="kpi-sub">48% of waste cost — ordering fix, not a kitchen fix</div></div>`;
+
+  const sel = $('#wItem');
+  if (!sel.options.length) items.forEach(i => sel.add(new Option(`${i.name} (${i.unit})`, i.id)));
+
+  $('#benchLabel').innerHTML = `Harvest &amp; Rye: <b>${rate.toFixed(1)}%</b> — industry average is 4–10% of purchases`;
+  $('#benchMark').style.left = `calc(${Math.min(100, rate / 12 * 100).toFixed(1)}% - 2px)`;
+
+  $('#topWaste').innerHTML = [
+    ['Atlantic Salmon', 'Trim waste', 86], ['Romaine Lettuce', 'Spoiled', 54],
+    ['Roma Tomatoes', 'Spoiled', 41], ['Chicken Alfredo', 'Over-prepped', 38], ['Whole Milk', 'Spoiled', 22],
+  ].map(([n, r, c]) => `<tr><td><b>${n}</b></td><td>${r}</td><td class="num">${fmt$(c)}</td></tr>`).join('');
+
+  $('#wasteEvents').innerHTML = wasteEvents.slice(0, 8).map(w =>
+    `<div class="alert-row"><span class="alert-dot" style="background:var(--warn)"></span>
+     <span><b>${esc(w.item)}</b> · ${w.qty} ${esc(w.unit)} · ${esc(w.reason)} · <b>${fmt$(w.cost)}</b></span>
+     <span class="when">${esc(w.when)}</span></div>`).join('');
+}
+document.addEventListener('click', (e) => {
+  if (e.target.id !== 'wLog') return;
+  const it = items.find(i => i.id === +$('#wItem').value);
+  const qty = Math.max(.1, +$('#wQty').value || 1);
+  const cost = +(qty * it.price).toFixed(2);
+  wasteEvents.unshift({ item: it.name, qty, unit: it.unit, reason: $('#wReason').value, cost, when: 'Just now' });
+  wasteTrend[wasteTrend.length - 1] = +(wasteTrend[wasteTrend.length - 1] + cost).toFixed(2);
+  it.qty = Math.max(0, +(it.qty - qty).toFixed(1));
+  toast(`Logged ${qty} ${it.unit} of ${it.name} — ${fmt$(cost)} tracked`);
+  renderAll();
+});
+
+/* ================= purchasing ================= */
+function suggested() {
+  return lowItems().map(i => ({ ...i, order: +(i.max - i.qty).toFixed(1), cost: +((i.max - i.qty) * i.price).toFixed(2) }));
+}
+function renderPurchasing() {
+  const sug = suggested();
+  $('#poSub').textContent = `${pos.length} purchase orders · ${sug.length} items awaiting reorder`;
+  $('#suggestSub').textContent = sug.length
+    ? `${sug.length} items below par across ${new Set(sug.map(s => s.sup)).size} suppliers — est. ${fmt$(sug.reduce((s, x) => s + x.cost, 0))}`
+    : 'Nothing below par right now — bump some counts down in Inventory to see this fill up.';
+  $('#suggestBody').innerHTML = sug.map(s => `<tr>
+    <td><b>${esc(s.name)}</b></td><td>${suppliers[s.sup]}</td>
+    <td class="num">${+s.qty.toFixed(1)} ${esc(s.unit)}</td><td class="num">${s.par}</td>
+    <td class="num"><b>${s.order} ${esc(s.unit)}</b></td><td class="num">${fmt$(s.cost)}</td></tr>`).join('')
+    || '<tr><td colspan="6" style="color:var(--muted)">All items at or above par ✓</td></tr>';
+
+  $('#poList').innerHTML = pos.map((po, idx) => {
+    const chip = po.status === 'Draft' ? 'warn' : po.status === 'Sent' ? 'neutral' : 'good';
+    return `<div class="card po">
+      <div class="po-head">
+        <b>${po.id}</b><span class="badge neutral">${esc(po.sup)}</span>
+        <span class="badge ${chip}">${po.status}</span><span class="kpi-sub">${po.when}</span>
+        <span class="total">${fmt$(po.total)}</span>
+        ${po.status === 'Draft' ? `<button class="btn small" data-send="${idx}">Mark as sent</button>` : ''}
+      </div>
+      <div class="tbl-wrap"><table><tbody>
+        ${po.lines.map(l => `<tr><td>${esc(l[0])}</td><td class="num">${esc(l[1])}</td><td class="num">${fmt$(l[2])}</td></tr>`).join('')}
+      </tbody></table></div></div>`;
+  }).join('');
+}
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'genPo') {
+    const sug = suggested();
+    if (!sug.length) return toast('Nothing below par — nothing to order');
+    const bySup = {};
+    sug.forEach(s => (bySup[s.sup] = bySup[s.sup] || []).push(s));
+    Object.entries(bySup).forEach(([sup, list]) => {
+      pos.unshift({
+        id: 'PO-' + poCounter++, sup: suppliers[sup], status: 'Draft', when: 'Just now',
+        lines: list.map(s => [s.name, `${s.order} ${s.unit}`, s.cost]),
+        total: +list.reduce((t, s) => t + s.cost, 0).toFixed(2),
+      });
+    });
+    toast(`${Object.keys(bySup).length} draft PO${Object.keys(bySup).length > 1 ? 's' : ''} created — grouped by supplier`);
+    renderAll();
+  }
+  const send = e.target.closest('[data-send]');
+  if (send) { pos[+send.dataset.send].status = 'Sent'; toast('PO emailed to supplier (in the full app)'); renderAll(); }
+});
+
+/* ================= recipes ================= */
+function renderRecipes() {
+  $('#recipeGrid').innerHTML = recipes.map(r => {
+    const cost = r.ings.reduce((s, [id, q]) => s + items.find(i => i.id === id).price * q, 0);
+    const margin = (r.price - cost) / r.price * 100;
+    const servings = Math.min(...r.ings.map(([id, q]) => Math.floor(items.find(i => i.id === id).qty / q)));
+    const lowM = margin < 65;
+    return `<div class="card">
+      <div class="r-head"><b>${esc(r.name)}</b><span class="price">$${r.price}</span></div>
+      <div class="kpi-sub">${esc(r.cat)} · plate cost ${fmt$(cost)}</div>
+      <div class="margin-bar"><i class="${lowM ? 'low' : ''}" style="width:${margin.toFixed(0)}%"></i></div>
+      <div style="display:flex; justify-content:space-between; font-size:12.5px">
+        <span style="color:${lowM ? 'var(--warn)' : 'var(--brand-ink)'}; font-weight:600">${margin.toFixed(0)}% margin${lowM ? ' · below 65% target' : ''}</span>
+        <span class="badge ${servings === 0 ? 'crit' : servings < 15 ? 'warn' : 'good'}">${servings === 0 ? '86’D' : servings + ' servings left'}</span>
+      </div>
+      <hr style="border:none; border-top:1px solid var(--grid); margin:10px 0">
+      ${r.ings.map(([id, q]) => { const it = items.find(i => i.id === id);
+        return `<div class="ing"><span>${esc(it.name)} · ${q} ${esc(it.unit)}</span><span class="c">${fmt$(it.price * q)}</span></div>`; }).join('')}
+    </div>`;
+  }).join('');
+}
+
+/* ================= insights ================= */
+function renderInsights() {
+  const open = insights.filter(i => !i.done).length;
+  $('#insightSub').textContent = `${open} active insights · generated from your sales pace, prices, and expiry dates`;
+  $('#insightList').innerHTML = insights.map((ins, i) => `
+    <div class="insight ${ins.tone} ${ins.done ? 'done' : ''}">
+      <h4>${ins.icon} ${esc(ins.title)} · <span class="impact">${esc(ins.impact)}</span></h4>
+      <p>${esc(ins.body)}</p>
+      ${ins.done ? '<span class="badge good">✓ Applied</span>' : `
+        <button class="btn small" data-apply="${i}">Apply</button>
+        <button class="btn small outline" data-dismiss="${i}">Dismiss</button>`}
+    </div>`).join('');
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('[data-apply]'), d = e.target.closest('[data-dismiss]');
+  if (a) { insights[+a.dataset.apply].done = true; toast('Applied — OnPar adjusts the order suggestion automatically'); renderAll(); }
+  if (d) { insights.splice(+d.dataset.dismiss, 1); toast('Dismissed'); renderAll(); }
+});
+
+/* ================= kitchen ================= */
+function renderKitchen() {
+  const now = new Date();
+  $('#kClock').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  $('#kDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  $('#kUseFirst').innerHTML = expItems()
+    .sort((a, b) => a.exp - b.exp)
+    .map(i => `<div class="k-item ${i.exp <= 1 ? 'k-crit' : 'k-warn'}"><span>${esc(i.name)}</span>
+      <span class="k-meta">${i.qty} ${esc(i.unit)} · ${i.exp <= 0 ? 'TODAY' : i.exp + 'd'}</span></div>`).join('')
+    || '<div class="k-note">Nothing at risk 🎉</div>';
+  $('#kLow').innerHTML = lowItems()
+    .map(i => `<div class="k-item k-warn"><span>${esc(i.name)}</span>
+      <span class="k-meta">${+i.qty.toFixed(1)} ${esc(i.unit)} left</span></div>`).join('')
+    || '<div class="k-note">Fully stocked 🎉</div>';
+}
+setInterval(() => { if (activeTab === 'kitchen') renderKitchen(); }, 30000);
+
+/* ================= shell ================= */
+function renderAll() {
+  renderTabs();
+  TABS.forEach(([id]) => { $('#view-' + id).hidden = id !== activeTab; });
+  renderDashboard(); renderInventory(); renderWaste();
+  renderPurchasing(); renderRecipes(); renderInsights(); renderKitchen();
+}
+$('#pitchBtn').addEventListener('click', () => {
+  const on = document.body.classList.toggle('pitch');
+  $('#pitchBtn').setAttribute('aria-pressed', on);
+  toast(on ? 'Pitch notes on — amber boxes are for the presenter' : 'Pitch notes hidden');
+});
+$('#themeBtn').addEventListener('click', () => {
+  const r = document.documentElement;
+  const cur = r.getAttribute('data-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  r.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+});
+renderAll();
+</script>
+
+</body>
+</html>
