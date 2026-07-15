@@ -34,7 +34,7 @@ export function HeroSection() {
               <span className="text-brand-600">Start Saving Money.</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-              Smart inventory management for restaurants. Reduce waste by 10-20% and save $500+ monthly with real-time tracking, AI insights, and waste analytics.
+              Smart inventory management for independent restaurants. The average kitchen throws away 4&ndash;10% of the food it buys &mdash; OnPar shows you where, in dollars, and helps you stop it.
             </p>
 
             {/* CTA buttons */}

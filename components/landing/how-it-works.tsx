@@ -20,7 +20,7 @@ const STEPS = [
     icon: PiggyBank,
     title: 'Save money',
     description:
-      'Follow AI recommendations to cut waste by 10-20%. Most restaurants save $500+ monthly within the first quarter.',
+      'Act on what the numbers show: reorder before you 86, rescue expiring stock, and reprice dishes whose margins slipped.',
   },
 ] as const
 

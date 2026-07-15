@@ -13,7 +13,7 @@ export function CTASection() {
             Ready to reduce waste and save money?
           </h2>
           <p className="mt-4 text-lg text-brand-100">
-            Join 200+ restaurants already saving with OnPar.
+            Find out what your kitchen is really throwing away &mdash; in dollars.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Button

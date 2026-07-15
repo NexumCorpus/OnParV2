@@ -11,11 +11,12 @@ import { CTASection } from '@/components/landing/cta-section'
 export const metadata: Metadata = {
   title: 'OnPar - Smart Restaurant Inventory Management',
   description:
-    'Reduce food waste by 10-20% and save $500+ monthly. Smart inventory tracking, AI insights, and waste analytics for restaurants.',
+    'Smart inventory, waste tracking, and plate costing for independent restaurants. See your food waste in dollars — and stop it.',
   openGraph: {
     title: 'OnPar - Smart Restaurant Inventory Management',
-    description: 'Reduce food waste by 10-20% and save $500+ monthly.',
-    url: 'https://onpar.app',
+    description:
+      'Smart inventory, waste tracking, and plate costing for independent restaurants.',
+    url: 'https://on-par-v2-mauve.vercel.app',
     siteName: 'OnPar',
     type: 'website',
   },

@@ -1,28 +1,23 @@
 import type { Metadata } from 'next'
-import { Mail, MapPin, Clock } from 'lucide-react'
+import { Mail, Clock } from 'lucide-react'
 import { ContactForm } from '@/components/contact/contact-form'
 
 export const metadata: Metadata = {
   title: 'Contact - OnPar',
   description:
-    'Get in touch with the OnPar team. We respond to all inquiries within 24 hours.',
+    'Get in touch with the OnPar team. We respond to all inquiries within one business day.',
 }
 
 const CONTACT_INFO = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'support@onpar.app',
-  },
-  {
-    icon: MapPin,
-    label: 'Location',
-    value: 'San Francisco, CA',
+    value: 'kalebsmoot1488@gmail.com',
   },
   {
     icon: Clock,
-    label: 'Hours',
-    value: 'Mon-Fri 9am-5pm PST',
+    label: 'Response time',
+    value: 'Within 1 business day',
   },
 ] as const
 

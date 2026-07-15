@@ -1,17 +1,17 @@
-import { Star, TrendingUp, Users } from 'lucide-react'
+import { TrendingDown, Zap, CreditCard } from 'lucide-react'
 
 const STATS = [
   {
-    icon: Users,
-    label: 'Trusted by 200+ restaurants',
+    icon: TrendingDown,
+    label: 'Built to cut the 4–10% of purchases kitchens waste',
   },
   {
-    icon: Star,
-    label: '4.9 average rating',
+    icon: Zap,
+    label: 'Set up in an afternoon — import your sheet, start counting',
   },
   {
-    icon: TrendingUp,
-    label: '$2M+ saved by our customers',
+    icon: CreditCard,
+    label: '14-day free trial, no credit card',
   },
 ] as const
 
@@ -19,7 +19,7 @@ export function SocialProofBar() {
   return (
     <section
       className="border-y bg-muted/30 py-6"
-      aria-label="Social proof statistics"
+      aria-label="Product highlights"
     >
       <div className="container mx-auto px-4">
         <div className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:gap-12">

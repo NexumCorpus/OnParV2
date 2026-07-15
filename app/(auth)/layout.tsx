@@ -18,11 +18,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </li>
           <li className="flex items-start gap-3">
             <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white text-xs font-bold">2</span>
-            <span>Reduce food waste by 10-20% with AI insights</span>
+            <span>See food waste in dollars, by ingredient and reason</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white text-xs font-bold">3</span>
-            <span>Save $500+ monthly on ingredient costs</span>
+            <span>Know your plate costs and margins from live prices</span>
           </li>
           <li className="flex items-start gap-3">
             <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-600 text-white text-xs font-bold">4</span>
