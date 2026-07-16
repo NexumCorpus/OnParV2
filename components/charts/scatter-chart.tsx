@@ -7,9 +7,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   ZAxis,
 } from 'recharts'
+import { SizedContainer } from './sized-container'
 import { ChartWrapper } from './chart-wrapper'
 
 export interface ScatterChartDataPoint {
@@ -50,7 +50,7 @@ export default function ScatterChartComponent({
     <ChartWrapper title={title} description={description} isLoading={isLoading} height={height}>
       <div aria-label={`${title} scatter plot`} role="img">
         {hasEnoughData ? (
-          <ResponsiveContainer width="100%" height={height}>
+          <SizedContainer height={height}>
             <RechartsScatterChart margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
@@ -89,7 +89,7 @@ export default function ScatterChartComponent({
                 animationDuration={300}
               />
             </RechartsScatterChart>
-          </ResponsiveContainer>
+          </SizedContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Not enough data for this time range. Try selecting a longer period or check back after a few more days of usage.

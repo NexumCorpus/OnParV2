@@ -8,10 +8,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Legend,
   ReferenceLine,
 } from 'recharts'
+import { SizedContainer } from './sized-container'
 import { ChartWrapper } from './chart-wrapper'
 
 export interface ComboChartDataPoint {
@@ -56,7 +56,7 @@ export default function ComboChartComponent({
     <ChartWrapper title={title} description={description} isLoading={isLoading} height={height}>
       <div aria-label={`${title} combo chart`} role="img">
         {hasEnoughData ? (
-          <ResponsiveContainer width="100%" height={height}>
+          <SizedContainer height={height}>
             <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
@@ -101,7 +101,7 @@ export default function ComboChartComponent({
                 />
               )}
             </ComposedChart>
-          </ResponsiveContainer>
+          </SizedContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Not enough data for this time range. Try selecting a longer period or check back after a few more days of usage.

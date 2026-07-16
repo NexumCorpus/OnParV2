@@ -7,9 +7,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { SizedContainer } from './sized-container'
 import { ChartWrapper } from './chart-wrapper'
 
 export interface BarChartDataPoint {
@@ -44,7 +44,7 @@ export default function BarChartComponent({
     <ChartWrapper title={title} description={description} isLoading={isLoading} height={height}>
       <div aria-label={`${title} bar chart`} role="img">
         {hasEnoughData ? (
-          <ResponsiveContainer width="100%" height={height}>
+          <SizedContainer height={height}>
             {layout === 'vertical' ? (
               <RechartsBarChart data={data} layout="vertical" margin={{ top: 5, right: 20, left: 60, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -76,7 +76,7 @@ export default function BarChartComponent({
                 <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} animationDuration={300} name="Value" />
               </RechartsBarChart>
             )}
-          </ResponsiveContainer>
+          </SizedContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Not enough data for this time range. Try selecting a longer period or check back after a few more days of usage.

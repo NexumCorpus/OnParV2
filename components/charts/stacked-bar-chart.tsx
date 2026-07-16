@@ -7,9 +7,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { SizedContainer } from './sized-container'
 import { ChartWrapper } from './chart-wrapper'
 
 export interface StackedBarDataPoint {
@@ -39,7 +39,7 @@ export default function StackedBarChartComponent({
     <ChartWrapper title={title} description={description} isLoading={isLoading} height={height}>
       <div aria-label={`${title} stacked bar chart`} role="img">
         {hasEnoughData ? (
-          <ResponsiveContainer width="100%" height={height}>
+          <SizedContainer height={height}>
             <BarChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
@@ -65,7 +65,7 @@ export default function StackedBarChartComponent({
                 name="Below Reorder"
               />
             </BarChart>
-          </ResponsiveContainer>
+          </SizedContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             No data available to display.

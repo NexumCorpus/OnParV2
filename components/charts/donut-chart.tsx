@@ -5,9 +5,9 @@ import {
   Pie,
   Cell,
   Tooltip,
-  ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { SizedContainer } from './sized-container'
 import { ChartWrapper } from './chart-wrapper'
 
 export interface DonutChartDataPoint {
@@ -43,7 +43,7 @@ export default function DonutChartComponent({
     <ChartWrapper title={title} description={description} isLoading={isLoading} height={height}>
       <div aria-label={`${title} donut chart`} role="img">
         {hasData ? (
-          <ResponsiveContainer width="100%" height={height}>
+          <SizedContainer height={height}>
             <PieChart>
               <Pie
                 data={data}
@@ -71,7 +71,7 @@ export default function DonutChartComponent({
               />
               <Legend />
             </PieChart>
-          </ResponsiveContainer>
+          </SizedContainer>
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             No data available to display.
