@@ -12,6 +12,7 @@ export function HeroSection() {
 
   const handlePlay = () => {
     if (videoRef.current) {
+      videoRef.current.muted = false
       videoRef.current.play().catch(() => setVideoError(true))
       setPlaying(true)
     }
@@ -77,11 +78,11 @@ export function HeroSection() {
               <video
                 ref={videoRef}
                 className="absolute inset-0 w-full h-full object-cover"
-                loop
-                muted
+                controls={playing}
                 playsInline
                 preload="metadata"
                 onError={() => setVideoError(true)}
+                onEnded={() => setPlaying(false)}
               >
                 <source src="/demo.mp4" type="video/mp4" />
                 <source src="/demo.webm" type="video/webm" />
