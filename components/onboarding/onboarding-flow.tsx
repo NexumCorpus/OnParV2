@@ -88,15 +88,16 @@ export function OnboardingFlow({
 
   async function handleComplete() {
     setIsLoading(true)
+    // completeOnboarding redirects to /dashboard server-side on success; the code
+    // below runs only if it returned instead (an error saving).
     const result = await completeOnboarding()
-    // If completeOnboarding succeeds, it calls redirect('/dashboard') server-side.
-    // We only reach here if the redirect didn't fire (e.g. update failed).
     if (result && !result.success) {
-      toast.error(result.error || 'Failed to complete onboarding.')
+      toast.error(result.error || 'Failed to complete onboarding. Please try again.')
+      setIsLoading(false)
+    } else {
+      // Success without the server redirect firing — navigate as a fallback.
+      router.push('/dashboard')
     }
-    // Fallback navigation in case redirect didn't trigger
-    router.push('/dashboard')
-    setIsLoading(false)
   }
 
   return (

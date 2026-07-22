@@ -1,5 +1,6 @@
 'use server'
 
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/types'
 
@@ -64,5 +65,8 @@ export async function completeOnboarding(): Promise<ActionResult> {
 
   if (error) return { success: false, error: error.message }
 
-  return { success: true }
+  // Redirect server-side so the client router doesn't race the server action's
+  // automatic revalidation of /onboarding (which previously left users stuck on
+  // a "Setting up..." spinner). redirect() throws NEXT_REDIRECT by design.
+  redirect('/dashboard')
 }
