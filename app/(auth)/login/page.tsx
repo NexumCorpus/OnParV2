@@ -85,7 +85,10 @@ export default function LoginPage() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* method="post" keeps credentials out of the URL if the form is
+              submitted before React hydrates (native submit); after hydration
+              handleSubmit preventDefaults and signs in client-side. */}
+          <form method="post" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"

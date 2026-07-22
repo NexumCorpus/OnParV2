@@ -74,8 +74,10 @@ export default function AddInventoryItemPage() {
     }
 
     toast.success('Item added')
+    // push alone navigates to the inventory list (a server component that
+    // refetches on navigation); an extra router.refresh() here raced the push
+    // and left the user stranded on the add form.
     router.push('/inventory')
-    router.refresh()
   }
 
   return (

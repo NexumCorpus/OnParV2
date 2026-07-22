@@ -3,7 +3,7 @@
 import { useCallback, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, Download, Upload, Trash2 } from 'lucide-react'
+import { Plus, Download, Upload, Trash2, Package } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { InventoryFilters } from '@/components/inventory/inventory-filters'
 import { InventoryAlerts } from '@/components/inventory/inventory-alerts'
@@ -247,6 +247,36 @@ export function InventoryPageClient({
         </div>
       )}
 
+      {/* First-run empty state (no items at all, not just a filtered view) */}
+      {items.length === 0 ? (
+        <div className="rounded-xl border bg-card py-16 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 dark:bg-brand-900/30">
+            <Package className="h-7 w-7 text-brand-600" aria-hidden="true" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold">No inventory yet</h3>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
+            Add your first item or import an existing spreadsheet to start tracking
+            stock, waste, and plate costs.
+          </p>
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <Button asChild className="bg-brand-600 hover:bg-brand-700 text-white min-h-[44px]">
+              <Link href="/inventory/add">
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+                Add your first item
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setCsvImportOpen(true)}
+              className="min-h-[44px]"
+            >
+              <Upload className="mr-2 h-4 w-4" aria-hidden="true" />
+              Import CSV
+            </Button>
+          </div>
+        </div>
+      ) : (
+      <>
       {/* Desktop table */}
       <div className="hidden md:block">
         <InventoryTable
@@ -267,7 +297,7 @@ export function InventoryPageClient({
       <div className="md:hidden space-y-3">
         {sortedItems.length === 0 ? (
           <div className="py-12 text-center text-muted-foreground">
-            No inventory items found.
+            No items match your search or filters.
           </div>
         ) : (
           sortedItems.map((item) => (
@@ -285,6 +315,8 @@ export function InventoryPageClient({
           ))
         )}
       </div>
+      </>
+      )}
 
       {/* Mobile CSV actions */}
       <div className="md:hidden flex gap-2">

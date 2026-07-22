@@ -160,7 +160,7 @@ export default async function DashboardPage() {
           )}
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <span>{greeting}, {user.email?.split('@')[0] ?? 'there'}</span>
+          <span>{greeting}, {user.email?.split('@')[0]?.split('+')[0] ?? 'there'}</span>
           <span className="hidden sm:inline">·</span>
           <time className="hidden sm:inline" dateTime={new Date().toISOString()}>
             Updated {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
