@@ -16,7 +16,10 @@ interface SuppliersPageClientProps {
 export function SuppliersPageClient({ initialSuppliers }: SuppliersPageClientProps) {
   const router = useRouter()
   const [, startTransition] = useTransition()
-  const [suppliers] = useState(initialSuppliers)
+  // Derive straight from the server prop. Freezing this in useState meant
+  // router.refresh() fetched new data that the component then ignored, so a
+  // newly added supplier never appeared until a full page reload.
+  const suppliers = initialSuppliers
   const [search, setSearch] = useState('')
   const [addDialogOpen, setAddDialogOpen] = useState(false)
   const [editSupplier, setEditSupplier] = useState<Supplier | null>(null)

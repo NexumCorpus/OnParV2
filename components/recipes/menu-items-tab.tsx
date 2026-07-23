@@ -41,7 +41,8 @@ export function MenuItemsTab({
   initialStats,
 }: MenuItemsTabProps) {
   const [items, setItems] = useState(initialItems)
-  const [recipes] = useState(initialRecipes)
+  // Derive from props so newly created recipes show up after a refresh.
+  const recipes = initialRecipes
   const [stats, setStats] = useState(initialStats)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
