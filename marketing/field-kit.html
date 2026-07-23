@@ -1,0 +1,278 @@
+<title>OnPar &mdash; Field Kit</title>
+<style>
+  :root{
+    --paper:#f7f9f7; --card:#fff; --ink:#141c17; --ink-2:#4f5d55; --muted:#87928b;
+    --line:#e2e9e4; --brand:#16a34a; --brand-ink:#0f5c33; --brand-soft:#e8f6ee;
+    --warn:#b45309; --warn-soft:#fdf3e3; --crit:#c2410c;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--paper:#0e1411;--card:#161e19;--ink:#e9efea;--ink-2:#a3b0a7;--muted:#77837b;
+      --line:#242d27;--brand:#34c46f;--brand-ink:#7fdda2;--brand-soft:#12301f;
+      --warn:#e0a04a;--warn-soft:#2e2411;--crit:#e6773f;}
+  }
+  :root[data-theme="dark"]{--paper:#0e1411;--card:#161e19;--ink:#e9efea;--ink-2:#a3b0a7;--muted:#77837b;
+    --line:#242d27;--brand:#34c46f;--brand-ink:#7fdda2;--brand-soft:#12301f;
+    --warn:#e0a04a;--warn-soft:#2e2411;--crit:#e6773f;}
+  :root[data-theme="light"]{--paper:#f7f9f7;--card:#fff;--ink:#141c17;--ink-2:#4f5d55;--muted:#87928b;
+    --line:#e2e9e4;--brand:#16a34a;--brand-ink:#0f5c33;--brand-soft:#e8f6ee;
+    --warn:#b45309;--warn-soft:#fdf3e3;--crit:#c2410c;}
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%;}
+  .wrap{max-width:720px;margin:0 auto;padding:0 14px 60px;}
+
+  header{position:sticky;top:0;z-index:20;background:var(--paper);padding:14px 0 0;}
+  .title{display:flex;align-items:center;gap:9px;font-weight:800;font-size:20px;letter-spacing:-.02em;}
+  .sub{color:var(--ink-2);font-size:14px;margin:3px 0 12px;}
+  nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  nav button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink-2);
+    border-radius:999px;padding:9px 15px;font-size:14.5px;font-weight:600;cursor:pointer;min-height:42px;}
+  nav button[aria-selected="true"]{background:var(--brand);border-color:var(--brand);color:#fff;}
+  :root[data-theme="dark"] nav button[aria-selected="true"]{color:#06130b;}
+
+  section[hidden]{display:none;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:15px 16px;margin:12px 0;}
+  h2{font-size:19px;margin:18px 0 2px;letter-spacing:-.01em;}
+  h3{font-size:15.5px;margin:0 0 7px;color:var(--brand-ink);font-weight:700;}
+  p{margin:0 0 10px;}
+  .lbl{font-size:11.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin:0 0 6px;}
+
+  .say{background:var(--brand-soft);border-left:4px solid var(--brand);border-radius:8px;
+    padding:13px 15px;margin:9px 0;font-size:17px;line-height:1.5;}
+  .say b{font-weight:700;}
+  .note{font-size:14px;color:var(--ink-2);margin:7px 0 0;}
+
+  ul{margin:6px 0 10px;padding-left:20px;}
+  li{margin:5px 0;}
+  .good li::marker{color:var(--brand);}
+  .bad li::marker{color:var(--crit);}
+
+  .pill{display:inline-block;background:var(--brand-soft);color:var(--brand-ink);
+    border-radius:999px;padding:3px 11px;font-size:13px;font-weight:700;margin:0 5px 5px 0;}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);}
+
+  .step{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);}
+  .step:last-child{border-bottom:none;}
+  .step .n{flex:none;width:30px;height:30px;border-radius:8px;background:var(--brand);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;}
+  :root[data-theme="dark"] .step .n{color:#06130b;}
+  .step .t{font-weight:700;font-size:16px;}
+  .step .d{font-size:14.5px;color:var(--ink-2);margin-top:2px;}
+  .step .time{margin-left:auto;font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap;}
+
+  details{border:1px solid var(--line);border-radius:10px;margin:9px 0;background:var(--card);}
+  summary{padding:13px 15px;font-weight:700;cursor:pointer;font-size:16px;list-style:none;}
+  summary::-webkit-details-marker{display:none;}
+  summary::before{content:"\25B8\0020";color:var(--brand);font-weight:800;}
+  details[open] summary::before{content:"\25BE\0020";}
+  details .body{padding:0 15px 14px;}
+
+  .big-num{font-size:34px;font-weight:800;letter-spacing:-.03em;color:var(--brand-ink);line-height:1;}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;}
+  .kpi > div{flex:1;min-width:120px;background:var(--card);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;}
+  .kpi .k{font-size:13px;color:var(--muted);font-weight:600;}
+
+  .warnbox{background:var(--warn-soft);border:1px solid var(--warn);border-radius:10px;padding:12px 14px;margin:11px 0;font-size:15px;}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="title">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 3v7a2.5 2.5 0 0 0 5 0V3M6.5 3v18"/><path d="M15 3c-1.5 1.8-2 4.5-2 7 0 2 .8 3 2.5 3S18 12 18 10c0-2.5-.5-5.2-2-7zM16.5 13v8"/>
+    </svg>
+    Field Kit
+  </div>
+  <p class="sub">Everything you need to walk in and sign restaurant #1.</p>
+  <nav id="tabs"></nav>
+</header>
+
+<!-- ============ TARGETS ============ -->
+<section id="v-who">
+  <h2>Who to walk into</h2>
+  <div class="card">
+    <p class="lbl">Best fit</p>
+    <ul class="good">
+      <li><b>Independent, owner-operated</b> &mdash; 1 to 3 locations</li>
+      <li><b>Full-service, scratch kitchen</b> &mdash; real inventory complexity</li>
+      <li><b>30&ndash;100 seats</b>, open <b>2+ years</b> (survived, has real ops pain)</li>
+      <li>High food-cost menus: <b>steakhouse, seafood, BBQ, farm-to-table, gastropub</b></li>
+      <li>Owner, GM, or exec chef <b>physically on site</b></li>
+    </ul>
+    <p class="lbl" style="margin-top:12px">Skip these</p>
+    <ul class="bad">
+      <li>Chains &amp; franchises &mdash; no local buying authority</li>
+      <li>Coffee shops, bars-only, food trucks &mdash; too few items to matter</li>
+      <li>Anywhere the manager can't sign without calling corporate</li>
+    </ul>
+  </div>
+
+  <h2>When to walk in</h2>
+  <div class="card">
+    <p><span class="pill">BEST 2:00&ndash;4:00 PM</span> <span class="pill">2nd 9:30&ndash;11:00 AM</span></p>
+    <p>Tuesday through Thursday. The dead zone between lunch and dinner is when owners do paperwork and actually have five minutes.</p>
+    <div class="warnbox">
+      <b>Never walk in during service.</b> 11:30&ndash;1:30 or after 5:00 &mdash; you'll get thrown out and burn the lead permanently. Fridays and Saturdays: don't. Many independents are closed Mondays.
+    </div>
+  </div>
+
+  <h2>The numbers</h2>
+  <div class="card">
+    <div class="kpi">
+      <div><div class="big-num">10</div><div class="k">walk-ins per outing</div></div>
+      <div><div class="big-num">3</div><div class="k">actual conversations</div></div>
+      <div><div class="big-num">1</div><div class="k">real demo</div></div>
+    </div>
+    <p class="note" style="margin-top:12px">Expect roughly <b>10&ndash;15 demos to close 1&ndash;2 customers</b>. Most will say no, and it's almost never about you &mdash; it's timing. Two good afternoons a week gets you there. Track every one so you know what's working.</p>
+  </div>
+</section>
+
+<!-- ============ WALK-IN ============ -->
+<section id="v-walk" hidden>
+  <h2>At the door</h2>
+  <p class="note">Goal: get past the host to a decision-maker, in under 15 seconds, without being a salesman.</p>
+  <div class="say">
+    "Hi &mdash; I'm Kaleb, I'm local. I'm not selling food and I'm not asking for a donation. Is the owner or the chef around for two minutes? If it's a bad time, I'll leave a one-pager and come back."
+  </div>
+  <p class="note"><b>Why it works:</b> names the two things they assume you are, gives them an easy out, and asks for a tiny amount of time. If they say come back &mdash; <b>get a specific day and time</b> and actually show up.</p>
+
+  <h2>When you get the owner or chef</h2>
+  <p class="note">30 seconds. Lead with their problem, not your product.</p>
+  <div class="say">
+    "I built a tool for independent kitchens that shows you exactly what you're throwing away &mdash; in dollars. Most kitchens waste <b>4 to 10 percent</b> of everything they buy and never see the number.<br><br>Can I show you on my tablet for three minutes? If it's not useful I'll get out of your way."
+  </div>
+
+  <div class="card">
+    <h3>Rules that matter</h3>
+    <ul>
+      <li><b>Never pitch the software.</b> Pitch the leak in their walk-in.</li>
+      <li><b>Ask, don't tell.</b> "What are you using now?" &mdash; then shut up and listen.</li>
+      <li><b>Respect the clock.</b> If you said 3 minutes, stop at 3 minutes. It builds more trust than the demo does.</li>
+      <li><b>Leave the one-pager every time</b>, even on a no. The QR code works after you're gone.</li>
+    </ul>
+  </div>
+
+  <h2>If you'd rather email first</h2>
+  <div class="say" style="font-size:16px">
+    <b>Subject:</b> the 4&ndash;10% your kitchen throws away<br><br>
+    Hi [Name] &mdash; I'm Kaleb, I'm local and I built an inventory tool for independent kitchens like [Restaurant].<br><br>
+    Most kitchens waste 4&ndash;10% of everything they buy and never see it as a dollar figure. OnPar shows you where it's going, tells you what to reorder before you 86 it, and costs out every plate.<br><br>
+    2-minute demo video: [link]<br><br>
+    I'm taking on my first few restaurants at $29/mo locked in for good, instead of $79. Worth 10 minutes this week?<br><br>
+    &mdash; Kaleb, nexumcorpus@gmail.com
+  </div>
+  <p class="note">Short, specific, one link, one ask. Follow up <b>twice</b>, three business days apart, then let it go.</p>
+</section>
+
+<!-- ============ DEMO ============ -->
+<section id="v-demo" hidden>
+  <h2>Run of show &mdash; 3 to 5 minutes</h2>
+  <p class="note">Open the demo on your tablet <b>before</b> you walk in. Never make them watch you load a page.</p>
+  <div class="card">
+    <div class="step"><span class="n">1</span><div><div class="t">Dashboard</div><div class="d">"This is a demo kitchen. What's low, what's expiring, what your inventory's worth &mdash; every morning, one screen."</div></div><span class="time">20s</span></div>
+    <div class="step"><span class="n">2</span><div><div class="t">Waste &mdash; the money moment</div><div class="d">Log one waste event in front of them. "Ten seconds at the bin. Now watch it become dollars, by ingredient and by reason." <b>Pause here. Let it land.</b></div></div><span class="time">60s</span></div>
+    <div class="step"><span class="n">3</span><div><div class="t">Purchasing</div><div class="d">"Everything below par becomes purchase orders, grouped by supplier, one tap. No more Sunday-night texts to five reps."</div></div><span class="time">30s</span></div>
+    <div class="step"><span class="n">4</span><div><div class="t">Recipes</div><div class="d">"Every plate costed from today's prices. This one slipped under margin when beef went up &mdash; you'd see it the week it happened."</div></div><span class="time">30s</span></div>
+    <div class="step"><span class="n">5</span><div><div class="t">ROI &mdash; with THEIR number</div><div class="d">"What do you spend a month on food?" Type it in while they watch. This is the close, not the dashboard.</div></div><span class="time">40s</span></div>
+  </div>
+  <div class="warnbox">
+    <b>The ROI tab with their real number is the whole pitch.</b> A dashboard impresses a chef; a dollar figure with their own spend in it moves an owner. Don't skip it to save time &mdash; skip a feature instead.
+  </div>
+  <div class="card">
+    <h3>If they're a chef, not an owner</h3>
+    <p style="margin:0">Lead with the <b>kitchen display and the 86 board</b> instead of ROI. Chefs care about not getting caught short mid-service; owners care about the money. Read the room and swap step 5 for the kitchen screen.</p>
+  </div>
+</section>
+
+<!-- ============ OBJECTIONS ============ -->
+<section id="v-obj" hidden>
+  <h2>Objections</h2>
+  <p class="note">Answer in one or two sentences, then ask a question back. Never argue.</p>
+
+  <details><summary>"We already use a spreadsheet"</summary><div class="body">
+    <div class="say">"Perfect &mdash; I can import it in about five minutes, so you don't lose the work. The difference is a spreadsheet tells you what you <b>have</b>. It doesn't tell you what you're <b>losing</b>."</div>
+  </div></details>
+
+  <details><summary>"I don't have time for this"</summary><div class="body">
+    <div class="say">"That's the actual problem I'm solving &mdash; most owners burn five-plus hours a week on counts and ordering. Give me three minutes and I'll show you exactly where that goes."</div>
+  </div></details>
+
+  <details><summary>"How much is it?"</summary><div class="body">
+    <div class="say">"Seventy-nine a month. But I'm taking my first restaurants on at <b>twenty-nine, locked in for as long as you stay</b>. Free for fourteen days, no card."</div>
+    <p class="note">Say the price plainly and don't flinch. Hesitating on price is what makes it sound expensive.</p>
+  </div></details>
+
+  <details><summary>"We already use Toast / Square"</summary><div class="body">
+    <div class="say">"Keep it &mdash; this isn't a POS and it won't touch your tickets. Toast tells you what you <b>sold</b>. This tells you what you <b>bought, wasted, and what each plate actually costs.</b>"</div>
+  </div></details>
+
+  <details><summary>"Who else is using it?" &nbsp;<span class="pill warn">be honest</span></summary><div class="body">
+    <div class="say">"You'd be one of the first &mdash; that's exactly why the rate is twenty-nine locked in forever and why you get my cell, not a ticket queue. I'd rather earn your business than show you a wall of logos I made up."</div>
+    <p class="note"><b>Never invent customers.</b> Restaurant owners talk to each other and they will check. Being early is a real offer &mdash; sell it as one.</p>
+  </div></details>
+
+  <details><summary>"Send me some information"</summary><div class="body">
+    <div class="say">"Absolutely &mdash; here's the one-pager, and the QR pulls up a two-minute video. Can I check back Thursday around two?"</div>
+    <p class="note">This is usually a polite no. The counter is always a <b>specific</b> follow-up time. Vague follow-ups never happen.</p>
+  </div></details>
+
+  <details><summary>"I need to think about it"</summary><div class="body">
+    <div class="say">"Fair enough. The trial's free and takes about ten minutes to set up &mdash; you'll learn more in a week of using it than a month of thinking about it. Want me to set it up now while I'm here?"</div>
+  </div></details>
+
+  <details><summary>"Is my data safe? / Who sees this?"</summary><div class="body">
+    <div class="say">"Your data is yours, it's not shared with anyone, and you can export or delete it any time. Nobody sees your costs but you and whoever you invite."</div>
+  </div></details>
+</section>
+
+<!-- ============ CLOSE ============ -->
+<section id="v-close" hidden>
+  <h2>The ask</h2>
+  <p class="note">Say it once, clearly, then <b>be quiet</b>. Whoever talks first loses.</p>
+  <div class="say">
+    "I'm signing my first handful of restaurants as founding customers &mdash; <b>$29 a month locked in for good</b> instead of $79. Free for fourteen days, no card.<br><br>
+    I can set you up right now in about ten minutes with your real inventory &mdash; or I leave this and check back Thursday. Which is easier for you?"
+  </div>
+  <p class="note">Two options, both of them a yes. Never ask "are you interested?" &mdash; that's a yes/no question and the easy answer is no.</p>
+
+  <h2>If they say yes &mdash; set it up on the spot</h2>
+  <div class="card">
+    <div class="step"><span class="n">1</span><div><div class="t">Sign up on their device</div><div class="d">Their email, their password. It's their account, not yours.</div></div></div>
+    <div class="step"><span class="n">2</span><div><div class="t">Add 10&ndash;15 real items with them</div><div class="d">Their actual big-ticket stock &mdash; protein, produce, dairy. Enough that the dashboard means something tomorrow.</div></div></div>
+    <div class="step"><span class="n">3</span><div><div class="t">Set par levels on 5 of them</div><div class="d">The ones they run out of most. That's what makes the alerts feel personal.</div></div></div>
+    <div class="step"><span class="n">4</span><div><div class="t">Log one waste event together</div><div class="d">The habit is the product. If they log waste in week one, they stay.</div></div></div>
+    <div class="step"><span class="n">5</span><div><div class="t">Book the check-in before you leave</div><div class="d">"I'll swing by Tuesday at two to see how it's going." Put it in your phone in front of them.</div></div></div>
+  </div>
+  <div class="warnbox">
+    <b>Don't take money yet.</b> Get them on the free trial and using it. Collect payment once your entity is set up &mdash; that gap is exactly what the 14 days are for.
+  </div>
+
+  <h2>Follow-up rhythm</h2>
+  <div class="card">
+    <ul>
+      <li><b>Day 1:</b> text a thank-you + the demo video link</li>
+      <li><b>Day 3:</b> "Anything not making sense?" &mdash; catch problems before they quit</li>
+      <li><b>Day 7:</b> stop in. Show them their own waste number. <b>This is the real close.</b></li>
+      <li><b>Day 12:</b> "Trial's up Friday &mdash; want me to switch it on at the founding rate?"</li>
+    </ul>
+    <p class="note">Most trials die from silence, not from the product. Showing up on day 7 with their own data is worth more than any feature.</p>
+  </div>
+</section>
+</div>
+
+<script>
+  const TABS=[['who','Targets'],['walk','Walk-in'],['demo','Demo'],['obj','Objections'],['close','Close']];
+  let active='who';
+  const nav=document.getElementById('tabs');
+  nav.innerHTML=TABS.map(([id,l])=>`<button role="tab" aria-selected="${id===active}" data-t="${id}">${l}</button>`).join('');
+  function render(){
+    // Update in place so keyboard focus survives a tab switch.
+    nav.querySelectorAll('[data-t]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.t===active)));
+    TABS.forEach(([id])=>{document.getElementById('v-'+id).hidden = id!==active;});
+  }
+  nav.addEventListener('click',e=>{const b=e.target.closest('[data-t]'); if(!b)return; active=b.dataset.t; render(); window.scrollTo({top:0});});
+  render();
+</script>
