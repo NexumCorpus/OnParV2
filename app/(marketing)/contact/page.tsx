@@ -12,7 +12,7 @@ const CONTACT_INFO = [
   {
     icon: Mail,
     label: 'Email',
-    value: 'nexumcorpus@gmail.com',
+    value: 'kaleb@onparkitchen.com',
   },
   {
     icon: Clock,
