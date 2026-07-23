@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: 'OnPar - Smart Restaurant Inventory Management',
     description:
       'Smart inventory, waste tracking, and plate costing for independent restaurants.',
-    url: 'https://on-par-v2-mauve.vercel.app',
+    url: 'https://onparkitchen.com',
     siteName: 'OnPar',
     type: 'website',
   },
