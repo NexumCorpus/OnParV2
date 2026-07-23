@@ -59,7 +59,7 @@ export const PLANS = {
   },
   starter: {
     name: 'Starter',
-    price: { monthly: 29, annual: 23 },
+    price: { monthly: 79, annual: 63 },
     stripePriceId: {
       monthly: process.env.STRIPE_STARTER_MONTHLY_PRICE_ID ?? 'price_starter_monthly',
       annual: process.env.STRIPE_STARTER_ANNUAL_PRICE_ID ?? 'price_starter_annual',
@@ -69,7 +69,7 @@ export const PLANS = {
   },
   professional: {
     name: 'Professional',
-    price: { monthly: 79, annual: 63 },
+    price: { monthly: 149, annual: 119 },
     stripePriceId: {
       monthly: process.env.STRIPE_PRO_MONTHLY_PRICE_ID ?? 'price_pro_monthly',
       annual: process.env.STRIPE_PRO_ANNUAL_PRICE_ID ?? 'price_pro_annual',
@@ -80,3 +80,15 @@ export const PLANS = {
 } as const
 
 export type PlanKey = keyof typeof PLANS
+
+/**
+ * Founding-restaurant rates: the early customers who take a chance on us lock
+ * these in for as long as they stay subscribed. List pricing sits at market
+ * level (peers charge $199–$469/mo); this is the reason to sign now.
+ */
+export const FOUNDING_RATES = {
+  enabled: true,
+  seats: 20,
+  starter: 29,
+  professional: 79,
+} as const

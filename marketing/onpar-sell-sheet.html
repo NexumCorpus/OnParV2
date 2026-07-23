@@ -1,0 +1,210 @@
+<title>OnPar — One-Page Sell Sheet</title>
+<style>
+  :root {
+    --paper:#fbfcfa; --card:#ffffff; --ink:#16201a; --ink-2:#55635b; --muted:#8a958e;
+    --line:#e3e9e4; --brand:#16a34a; --brand-strong:#15803d; --brand-ink:#0f5c33;
+    --brand-soft:#e9f6ef; --burn:#c2410c; --burn-soft:#fbeee6;
+    --shadow:0 1px 2px rgba(22,32,26,.05), 0 6px 22px rgba(22,32,26,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:#0f1411; --card:#161d18; --ink:#eaf0ec; --ink-2:#a4b1a8; --muted:#74807a;
+      --line:#232c26; --brand:#34c46f; --brand-strong:#4cd07f; --brand-ink:#7fdda2;
+      --brand-soft:#123021; --burn:#e6773f; --burn-soft:#301c11;
+      --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 22px rgba(0,0,0,.3);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0f1411; --card:#161d18; --ink:#eaf0ec; --ink-2:#a4b1a8; --muted:#74807a;
+    --line:#232c26; --brand:#34c46f; --brand-strong:#4cd07f; --brand-ink:#7fdda2;
+    --brand-soft:#123021; --burn:#e6773f; --burn-soft:#301c11;
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 6px 22px rgba(0,0,0,.3);
+  }
+  :root[data-theme="light"]{
+    --paper:#fbfcfa; --card:#ffffff; --ink:#16201a; --ink-2:#55635b; --muted:#8a958e;
+    --line:#e3e9e4; --brand:#16a34a; --brand-strong:#15803d; --brand-ink:#0f5c33;
+    --brand-soft:#e9f6ef; --burn:#c2410c; --burn-soft:#fbeee6;
+    --shadow:0 1px 2px rgba(22,32,26,.05), 0 6px 22px rgba(22,32,26,.06);
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:860px;margin:0 auto;padding:22px 40px 20px;}
+  .sheet{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);padding:28px 36px 24px;}
+
+  /* masthead */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding-bottom:16px;border-bottom:1px solid var(--line);}
+  .logo{display:flex;align-items:center;gap:9px;font-weight:800;font-size:22px;letter-spacing:-.02em;}
+  .logo svg{flex:none;}
+  .top .tag{font-size:12.5px;color:var(--ink-2);text-align:right;max-width:230px;line-height:1.35;}
+
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--brand-ink);}
+  h1{font-size:31px;line-height:1.07;letter-spacing:-.025em;font-weight:800;margin:10px 0 0;text-wrap:balance;max-width:15ch;}
+  h1 em{color:var(--brand);font-style:normal;}
+  .lede{margin:11px 0 0;color:var(--ink-2);font-size:14.4px;max-width:64ch;line-height:1.52;}
+
+  /* problem band */
+  .band{display:flex;align-items:center;gap:20px;margin:18px 0 4px;padding:15px 20px;
+    background:var(--brand-soft);border-radius:12px;flex-wrap:wrap;}
+  .band .big{font-size:37px;font-weight:800;letter-spacing:-.03em;color:var(--burn);
+    font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;}
+  .band .cap{flex:1;min-width:240px;font-size:13.5px;color:var(--ink-2);line-height:1.5;}
+  .band .cap b{color:var(--ink);}
+
+  /* features */
+  .feat-h{margin:18px 0 11px;font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 30px;}
+  .f{display:flex;gap:12px;align-items:flex-start;}
+  .f .ic{flex:none;width:34px;height:34px;border-radius:9px;background:var(--brand-soft);
+    display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .f .ic svg{width:18px;height:18px;stroke:var(--brand);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+  .f h3{margin:0;font-size:14.5px;font-weight:700;letter-spacing:-.01em;}
+  .f p{margin:2px 0 0;font-size:12.8px;color:var(--ink-2);line-height:1.45;}
+
+  /* roi */
+  .roi{margin:16px 0 0;padding:14px 18px;border:1px solid var(--line);border-radius:12px;
+    display:flex;gap:18px;align-items:center;flex-wrap:wrap;}
+  .roi .num{font-size:27px;font-weight:800;letter-spacing:-.03em;color:var(--brand-ink);
+    font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap;}
+  .roi .txt{flex:1;min-width:280px;font-size:12.8px;color:var(--ink-2);line-height:1.5;}
+  .roi .txt b{color:var(--ink);}
+
+  /* pricing + offer */
+  .split{display:grid;grid-template-columns:1.15fr 1fr;gap:26px;margin:16px 0 0;align-items:start;}
+  @media(max-width:680px){.split{grid-template-columns:1fr;}.grid{grid-template-columns:1fr;}}
+  .price-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
+  .tier{border:1px solid var(--line);border-radius:10px;padding:10px 13px;flex:1;min-width:104px;}
+  .tier .n{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+  .tier .v{font-size:19px;font-weight:800;letter-spacing:-.02em;margin-top:2px;}
+  .tier .v small{font-size:12px;font-weight:600;color:var(--ink-2);}
+  .tier.feature{border-color:var(--brand);background:var(--brand-soft);}
+  .offer h4{margin:0 0 4px;font-size:14.5px;font-weight:700;}
+  .offer p{margin:0;font-size:12.8px;color:var(--ink-2);line-height:1.5;}
+  .offer ul{margin:8px 0 0;padding:0;list-style:none;font-size:12.8px;color:var(--ink-2);}
+  .offer li{padding:2px 0 2px 18px;position:relative;}
+  .offer li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:2px;background:var(--brand);}
+
+  /* cta */
+  .cta{margin:18px 0 0;padding:16px 20px;border-radius:12px;background:var(--ink);color:var(--paper);
+    display:flex;align-items:center;gap:22px;flex-wrap:wrap;}
+  .cta .qr{flex:none;width:92px;height:92px;background:#fff;border-radius:10px;padding:9px;}
+  .cta .qr svg{display:block;width:100%;height:100%;}
+  .cta .lines{flex:1;min-width:230px;}
+  .cta .lines .k{font-size:16px;font-weight:800;letter-spacing:-.01em;color:#fff;}
+  .cta .lines .s{font-size:13px;margin-top:3px;color:#c9d3cc;line-height:1.45;}
+  .cta .lines .s b{color:#fff;}
+  .cta .lines .u{margin-top:9px;font-size:12.5px;color:#9fb0a6;font-variant-numeric:tabular-nums;}
+  .cta .lines .u strong{color:var(--brand-ink);color:#7fdda2;}
+  .badge{display:inline-block;background:var(--brand);color:#06130b;font-weight:700;font-size:11.5px;
+    padding:3px 10px;border-radius:999px;margin-bottom:6px;}
+
+  .foot{margin-top:11px;text-align:center;font-size:11px;color:var(--muted);}
+
+  @media print{
+    body{background:#fff;}
+    .wrap{padding:0;max-width:none;}
+    .sheet{border:none;box-shadow:none;border-radius:0;padding:0.35in 0.45in;}
+    .cta{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .band,.tier.feature,.f .ic,.cta .qr,.badge{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+  @page{size:letter;margin:0.4in;}
+</style>
+
+<div class="wrap">
+  <div class="sheet">
+
+    <div class="top">
+      <span class="logo">
+        <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 3v7a2.5 2.5 0 0 0 5 0V3M6.5 3v18"/>
+          <path d="M15 3c-1.5 1.8-2 4.5-2 7 0 2 .8 3 2.5 3S18 12 18 10c0-2.5-.5-5.2-2-7zM16.5 13v8"/>
+        </svg>
+        OnPar
+      </span>
+      <div class="tag">Smart inventory, waste tracking &amp; plate costing<br>built for independent restaurants.</div>
+    </div>
+
+    <p class="eyebrow" style="margin-top:20px">Inventory &middot; Waste &middot; Plate costs</p>
+    <h1>See what your kitchen is really throwing away &mdash; <em>in dollars.</em></h1>
+    <p class="lede">The average kitchen wastes 4&ndash;10% of everything it buys &mdash; and most owners never see the number. OnPar tracks it by ingredient and by reason, tells you what to reorder before you 86 it, and shows the true cost of every plate. It runs on the phone already in your apron.</p>
+
+    <div class="band">
+      <span class="big">$14k&ndash;$36k</span>
+      <span class="cap">A restaurant buying <b>$30,000/month</b> in food quietly loses that much to waste <b>every year</b>. The first step to winning it back is seeing exactly where it goes &mdash; which is the whole point of OnPar.</span>
+    </div>
+
+    <p class="feat-h">Everything you need, nothing you don't</p>
+    <div class="grid">
+      <div class="f">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
+        <div><h3>Counts from the walk-in</h3><p>Tap to adjust stock on any phone. Par levels flag what's low before service does.</p></div>
+      </div>
+      <div class="f">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg></span>
+        <div><h3>Waste, logged in seconds</h3><p>What, how much, and why &mdash; turned into dollars, by ingredient and by reason, benchmarked to the industry.</p></div>
+      </div>
+      <div class="f">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="M6 6L5 3H2"/></svg></span>
+        <div><h3>One-tap purchase orders</h3><p>Everything below par becomes draft POs, grouped by supplier with suggested quantities. No more Sunday-night texts.</p></div>
+      </div>
+      <div class="f">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span>
+        <div><h3>Live plate costs &amp; margins</h3><p>Every recipe costed from today's prices. See the dish slipping under target before it eats your margin.</p></div>
+      </div>
+      <div class="f">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-4 10.5V16h8v-2.5A6 6 0 0 0 12 3z"/><path d="M9 20h6M10 22h4"/></svg></span>
+        <div><h3>Insights that pay for themselves</h3><p>Run a special on the salmon before it expires. Switch the supplier that quietly raised prices. Each tip carries a dollar figure.</p></div>
+      </div>
+      <div class="f">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg></span>
+        <div><h3>Up and running in an afternoon</h3><p>Import your existing spreadsheet in one go. Mount a tablet by the pass for the always-on kitchen display.</p></div>
+      </div>
+    </div>
+
+    <div class="roi">
+      <span class="num">~$9,000/yr</span>
+      <span class="txt">Restaurants that start measuring waste typically cut it 30&ndash;50%. Recover just a quarter of that, plus halve the hours spent counting and ordering, and a typical independent nets <b>~$9,000 a year back</b> &mdash; against <b>$948/yr</b> for OnPar Starter, or <b>$348/yr</b> at the founding rate. An estimate, not a promise &mdash; which is exactly why the first 14 days are free.</span>
+    </div>
+
+    <div class="split">
+      <div>
+        <p class="feat-h" style="margin:0 0 2px">Simple pricing</p>
+        <div class="price-row">
+          <div class="tier"><div class="n">Free</div><div class="v">$0<small> / up to 50 items</small></div></div>
+          <div class="tier feature"><div class="n">Starter</div><div class="v">$79<small> /mo</small></div></div>
+          <div class="tier"><div class="n">Professional</div><div class="v">$149<small> /mo</small></div></div>
+        </div>
+        <p style="margin:10px 0 0;font-size:12.5px;color:var(--ink-2)">14-day free trial &middot; no credit card &middot; <b>no setup or onboarding fee</b> &middot; cancel anytime.</p>
+      </div>
+      <div class="offer">
+        <span class="badge">Founding restaurants</span>
+        <h4>Get in early, shape the product</h4>
+        <ul>
+          <li>A direct line to the people who build OnPar</li>
+          <li>Your kitchen's real needs on the roadmap</li>
+          <li><b>$29/mo locked in for life</b> &mdash; vs $79 list</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cta">
+      <div class="qr" aria-label="QR code linking to the OnPar demo">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path stroke="#14201a" d="M0 0.5h7m1 0h3m2 0h3m2 0h3m1 0h7M0 1.5h1m5 0h1m1 0h2m1 0h1m1 0h1m2 0h3m1 0h1m1 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m2 0h1m1 0h1m4 0h1m1 0h1m1 0h1m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h1m3 0h1m1 0h2m1 0h2m1 0h1m1 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h1m1 0h1m2 0h1m1 0h1m2 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m5 0h2m1 0h6m1 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h1m1 0h2m3 0h3M0 8.5h1m1 0h2m1 0h3m3 0h1m1 0h1m1 0h6m1 0h1m2 0h1m1 0h2M1 9.5h1m1 0h1m4 0h1m2 0h1m1 0h3m3 0h6m3 0h1M1 10.5h3m1 0h2m1 0h2m3 0h1m4 0h1m4 0h1m2 0h2M0 11.5h3m4 0h1m2 0h2m4 0h1m2 0h1m1 0h2m5 0h1M0 12.5h1m2 0h1m1 0h3m1 0h3m2 0h4m5 0h1m1 0h2M4 13.5h1m4 0h3m2 0h4m1 0h1m1 0h2m3 0h3M1 14.5h1m2 0h4m4 0h2m2 0h1m1 0h3m1 0h2m2 0h3M0 15.5h1m2 0h2m2 0h2m5 0h2m4 0h4m3 0h1M2 16.5h1m1 0h1m1 0h6m2 0h1m1 0h1m1 0h3m2 0h3m1 0h1M2 17.5h1m1 0h2m1 0h2m1 0h1m1 0h1m1 0h2m2 0h1m1 0h1m4 0h3M0 18.5h1m5 0h1m4 0h8m1 0h1m1 0h1m3 0h1M3 19.5h3m1 0h3m3 0h2m2 0h1m3 0h1m2 0h1m1 0h1M1 20.5h1m3 0h2m1 0h1m4 0h2m1 0h3m1 0h7M8 21.5h4m4 0h1m1 0h1m1 0h1m3 0h5M0 22.5h7m1 0h3m1 0h1m1 0h1m4 0h2m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h3m2 0h3m2 0h3m3 0h2M0 24.5h1m1 0h3m1 0h1m3 0h1m1 0h1m4 0h1m2 0h5m1 0h2M0 25.5h1m1 0h3m1 0h1m1 0h2m1 0h2m2 0h1m1 0h1m3 0h1m1 0h3m2 0h1M0 26.5h1m1 0h3m1 0h1m1 0h5m3 0h1m1 0h2m1 0h1m1 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m4 0h1m1 0h1m1 0h2m2 0h2m2 0h1m1 0h1m1 0h1M0 28.5h7m1 0h1m1 0h2m2 0h2m2 0h1m1 0h1m1 0h1m1 0h1m2 0h1"/></svg>
+      </div>
+      <div class="lines">
+        <div class="k">Watch the 2-minute demo &amp; start free</div>
+        <div class="s">Scan the code, or visit the site, to see OnPar running a real kitchen &mdash; then <b>start your free trial at the table.</b></div>
+        <div class="u">on-par-v2-mauve.vercel.app &nbsp;&middot;&nbsp; <strong>nexumcorpus@gmail.com</strong></div>
+      </div>
+    </div>
+
+    <p class="foot">OnPar by NexumCorpus &middot; Built for independent restaurants</p>
+  </div>
+</div>
+
+<script>
+  // Theme toggle support from the Artifact chrome is handled via data-theme on <html>.
+</script>

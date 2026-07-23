@@ -475,7 +475,7 @@
           <div class="c">estimated back in your pocket, per year</div>
         </div>
         <div class="roi-row" style="border-top:1px solid var(--grid)">
-          <span>OnPar Starter, billed monthly</span><span class="v">$348 / yr</span>
+          <span>OnPar Starter, billed monthly</span><span class="v">$948 / yr</span>
         </div>
         <div class="roi-row"><span>Payback</span><span class="v" id="roiPayback" style="color:var(--brand-ink)"></span></div>
       </div>
@@ -516,7 +516,7 @@
   </section>
 
   <div class="footer-pitch">
-    OnPar &middot; Free up to 50 items &middot; Starter $29/mo &middot; Professional $79/mo &middot; 14-day free trial, no card required
+    OnPar &middot; Free up to 50 items &middot; Starter $79/mo &middot; Professional $149/mo &middot; Founding restaurants lock $29/mo &middot; 14-day free trial, no card
   </div>
 </main>
 
@@ -959,7 +959,7 @@ function renderRoi() {
   const laborSaved = laborNow / 2;
   const monthly = recovered + laborSaved;
   const annual = monthly * 12;
-  const paybackDays = annual > 348 ? Math.max(1, Math.ceil(348 / (annual / 365))) : null;
+  const paybackDays = annual > 948 ? Math.max(1, Math.ceil(948 / (annual / 365))) : null;
   $('#roiRows').innerHTML = `
     <div class="roi-row"><span>Food currently wasted / month</span><span class="v" style="color:var(--crit)">${fmt$(Math.round(wasted))}</span></div>
     <div class="roi-row"><span>Recovered with OnPar (25% of waste)</span><span class="v">${fmt$(Math.round(recovered))} / mo</span></div>
@@ -967,7 +967,7 @@ function renderRoi() {
     <div class="roi-row"><span>Labor saved (counts in half the time)</span><span class="v">${fmt$(Math.round(laborSaved))} / mo</span></div>`;
   $('#roiTotal').textContent = fmt$(Math.round(annual));
   $('#roiPayback').textContent = paybackDays
-    ? `pays for itself in ~${paybackDays} day${paybackDays === 1 ? '' : 's'} · ${Math.round(annual / 348)}× return`
+    ? `pays for itself in ~${paybackDays} day${paybackDays === 1 ? '' : 's'} · ${Math.round(annual / 948)}× return`
     : 'adjust the numbers above';
 }
 ['roiSpend', 'roiWaste', 'roiHrs', 'roiWage'].forEach(id => {

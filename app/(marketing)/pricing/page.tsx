@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { PlanCard } from '@/components/pricing/plan-card'
 import { PricingToggle } from '@/components/pricing/pricing-toggle'
 import { FAQSection } from '@/components/pricing/faq-section'
-import { PLANS } from '@/lib/config'
+import { PLANS, FOUNDING_RATES } from '@/lib/config'
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false)
@@ -50,6 +50,21 @@ export default function PricingPage() {
             14-day free trial.
           </p>
         </div>
+
+        {/* Founding-restaurant offer */}
+        {FOUNDING_RATES.enabled && (
+          <div className="mx-auto mt-8 max-w-3xl rounded-xl border border-brand-600 bg-brand-50 px-5 py-4 text-center dark:bg-brand-950/30">
+            <p className="text-sm font-semibold text-brand-700 dark:text-brand-400">
+              Founding restaurants: ${FOUNDING_RATES.starter}/mo Starter or $
+              {FOUNDING_RATES.professional}/mo Professional &mdash; locked in for
+              as long as you stay.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              For our first {FOUNDING_RATES.seats} restaurants. Start a free
+              trial and mention it, or email us to claim your rate.
+            </p>
+          </div>
+        )}
 
         {/* Toggle */}
         <div className="mt-10">
