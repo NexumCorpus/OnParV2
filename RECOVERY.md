@@ -1,5 +1,8 @@
 # OnPar Production Recovery Runbook
 
+**Update (2026-10-19):** the backend is restored; `/api/health` returns
+`"database": "connected"`. The runbook below stays for the next pause.
+
 **Status (2026-07-14):** The deployed app at https://on-par-v2.vercel.app is UP, but its
 Supabase backend (`sxecaxzqdpveyykrvpsy.supabase.co`) no longer resolves (DNS NXDOMAIN).
 **Nobody can sign up or log in.** Supabase pauses free-tier projects after ~1 week of
@@ -26,7 +29,7 @@ If the project is gone (Supabase deletes long-paused free projects), use Path B.
 1. **Create project** at https://supabase.com/dashboard → New project.
 2. **Run the schema**: open SQL Editor, paste the entire contents of
    [`supabase/setup-database.sql`](supabase/setup-database.sql), run it.
-   (It combines migrations 001–003 plus the `seed_demo_data()` function.)
+   (It combines migrations 001–005 plus the `seed_demo_data()` function.)
 3. **Auth settings** (Authentication → URL Configuration):
    - Site URL: `https://on-par-v2.vercel.app`
    - Redirect URLs: add `https://on-par-v2.vercel.app/**` and `http://localhost:3000/**`

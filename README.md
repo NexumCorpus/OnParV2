@@ -44,26 +44,39 @@ The repository also includes authentication, Stripe integration points,
 Supabase-backed data access, Sentry instrumentation, responsive marketing pages,
 and automated unit and end-to-end test surfaces.
 
+## See it in ten seconds
+
+Open [`demo/onpar-demo.html`](./demo/onpar-demo.html) in a browser. It is a
+single self-contained file (no network, no install) that walks the product
+surface with sample data.
+
 ## Local setup
 
-Requirements: Node.js 20+, npm, and a Supabase project.
+Requirements: Node.js 20+, npm, and a free Supabase project for anything past
+the marketing pages.
 
 ```bash
 git clone https://github.com/NexumCorpus/OnParV2.git
 cd OnParV2
 npm install
-copy .env.example .env.local
+cp .env.example .env.local      # Windows cmd: copy .env.example .env.local
 npm run dev
 ```
 
-Configure the variables documented in [`.env.example`](./.env.example):
+With the placeholder values from `.env.example`, the marketing, pricing, and
+login pages render at [http://localhost:3000](http://localhost:3000), and app
+routes redirect to login. To sign in and use the app:
 
-- Supabase URL, anonymous key, and service-role key
-- Stripe publishable, secret, and webhook keys
-- application URL
-- optional Sentry and log-level settings
+1. Create a Supabase project, open its SQL Editor, and run
+   [`supabase/setup-database.sql`](./supabase/setup-database.sql) (migrations
+   001–005 plus the demo-data function, in one file).
+2. Put the project URL, anon key, and service-role key into `.env.local`.
+3. Restart `npm run dev` and sign up. For instant signups, turn off
+   Authentication → Providers → Email → "Confirm email".
 
-Then open [http://localhost:3000](http://localhost:3000).
+Leave `STRIPE_SECRET_KEY` empty to run without billing: checkout then reports
+"Billing is not configured" and the rest of the app works. Sentry and log
+level are optional.
 
 ## Verification
 
