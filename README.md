@@ -81,7 +81,8 @@ are set. To sign in and use the app:
 The three Stripe values in `.env.example` are empty, which runs the app without
 billing and leaves the rest of it working:
 
-- With all three empty, the pricing buttons show "Billing is coming soon!".
+- With all three empty, the paid-plan buttons on `/pricing` are disabled and read
+  "Coming Soon".
 - If you set `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` but leave `STRIPE_SECRET_KEY`
   empty, a signed-in checkout reports "Billing is not configured".
 
@@ -110,7 +111,9 @@ E2E_EMAIL=you@example.com E2E_PASSWORD=your-password npm run test:e2e
 ```
 
 Five inventory specs that need seeded data are marked `fixme` and also show as
-skipped.
+skipped. A run with credentials records no traces and writes no HTML report,
+because both capture typed values; failure snapshots in `test-results/` can
+still contain them, so do not share that folder.
 
 CI (`.github/workflows/ci.yml`) runs lint, type-check, `npm test -- --coverage`
 (70% thresholds), a build with placeholder values, and the e2e suite. The

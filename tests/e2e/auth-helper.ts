@@ -21,5 +21,6 @@ export async function signIn(page: Page) {
   await page.getByLabel('Email').fill(email)
   await page.getByLabel('Password').fill(password)
   await page.getByRole('button', { name: 'Sign In' }).click()
-  await expect(page).toHaveURL(/\/dashboard/)
+  // The first request to /dashboard compiles it on a cold dev server, which can take several seconds.
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 30_000 })
 }
