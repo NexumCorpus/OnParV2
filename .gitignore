@@ -42,3 +42,4 @@ playwright-report/
 # supabase
 supabase/.temp/
 .env*
+!.env.example
