@@ -67,6 +67,17 @@ jobs:
   e2e-tests:
     runs-on: ubuntu-latest
     needs: [build]
+    # Signed-out specs always run against placeholder Supabase values (a request
+    # with no session cookie makes no Supabase call). Signed-in specs run only
+    # when SUPABASE_E2E_URL, SUPABASE_E2E_ANON_KEY, E2E_EMAIL and E2E_PASSWORD
+    # are set as repository secrets; otherwise they are reported as skipped in
+    # the test log.
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_E2E_URL || 'https://placeholder.supabase.co' }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_E2E_ANON_KEY || 'placeholder' }}
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -74,14 +85,11 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - run: npx playwright install --with-deps
+      - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
-        if: env.SUPABASE_E2E_URL != ''
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_E2E_URL || 'https://placeholder.supabase.co' }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_E2E_ANON_KEY || 'placeholder' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report
           path: playwright-report/
+          retention-days: 7

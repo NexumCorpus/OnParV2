@@ -12,6 +12,9 @@ export const metadata = {
   title: 'Purchase Orders - OnPar',
 }
 
+// Reads the signed-in user's cookies on every request; never prerender.
+export const dynamic = 'force-dynamic'
+
 const statusConfig: Record<string, { icon: LucideIcon; variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
   draft: { icon: Clock, variant: "secondary", label: "Draft" },
   sent: { icon: ShoppingCart, variant: "default", label: "Sent" },

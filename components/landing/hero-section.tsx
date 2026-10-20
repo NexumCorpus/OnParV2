@@ -85,7 +85,6 @@ export function HeroSection() {
                 onEnded={() => setPlaying(false)}
               >
                 <source src="/demo.mp4" type="video/mp4" />
-                <source src="/demo.webm" type="video/webm" />
               </video>
 
               {/* Play button overlay — shows when not playing or video unavailable */}

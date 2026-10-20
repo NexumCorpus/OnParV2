@@ -2,6 +2,7 @@ import Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { PLANS } from '@/lib/config'
 import type { PlanKey } from '@/lib/config'
+import { BILLING_NOT_CONFIGURED } from '@/lib/utils/error-messages'
 
 const stripeKey = process.env.STRIPE_SECRET_KEY
 const stripe = stripeKey ? new Stripe(stripeKey) : null
@@ -13,7 +14,7 @@ export async function createCheckoutSession(params: {
   successUrl: string
   cancelUrl: string
 }): Promise<{ url: string }> {
-  if (!stripe) throw new Error('Billing is not configured')
+  if (!stripe) throw new Error(BILLING_NOT_CONFIGURED)
 
   const supabase = createAdminClient()
   const { data: userData } = await supabase
@@ -50,7 +51,7 @@ export async function createPortalSession(params: {
   customerId: string
   returnUrl: string
 }): Promise<{ url: string }> {
-  if (!stripe) throw new Error('Billing is not configured')
+  if (!stripe) throw new Error(BILLING_NOT_CONFIGURED)
 
   const session = await stripe.billingPortal.sessions.create({
     customer: params.customerId,
@@ -138,7 +139,7 @@ export async function getSubscriptionStatus(userId: string): Promise<{
 
 /** Link a Supabase user to a Stripe customer, creating the customer if needed */
 export async function getOrCreateStripeCustomer(userId: string, email: string): Promise<string> {
-  if (!stripe) throw new Error('Billing is not configured')
+  if (!stripe) throw new Error(BILLING_NOT_CONFIGURED)
 
   const supabase = createAdminClient()
 

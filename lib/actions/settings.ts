@@ -9,6 +9,7 @@ import {
 } from '@/lib/services/stripe'
 import { APP_URL } from '@/lib/config'
 import { logger } from '@/lib/utils/logger'
+import { BILLING_NOT_CONFIGURED } from '@/lib/utils/error-messages'
 import type { ActionResult } from '@/types'
 
 async function getAuthenticatedUser(): Promise<{
@@ -222,6 +223,10 @@ export async function createCheckout(
 
     return { url: result.url }
   } catch (err) {
+    if (err instanceof Error && err.message === BILLING_NOT_CONFIGURED) {
+      logger.warn({ action: 'createCheckout' }, 'Billing is not configured (STRIPE_SECRET_KEY is empty)')
+      return { error: BILLING_NOT_CONFIGURED }
+    }
     logger.error({ err }, 'Failed to create checkout session')
     return { error: 'Failed to create checkout session' }
   }
